@@ -1,4 +1,4 @@
-import '../../../core/exceptions/domain_exception.dart';
+import 'package:app/core/exceptions/domain_exception.dart';
 
 /// Airport code value object (IATA format)
 /// Examples: TPE, NRT, LAX, JFK

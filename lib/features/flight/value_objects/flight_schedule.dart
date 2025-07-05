@@ -1,7 +1,7 @@
+import 'package:app/core/exceptions/domain_exception.dart';
 import 'package:timezone/timezone.dart';
 import 'airport_code.dart';
 import 'gate.dart';
-import '../../../core/exceptions/domain_exception.dart';
 
 /// Flight schedule value object
 /// Contains all time-related and location information for a flight

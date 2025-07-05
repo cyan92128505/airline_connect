@@ -1,12 +1,12 @@
+import 'package:app/core/exceptions/domain_exception.dart';
+import 'package:app/features/boarding_pass/enums/pass_status.dart';
+import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
+import 'package:app/features/boarding_pass/value_objects/pass_id.dart';
+import 'package:app/features/boarding_pass/value_objects/qr_code_data.dart';
+import 'package:app/features/boarding_pass/value_objects/seat_number.dart';
+import 'package:app/features/flight/value_objects/flight_number.dart';
+import 'package:app/features/member/value_objects/member_number.dart';
 import 'package:timezone/timezone.dart';
-import '../value_objects/pass_id.dart';
-import '../value_objects/seat_number.dart';
-import '../value_objects/flight_schedule_snapshot.dart';
-import '../value_objects/qr_code_data.dart';
-import '../enums/pass_status.dart';
-import '../../member/value_objects/member_number.dart';
-import '../../flight/value_objects/flight_number.dart';
-import '../../../core/exceptions/domain_exception.dart';
 
 class BoardingPass {
   final PassId passId;

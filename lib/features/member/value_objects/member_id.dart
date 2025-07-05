@@ -1,5 +1,5 @@
+import 'package:app/core/exceptions/domain_exception.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/exceptions/domain_exception.dart';
 
 class MemberId {
   final String value;

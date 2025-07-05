@@ -1,4 +1,4 @@
-import '../../../core/exceptions/domain_exception.dart';
+import 'package:app/core/exceptions/domain_exception.dart';
 
 class FullName {
   final String value;

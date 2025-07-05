@@ -1,8 +1,8 @@
+import 'package:app/core/exceptions/domain_exception.dart';
+import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/value_objects/flight_number.dart';
+import 'package:app/features/flight/value_objects/flight_schedule.dart';
 import 'package:timezone/timezone.dart';
-import '../value_objects/flight_number.dart';
-import '../value_objects/flight_schedule.dart';
-import '../enums/flight_status.dart';
-import '../../../core/exceptions/domain_exception.dart';
 
 class Flight {
   final FlightNumber flightNumber;

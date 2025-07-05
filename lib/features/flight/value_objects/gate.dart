@@ -1,4 +1,4 @@
-import '../../../core/exceptions/domain_exception.dart';
+import 'package:app/core/exceptions/domain_exception.dart';
 
 /// Gate value object
 /// Examples: A12, B5, C24, T1A15

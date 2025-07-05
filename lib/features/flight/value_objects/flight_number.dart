@@ -1,4 +1,4 @@
-import '../../../core/exceptions/domain_exception.dart';
+import 'package:app/core/exceptions/domain_exception.dart';
 
 /// Flight number value object
 /// Format: BR857, CI101, etc. (2-3 letters + 3-4 digits)

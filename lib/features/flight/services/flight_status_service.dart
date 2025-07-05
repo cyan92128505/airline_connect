@@ -1,11 +1,11 @@
+import 'package:app/core/exceptions/domain_exception.dart';
+import 'package:app/core/failures/failure.dart';
+import 'package:app/features/flight/entities/flight.dart';
+import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/repositories/flight_repository.dart';
+import 'package:app/features/flight/value_objects/flight_number.dart';
 import 'package:dartz/dartz.dart';
 import 'package:timezone/timezone.dart';
-import '../entities/flight.dart';
-import '../value_objects/flight_number.dart';
-import '../enums/flight_status.dart';
-import '../repositories/flight_repository.dart';
-import '../../../core/failures/failure.dart';
-import '../../../core/exceptions/domain_exception.dart';
 
 class FlightStatusService {
   final FlightRepository _flightRepository;

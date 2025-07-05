@@ -1,4 +1,4 @@
-import '../../../core/exceptions/domain_exception.dart';
+import 'package:app/core/exceptions/domain_exception.dart';
 
 /// Member number value object
 /// Format: AA123456 (2 letters + 6 digits)

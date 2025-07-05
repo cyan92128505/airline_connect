@@ -1,15 +1,15 @@
+import 'package:app/core/exceptions/domain_exception.dart';
+import 'package:app/core/failures/failure.dart';
+import 'package:app/features/boarding_pass/entities/boarding_pass.dart';
+import 'package:app/features/boarding_pass/repositories/boarding_pass_repository.dart';
+import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
+import 'package:app/features/boarding_pass/value_objects/pass_id.dart';
+import 'package:app/features/boarding_pass/value_objects/seat_number.dart';
+import 'package:app/features/flight/entities/flight.dart';
+import 'package:app/features/member/entities/member.dart';
+import 'package:app/features/member/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
 import 'package:timezone/timezone.dart';
-import '../entities/boarding_pass.dart';
-import '../value_objects/pass_id.dart';
-import '../value_objects/seat_number.dart';
-import '../value_objects/flight_schedule_snapshot.dart';
-import '../repositories/boarding_pass_repository.dart';
-import '../../member/entities/member.dart';
-import '../../member/value_objects/member_number.dart';
-import '../../flight/entities/flight.dart';
-import '../../../core/failures/failure.dart';
-import '../../../core/exceptions/domain_exception.dart';
 
 class BoardingPassService {
   final BoardingPassRepository _boardingPassRepository;

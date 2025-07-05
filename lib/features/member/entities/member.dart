@@ -1,10 +1,10 @@
+import 'package:app/core/exceptions/domain_exception.dart';
+import 'package:app/features/member/enums/member_tier.dart';
+import 'package:app/features/member/value_objects/contact_info.dart';
+import 'package:app/features/member/value_objects/full_name.dart';
+import 'package:app/features/member/value_objects/member_id.dart';
+import 'package:app/features/member/value_objects/member_number.dart';
 import 'package:timezone/timezone.dart';
-import '../value_objects/member_id.dart';
-import '../value_objects/member_number.dart';
-import '../value_objects/full_name.dart';
-import '../value_objects/contact_info.dart';
-import '../enums/member_tier.dart';
-import '../../../core/exceptions/domain_exception.dart';
 
 class Member {
   final MemberId memberId;

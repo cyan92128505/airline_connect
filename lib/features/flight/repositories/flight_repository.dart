@@ -1,8 +1,8 @@
+import 'package:app/core/failures/failure.dart';
+import 'package:app/features/flight/entities/flight.dart';
 import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/value_objects/flight_number.dart';
 import 'package:dartz/dartz.dart';
-import '../entities/flight.dart';
-import '../value_objects/flight_number.dart';
-import '../../../core/failures/failure.dart';
 
 /// Flight repository interface
 /// Follows Repository pattern for aggregate persistence
