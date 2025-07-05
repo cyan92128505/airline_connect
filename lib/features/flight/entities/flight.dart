@@ -125,18 +125,28 @@ class Flight {
         status != FlightStatus.diverted;
   }
 
+  /// Check if flight is boarding eligible
   bool get isBoardingEligible {
-    return status == FlightStatus.boarding ||
-        (status == FlightStatus.scheduled && _isWithinBoardingWindow()) ||
-        (status == FlightStatus.delayed && _isWithinBoardingWindow());
-  }
+    if (!isActive) return false;
 
-  bool _isWithinBoardingWindow() {
+    if (status == FlightStatus.cancelled ||
+        status == FlightStatus.arrived ||
+        status == FlightStatus.diverted) {
+      return false;
+    }
+
+    if (status == FlightStatus.departed) {
+      return false;
+    }
+
     final now = TZDateTime.now(local);
-    final boardingStart = schedule.boardingTime;
-    final departureTime = schedule.departureTime;
+    if (now.isAfter(schedule.departureTime)) {
+      return false;
+    }
 
-    return now.isAfter(boardingStart) && now.isBefore(departureTime);
+    return status == FlightStatus.scheduled ||
+        status == FlightStatus.delayed ||
+        status == FlightStatus.boarding;
   }
 
   bool _canTransitionTo(FlightStatus targetStatus) {
