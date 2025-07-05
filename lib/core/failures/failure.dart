@@ -31,3 +31,7 @@ class NotFoundFailure extends Failure {
 class UnknownFailure extends Failure {
   const UnknownFailure(String message) : super(message, 'UNKNOWN_ERROR');
 }
+
+class DatabaseFailure extends Failure {
+  const DatabaseFailure(String message) : super(message, 'DATABASE_FAILURE');
+}

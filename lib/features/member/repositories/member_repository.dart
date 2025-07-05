@@ -1,8 +1,8 @@
+import 'package:app/core/failures/failure.dart';
+import 'package:app/features/member/entities/member.dart';
+import 'package:app/features/member/value_objects/member_id.dart';
+import 'package:app/features/member/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
-import '../entities/member.dart';
-import '../value_objects/member_number.dart';
-import '../value_objects/member_id.dart';
-import '../../../core/failures/failure.dart';
 
 /// Member repository interface
 /// Follows Repository pattern for aggregate persistence
