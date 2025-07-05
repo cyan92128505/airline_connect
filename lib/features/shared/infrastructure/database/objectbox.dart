@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:app/features/flight/infrastructure/entities/flight_entity.dart';
 import 'package:app/features/member/infrastructure/entities/member_entity.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -13,12 +14,14 @@ class ObjectBox {
   /// The ObjectBox Store instance
   late final Store store;
 
-  /// Box accessor for Member entities
+  /// Box accessors for all entities
   late final Box<MemberEntity> memberBox;
+  late final Box<FlightEntity> flightBox;
 
   ObjectBox._create(this.store) {
-    // Initialize boxes after store creation
+    // Initialize all boxes after store creation
     memberBox = store.box<MemberEntity>();
+    flightBox = store.box<FlightEntity>();
     _logger.i('ObjectBox store initialized successfully');
   }
 

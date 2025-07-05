@@ -1,3 +1,6 @@
+import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
+import 'package:app/features/flight/repositories/flight_repository.dart';
+import 'package:app/features/flight/services/flight_status_service.dart';
 import 'package:app/features/member/infrastructure/repositories/member_repository_impl.dart';
 import 'package:app/features/member/repositories/member_repository.dart';
 import 'package:app/features/member/services/member_auth_service.dart';
@@ -16,8 +19,18 @@ final memberRepositoryProvider = Provider<MemberRepository>((ref) {
   return MemberRepositoryImpl(objectBox);
 });
 
+final flightRepositoryProvider = Provider<FlightRepository>((ref) {
+  final objectBox = ref.watch(objectBoxProvider);
+  return FlightRepositoryImpl(objectBox);
+});
+
 /// Service providers
 final memberAuthServiceProvider = Provider<MemberAuthService>((ref) {
   final memberRepository = ref.watch(memberRepositoryProvider);
   return MemberAuthService(memberRepository);
+});
+
+final flightStatusServiceProvider = Provider<FlightStatusService>((ref) {
+  final flightRepository = ref.watch(flightRepositoryProvider);
+  return FlightStatusService(flightRepository);
 });

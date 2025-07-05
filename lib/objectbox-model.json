@@ -62,10 +62,86 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "2:3634553643630346782",
+      "lastPropertyId": "11:5290880257771907759",
+      "name": "FlightEntity",
+      "properties": [
+        {
+          "id": "1:7035462238413643930",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6811374462938321370",
+          "name": "flightNumber",
+          "type": 9,
+          "flags": 34848,
+          "indexId": "4:6008721783439271793"
+        },
+        {
+          "id": "3:3601927885249708934",
+          "name": "departureAirport",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "5:7516065672703350765"
+        },
+        {
+          "id": "4:5182308166896892006",
+          "name": "arrivalAirport",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "6:4221385455940219823"
+        },
+        {
+          "id": "5:1275977013316103425",
+          "name": "gateNumber",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "7:3432840115799882872"
+        },
+        {
+          "id": "6:7247330410663687591",
+          "name": "departureTime",
+          "type": 10,
+          "flags": 8,
+          "indexId": "8:1383971629220557855"
+        },
+        {
+          "id": "7:3112732619577551363",
+          "name": "boardingTime",
+          "type": 10
+        },
+        {
+          "id": "8:5131411902048786043",
+          "name": "status",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "9:5882549834817156367"
+        },
+        {
+          "id": "9:66448991810077029",
+          "name": "aircraftType",
+          "type": 9
+        },
+        {
+          "id": "10:117464826762693304",
+          "name": "createdAt",
+          "type": 10
+        },
+        {
+          "id": "11:5290880257771907759",
+          "name": "updatedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "1:1862924290834340112",
-  "lastIndexId": "3:8149576131503353022",
+  "lastEntityId": "2:3634553643630346782",
+  "lastIndexId": "9:5882549834817156367",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
