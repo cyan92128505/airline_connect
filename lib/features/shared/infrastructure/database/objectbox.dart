@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:app/features/boarding_pass/infrastructure/entities/boarding_pass_entity.dart';
 import 'package:app/features/flight/infrastructure/entities/flight_entity.dart';
 import 'package:app/features/member/infrastructure/entities/member_entity.dart';
 import 'package:path/path.dart' as path;
@@ -17,11 +18,13 @@ class ObjectBox {
   /// Box accessors for all entities
   late final Box<MemberEntity> memberBox;
   late final Box<FlightEntity> flightBox;
+  late final Box<BoardingPassEntity> boardingPassBox;
 
   ObjectBox._create(this.store) {
     // Initialize all boxes after store creation
     memberBox = store.box<MemberEntity>();
     flightBox = store.box<FlightEntity>();
+    boardingPassBox = store.box<BoardingPassEntity>();
     _logger.i('ObjectBox store initialized successfully');
   }
 

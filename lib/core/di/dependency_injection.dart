@@ -1,3 +1,7 @@
+import 'package:app/features/boarding_pass/infrastructure/repositories/boarding_pass_repository_impl.dart';
+import 'package:app/features/boarding_pass/repositories/boarding_pass_repository.dart';
+import 'package:app/features/boarding_pass/services/boarding_pass_service.dart';
+import 'package:app/features/boarding_pass/services/qr_code_service.dart';
 import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
 import 'package:app/features/flight/repositories/flight_repository.dart';
 import 'package:app/features/flight/services/flight_status_service.dart';
@@ -24,6 +28,11 @@ final flightRepositoryProvider = Provider<FlightRepository>((ref) {
   return FlightRepositoryImpl(objectBox);
 });
 
+final boardingPassRepositoryProvider = Provider<BoardingPassRepository>((ref) {
+  final objectBox = ref.watch(objectBoxProvider);
+  return BoardingPassRepositoryImpl(objectBox);
+});
+
 /// Service providers
 final memberAuthServiceProvider = Provider<MemberAuthService>((ref) {
   final memberRepository = ref.watch(memberRepositoryProvider);
@@ -33,4 +42,14 @@ final memberAuthServiceProvider = Provider<MemberAuthService>((ref) {
 final flightStatusServiceProvider = Provider<FlightStatusService>((ref) {
   final flightRepository = ref.watch(flightRepositoryProvider);
   return FlightStatusService(flightRepository);
+});
+
+final boardingPassServiceProvider = Provider<BoardingPassService>((ref) {
+  final boardingPassRepository = ref.watch(boardingPassRepositoryProvider);
+  return BoardingPassService(boardingPassRepository);
+});
+
+final qrCodeServiceProvider = Provider<QRCodeService>((ref) {
+  final boardingPassRepository = ref.watch(boardingPassRepositoryProvider);
+  return QRCodeService(boardingPassRepository);
 });

@@ -138,10 +138,126 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "3:5423840136445481324",
+      "lastPropertyId": "19:5541838562246388199",
+      "name": "BoardingPassEntity",
+      "properties": [
+        {
+          "id": "1:4843714121151575344",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:7313044608158396792",
+          "name": "passId",
+          "type": 9,
+          "flags": 34848,
+          "indexId": "10:4464694274545132267"
+        },
+        {
+          "id": "3:3433435713636823398",
+          "name": "memberNumber",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "11:385857828955740826"
+        },
+        {
+          "id": "4:6268999713121611723",
+          "name": "flightNumber",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "12:6975993734840079662"
+        },
+        {
+          "id": "5:4666630851458304735",
+          "name": "seatNumber",
+          "type": 9
+        },
+        {
+          "id": "6:11356774413770912",
+          "name": "departureTime",
+          "type": 10,
+          "flags": 8,
+          "indexId": "13:7849867306773582660"
+        },
+        {
+          "id": "7:397835885822662392",
+          "name": "boardingTime",
+          "type": 10
+        },
+        {
+          "id": "8:2821840513651983934",
+          "name": "departureAirport",
+          "type": 9
+        },
+        {
+          "id": "9:5799616438453202765",
+          "name": "arrivalAirport",
+          "type": 9
+        },
+        {
+          "id": "10:2063836380856821654",
+          "name": "gateNumber",
+          "type": 9
+        },
+        {
+          "id": "11:8439828915785134788",
+          "name": "scheduleSnapshotTime",
+          "type": 10
+        },
+        {
+          "id": "12:330946293072665754",
+          "name": "status",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "14:5984464665526667695"
+        },
+        {
+          "id": "13:2415893377164786097",
+          "name": "qrCodeEncryptedPayload",
+          "type": 9
+        },
+        {
+          "id": "14:7719062591484609979",
+          "name": "qrCodeChecksum",
+          "type": 9
+        },
+        {
+          "id": "15:7439333756046955191",
+          "name": "qrCodeGeneratedAt",
+          "type": 10
+        },
+        {
+          "id": "16:5170225473180315720",
+          "name": "qrCodeVersion",
+          "type": 6
+        },
+        {
+          "id": "17:5736757221010290387",
+          "name": "issueTime",
+          "type": 10,
+          "flags": 8,
+          "indexId": "15:8678279675979701138"
+        },
+        {
+          "id": "18:2690028202702345743",
+          "name": "activatedAt",
+          "type": 10
+        },
+        {
+          "id": "19:5541838562246388199",
+          "name": "usedAt",
+          "type": 10
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "2:3634553643630346782",
-  "lastIndexId": "9:5882549834817156367",
+  "lastEntityId": "3:5423840136445481324",
+  "lastIndexId": "15:8678279675979701138",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
