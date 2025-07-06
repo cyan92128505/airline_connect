@@ -66,6 +66,7 @@ dependencies:
   flutter_screenutil: ^5.9.3
   path: ^1.9.1
   flutter_riverpod: ^2.6.1
+  injectable: ^2.5.0
 
 dev_dependencies:
   flutter_test:
