@@ -1,3 +1,6 @@
+import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
+import 'package:app/features/flight/repositories/flight_repository.dart';
+import 'package:app/features/flight/services/flight_status_service.dart';
 import 'package:app/features/member/application/services/member_application_service.dart';
 import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
 import 'package:app/features/member/application/use_cases/get_member_profile_use_case.dart';
@@ -81,4 +84,16 @@ final memberApplicationServiceProvider = Provider<MemberApplicationService>((
     ref.watch(upgradeMemberTierUseCaseProvider),
     ref.watch(validateMemberEligibilityUseCaseProvider),
   );
+});
+
+/// Repository providers
+final flightRepositoryProvider = Provider<FlightRepository>((ref) {
+  final objectBox = ref.watch(objectBoxProvider);
+  return FlightRepositoryImpl(objectBox);
+});
+
+/// Service providers
+final flightStatusServiceProvider = Provider<FlightStatusService>((ref) {
+  final flightRepository = ref.watch(flightRepositoryProvider);
+  return FlightStatusService(flightRepository);
 });
