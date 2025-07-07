@@ -10,10 +10,10 @@ import 'package:app/features/boarding_pass/repositories/boarding_pass_repository
 import 'package:app/features/boarding_pass/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/value_objects/seat_number.dart';
 import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
-import 'package:app/features/member/entities/member.dart';
-import 'package:app/features/member/enums/member_tier.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/value_objects/flight_schedule.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
 import 'package:app/core/failures/failure.dart';
 
 import 'boarding_pass_service_test.mocks.dart';

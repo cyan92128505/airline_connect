@@ -4,7 +4,7 @@ import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
 import 'package:app/core/failures/failure.dart';
 import 'package:app/features/member/application/use_cases/validate_member_eligibility_use_case.dart';
-import 'package:app/features/member/services/member_auth_service.dart';
+import 'package:app/features/member/domain/services/member_auth_service.dart';
 
 import 'validate_member_eligibility_use_case_test.mocks.dart';
 

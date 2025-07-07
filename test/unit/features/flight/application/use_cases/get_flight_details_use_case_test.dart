@@ -1,9 +1,9 @@
 import 'package:app/core/failures/failure.dart';
 import 'package:app/features/flight/application/use_cases/get_flight_details_use_case.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/repositories/flight_repository.dart';
-import 'package:app/features/flight/value_objects/flight_number.dart';
-import 'package:app/features/flight/value_objects/flight_schedule.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/repositories/flight_repository.dart';
+import 'package:app/features/flight/domain/value_objects/flight_number.dart';
+import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';

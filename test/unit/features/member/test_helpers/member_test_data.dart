@@ -1,7 +1,7 @@
 import 'package:app/features/member/application/dtos/authentication_dto.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/member/entities/member.dart';
-import 'package:app/features/member/enums/member_tier.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
 
 /// Test data factory for member-related tests
 /// Provides consistent test data across all test files

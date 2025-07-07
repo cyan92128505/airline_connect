@@ -1,9 +1,9 @@
 import 'package:app/core/failures/failure.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/enums/flight_status.dart';
 import 'package:app/features/flight/infrastructure/entities/flight_entity.dart';
-import 'package:app/features/flight/repositories/flight_repository.dart';
-import 'package:app/features/flight/value_objects/flight_number.dart';
+import 'package:app/features/flight/domain/repositories/flight_repository.dart';
+import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
 import 'package:app/objectbox.g.dart';
 import 'package:dartz/dartz.dart';

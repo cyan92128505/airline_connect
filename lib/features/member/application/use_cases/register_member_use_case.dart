@@ -2,10 +2,10 @@ import 'package:app/core/failures/failure.dart';
 import 'package:app/core/use_cases/use_case.dart';
 import 'package:app/features/member/application/dtos/authentication_dto.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/member/entities/member.dart';
-import 'package:app/features/member/enums/member_tier.dart';
-import 'package:app/features/member/repositories/member_repository.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 

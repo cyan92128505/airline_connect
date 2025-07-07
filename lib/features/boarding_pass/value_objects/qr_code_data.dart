@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:app/features/flight/value_objects/flight_number.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
+import 'package:app/features/flight/domain/value_objects/flight_number.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:crypto/crypto.dart';
 import 'package:timezone/timezone.dart';
 import 'pass_id.dart';

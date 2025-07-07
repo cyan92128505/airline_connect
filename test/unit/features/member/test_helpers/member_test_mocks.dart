@@ -1,6 +1,6 @@
 import 'package:mockito/annotations.dart';
-import 'package:app/features/member/repositories/member_repository.dart';
-import 'package:app/features/member/services/member_auth_service.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/services/member_auth_service.dart';
 import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
 import 'package:app/features/member/application/use_cases/get_member_profile_use_case.dart';
 import 'package:app/features/member/application/use_cases/register_member_use_case.dart';

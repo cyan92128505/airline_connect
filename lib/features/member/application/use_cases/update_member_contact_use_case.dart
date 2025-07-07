@@ -1,8 +1,8 @@
 import 'package:app/core/failures/failure.dart';
 import 'package:app/core/use_cases/use_case.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/member/repositories/member_repository.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';

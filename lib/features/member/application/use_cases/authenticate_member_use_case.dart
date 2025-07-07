@@ -2,8 +2,8 @@ import 'package:app/core/failures/failure.dart';
 import 'package:app/core/use_cases/use_case.dart';
 import 'package:app/features/member/application/dtos/authentication_dto.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/member/services/member_auth_service.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
+import 'package:app/features/member/domain/services/member_auth_service.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 

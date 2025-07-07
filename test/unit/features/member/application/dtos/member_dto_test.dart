@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/member/entities/member.dart';
-import 'package:app/features/member/enums/member_tier.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
 
 void main() {
   setUpAll(() {

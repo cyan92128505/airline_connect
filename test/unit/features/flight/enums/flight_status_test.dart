@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/domain/enums/flight_status.dart';
 
 void main() {
   group('FlightStatus Enum Tests', () {

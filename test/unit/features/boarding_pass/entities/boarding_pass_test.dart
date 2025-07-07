@@ -5,8 +5,8 @@ import 'package:app/features/boarding_pass/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/value_objects/seat_number.dart';
 import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
 import 'package:app/features/boarding_pass/enums/pass_status.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
-import 'package:app/features/flight/value_objects/flight_number.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
+import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:app/core/exceptions/domain_exception.dart';
 
 void main() {

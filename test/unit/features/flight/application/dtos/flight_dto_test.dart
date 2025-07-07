@@ -1,7 +1,7 @@
 import 'package:app/features/flight/application/dtos/flight_dto.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/enums/flight_status.dart';
-import 'package:app/features/flight/value_objects/flight_schedule.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/enums/flight_status.dart';
+import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;

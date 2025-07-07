@@ -1,9 +1,9 @@
 import 'package:app/core/failures/failure.dart';
-import 'package:app/features/member/entities/member.dart';
-import 'package:app/features/member/enums/member_tier.dart';
-import 'package:app/features/member/repositories/member_repository.dart';
-import 'package:app/features/member/services/member_auth_service.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/services/member_auth_service.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';

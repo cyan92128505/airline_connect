@@ -12,7 +12,7 @@ import 'package:app/features/member/application/use_cases/register_member_use_ca
 import 'package:app/features/member/application/use_cases/update_member_contact_use_case.dart';
 import 'package:app/features/member/application/use_cases/upgrade_member_tier_use_case.dart';
 import 'package:app/features/member/application/use_cases/validate_member_eligibility_use_case.dart';
-import 'package:app/features/member/enums/member_tier.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
 
 import 'member_application_service_test.mocks.dart';
 

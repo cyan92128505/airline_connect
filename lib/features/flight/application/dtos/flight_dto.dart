@@ -1,5 +1,5 @@
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/enums/flight_status.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'flight_dto.freezed.dart';

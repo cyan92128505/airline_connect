@@ -1,6 +1,6 @@
-import 'package:app/features/flight/value_objects/airport_code.dart';
-import 'package:app/features/flight/value_objects/flight_schedule.dart';
-import 'package:app/features/flight/value_objects/gate.dart';
+import 'package:app/features/flight/domain/value_objects/airport_code.dart';
+import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
+import 'package:app/features/flight/domain/value_objects/gate.dart';
 import 'package:timezone/timezone.dart';
 
 class FlightScheduleSnapshot {

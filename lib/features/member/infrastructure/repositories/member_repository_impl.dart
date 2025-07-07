@@ -1,9 +1,9 @@
 import 'package:app/core/failures/failure.dart';
-import 'package:app/features/member/entities/member.dart';
+import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/infrastructure/entities/member_entity.dart';
-import 'package:app/features/member/repositories/member_repository.dart';
-import 'package:app/features/member/value_objects/member_id.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/value_objects/member_id.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
 import 'package:app/objectbox.g.dart';
 import 'package:dartz/dartz.dart';

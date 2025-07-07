@@ -1,4 +1,4 @@
-import 'package:app/features/member/enums/member_tier.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

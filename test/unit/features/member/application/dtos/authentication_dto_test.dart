@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app/features/member/application/dtos/authentication_dto.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/member/enums/member_tier.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
 
 void main() {
   group('AuthenticationRequestDTO Tests', () {

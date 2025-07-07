@@ -4,12 +4,12 @@ import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
-import 'package:app/features/flight/services/flight_status_service.dart';
-import 'package:app/features/flight/repositories/flight_repository.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/value_objects/flight_number.dart';
-import 'package:app/features/flight/value_objects/flight_schedule.dart';
-import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/domain/services/flight_status_service.dart';
+import 'package:app/features/flight/domain/repositories/flight_repository.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/value_objects/flight_number.dart';
+import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
+import 'package:app/features/flight/domain/enums/flight_status.dart';
 import 'package:app/core/failures/failure.dart';
 
 import 'flight_status_service_test.mocks.dart';

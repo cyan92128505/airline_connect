@@ -4,7 +4,7 @@ import 'package:app/features/flight/application/dtos/flight_search_dto.dart';
 import 'package:app/features/flight/application/services/flight_support_service.dart';
 import 'package:app/features/flight/application/use_cases/get_flight_details_use_case.dart';
 import 'package:app/features/flight/application/use_cases/search_available_flights_use_case.dart';
-import 'package:app/features/flight/enums/flight_status.dart';
+import 'package:app/features/flight/domain/enums/flight_status.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';

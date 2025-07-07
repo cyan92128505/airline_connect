@@ -3,9 +3,9 @@ import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
 import 'package:app/features/member/application/use_cases/upgrade_member_tier_use_case.dart';
-import 'package:app/features/member/repositories/member_repository.dart';
-import 'package:app/features/member/entities/member.dart';
-import 'package:app/features/member/enums/member_tier.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
 import 'upgrade_member_tier_use_case_test.mocks.dart';

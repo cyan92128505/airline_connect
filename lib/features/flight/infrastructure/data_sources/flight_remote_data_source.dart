@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:app/core/exceptions/domain_exception.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/enums/flight_status.dart';
-import 'package:app/features/flight/value_objects/flight_number.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/enums/flight_status.dart';
+import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:http/http.dart' as http;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:logger/logger.dart';

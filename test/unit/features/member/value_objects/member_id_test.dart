@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/member/value_objects/member_id.dart';
+import 'package:app/features/member/domain/value_objects/member_id.dart';
 import 'package:app/core/exceptions/domain_exception.dart';
 
 void main() {

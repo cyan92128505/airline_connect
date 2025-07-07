@@ -3,9 +3,9 @@ import 'package:app/core/failures/failure.dart';
 import 'package:app/core/use_cases/use_case.dart';
 import 'package:app/features/flight/application/dtos/flight_dto.dart';
 import 'package:app/features/flight/application/dtos/flight_search_dto.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/flight/repositories/flight_repository.dart';
-import 'package:app/features/flight/value_objects/airport_code.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/flight/domain/repositories/flight_repository.dart';
+import 'package:app/features/flight/domain/value_objects/airport_code.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 

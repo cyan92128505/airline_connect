@@ -1,6 +1,6 @@
 import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
-import 'package:app/features/flight/repositories/flight_repository.dart';
-import 'package:app/features/flight/services/flight_status_service.dart';
+import 'package:app/features/flight/domain/repositories/flight_repository.dart';
+import 'package:app/features/flight/domain/services/flight_status_service.dart';
 import 'package:app/features/member/application/services/member_application_service.dart';
 import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
 import 'package:app/features/member/application/use_cases/get_member_profile_use_case.dart';
@@ -9,8 +9,8 @@ import 'package:app/features/member/application/use_cases/update_member_contact_
 import 'package:app/features/member/application/use_cases/upgrade_member_tier_use_case.dart';
 import 'package:app/features/member/application/use_cases/validate_member_eligibility_use_case.dart';
 import 'package:app/features/member/infrastructure/repositories/member_repository_impl.dart';
-import 'package:app/features/member/repositories/member_repository.dart';
-import 'package:app/features/member/services/member_auth_service.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/services/member_auth_service.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

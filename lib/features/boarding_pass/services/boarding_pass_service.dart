@@ -5,9 +5,9 @@ import 'package:app/features/boarding_pass/repositories/boarding_pass_repository
 import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
 import 'package:app/features/boarding_pass/value_objects/pass_id.dart';
 import 'package:app/features/boarding_pass/value_objects/seat_number.dart';
-import 'package:app/features/flight/entities/flight.dart';
-import 'package:app/features/member/entities/member.dart';
-import 'package:app/features/member/value_objects/member_number.dart';
+import 'package:app/features/flight/domain/entities/flight.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
 import 'package:timezone/timezone.dart';
 
