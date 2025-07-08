@@ -20,23 +20,23 @@ class PassId {
     if (id.isEmpty) {
       throw DomainException('Pass ID cannot be empty');
     }
-
-    if (!id.startsWith('BP')) {
+    final trimedID = id.trim();
+    if (!trimedID.startsWith('BP')) {
       throw DomainException('Pass ID must start with "BP"');
     }
 
-    if (id.length != 10) {
+    if (trimedID.length != 10) {
       throw DomainException(
         'Pass ID must be 10 characters long (BP + 8 chars)',
       );
     }
 
     final regex = RegExp(r'^BP[A-Z0-9]{8}$');
-    if (!regex.hasMatch(id)) {
+    if (!regex.hasMatch(trimedID)) {
       throw DomainException('Invalid pass ID format');
     }
 
-    return PassId(id);
+    return PassId(trimedID);
   }
 
   @override
