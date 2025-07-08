@@ -1,7 +1,7 @@
-import 'package:app/features/boarding_pass/entities/boarding_pass.dart';
-import 'package:app/features/boarding_pass/enums/pass_status.dart';
-import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
-import 'package:app/features/boarding_pass/value_objects/qr_code_data.dart';
+import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
+import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/flight_schedule_snapshot.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:timezone/timezone.dart' as tz;
 

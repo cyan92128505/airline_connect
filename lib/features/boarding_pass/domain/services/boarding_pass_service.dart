@@ -1,10 +1,10 @@
 import 'package:app/core/exceptions/domain_exception.dart';
 import 'package:app/core/failures/failure.dart';
-import 'package:app/features/boarding_pass/entities/boarding_pass.dart';
-import 'package:app/features/boarding_pass/repositories/boarding_pass_repository.dart';
-import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
-import 'package:app/features/boarding_pass/value_objects/pass_id.dart';
-import 'package:app/features/boarding_pass/value_objects/seat_number.dart';
+import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
+import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/flight_schedule_snapshot.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/seat_number.dart';
 import 'package:app/features/flight/domain/entities/flight.dart';
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';

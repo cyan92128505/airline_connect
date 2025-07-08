@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/boarding_pass/value_objects/seat_number.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/seat_number.dart';
 import 'package:app/core/exceptions/domain_exception.dart';
 
 void main() {

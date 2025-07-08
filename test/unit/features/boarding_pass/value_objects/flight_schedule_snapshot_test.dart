@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
-import 'package:app/features/boarding_pass/value_objects/flight_schedule_snapshot.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/flight_schedule_snapshot.dart';
 import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
 import 'package:app/features/flight/domain/value_objects/airport_code.dart';
 import 'package:app/features/flight/domain/value_objects/gate.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/features/boarding_pass/enums/pass_status.dart';
+import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
 
 void main() {
   group('PassStatus Enum Tests', () {

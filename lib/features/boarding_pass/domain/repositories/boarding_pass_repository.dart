@@ -1,6 +1,6 @@
 import 'package:app/core/failures/failure.dart';
-import 'package:app/features/boarding_pass/entities/boarding_pass.dart';
-import 'package:app/features/boarding_pass/value_objects/pass_id.dart';
+import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
 import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
