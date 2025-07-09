@@ -53,3 +53,8 @@ app.*.map.json
 .fvm/
 
 /temp
+
+/download
+
+*.result
+*.diff
