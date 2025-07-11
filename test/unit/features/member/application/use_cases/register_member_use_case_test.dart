@@ -35,6 +35,7 @@ void main() {
       );
 
       when(mockRepository.exists(any)).thenAnswer((_) async => Right(false));
+      // ignore: void_checks
       when(mockRepository.save(any)).thenAnswer((_) async => Right(unit));
 
       // Act

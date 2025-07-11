@@ -43,6 +43,7 @@ void main() {
       when(
         mockRepository.findByMemberNumber(any),
       ).thenAnswer((_) async => Right(member));
+      // ignore: void_checks
       when(mockRepository.save(any)).thenAnswer((_) async => Right(unit));
 
       // Act
