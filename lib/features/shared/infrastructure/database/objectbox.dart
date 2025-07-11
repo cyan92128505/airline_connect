@@ -74,6 +74,11 @@ class ObjectBox {
     return ObjectBox._create(store);
   }
 
+  /// Reset database for testing purposes
+  static ObjectBox createFromStore(Store store) {
+    return ObjectBox._create(store);
+  }
+
   /// Cleanup test database
   static Future<void> cleanupTest(
     ObjectBox objectBox, [
