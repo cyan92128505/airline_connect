@@ -92,7 +92,7 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
     try {
       // Access Riverpod-managed service
       final boardingPassService = ref.read(
-        boardingPassApplicationServiceProvider,
+        boardingPassApplicationServiceRefProvider,
       );
 
       final result = await boardingPassService.getBoardingPassesForMember(
@@ -126,7 +126,7 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
 
     try {
       final boardingPassService = ref.read(
-        boardingPassApplicationServiceProvider,
+        boardingPassApplicationServiceRefProvider,
       );
       final result = await boardingPassService.activateBoardingPass(passId);
 
@@ -184,7 +184,7 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
 
     try {
       final boardingPassService = ref.read(
-        boardingPassApplicationServiceProvider,
+        boardingPassApplicationServiceRefProvider,
       );
       final result = await boardingPassService.validateQRCode(
         encryptedPayload: encryptedPayload,
