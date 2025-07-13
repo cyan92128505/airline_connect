@@ -30,27 +30,32 @@ class MemberAuthService {
         memberNumberVO,
       );
 
-      return memberResult.fold((failure) => Left(failure), (member) {
-        if (member == null) {
-          return Left(NotFoundFailure('Member not found'));
-        }
+      return memberResult.fold(
+        (failure) {
+          return Left(failure);
+        },
+        (member) {
+          if (member == null) {
+            return Left(NotFoundFailure('Member not found'));
+          }
 
-        // Validate name suffix
-        if (!member.validateNameSuffix(nameSuffix)) {
-          return Left(AuthenticationFailure('Invalid name suffix'));
-        }
+          // Validate name suffix
+          if (!member.validateNameSuffix(nameSuffix)) {
+            return Left(AuthenticationFailure('Invalid name suffix'));
+          }
 
-        // Check if member is eligible
-        if (!member.isEligibleForBoardingPass()) {
-          return Left(AuthenticationFailure('Member account is suspended'));
-        }
+          // Check if member is eligible
+          if (!member.isEligibleForBoardingPass()) {
+            return Left(AuthenticationFailure('Member account is suspended'));
+          }
 
-        // Update last login and return
-        final updatedMember = member.updateLastLogin();
-        _memberRepository.save(updatedMember); // Fire and forget
+          // Update last login and return
+          final updatedMember = member.updateLastLogin();
+          _memberRepository.save(updatedMember); // Fire and forget
 
-        return Right(updatedMember);
-      });
+          return Right(updatedMember);
+        },
+      );
     } on DomainException catch (e) {
       return Left(ValidationFailure(e.message));
     } catch (e) {
