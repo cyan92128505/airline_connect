@@ -10,15 +10,23 @@ import 'package:dartz/dartz.dart';
 import 'package:logger/logger.dart';
 
 /// Concrete implementation of MemberRepository using ObjectBox
-/// Follows official ObjectBox repository patterns
 class MemberRepositoryImpl implements MemberRepository {
   static final Logger _logger = Logger();
 
   final ObjectBox _objectBox;
-  late final Box<MemberEntity> _memberBox;
 
   MemberRepositoryImpl(this._objectBox) {
-    _memberBox = _objectBox.memberBox;
+    _logger.d('MemberRepositoryImpl initialized with lazy ObjectBox strategy');
+  }
+
+  /// Safe access to member box with validation
+  Box<MemberEntity> get _memberBox {
+    try {
+      return _objectBox.memberBox;
+    } catch (e) {
+      _logger.e('Failed to access member box: $e');
+      throw StateError('Member box is not accessible: $e');
+    }
   }
 
   @override
@@ -27,6 +35,11 @@ class MemberRepositoryImpl implements MemberRepository {
   ) async {
     try {
       _logger.d('Finding member by number: ${memberNumber.value}');
+
+      // Validate ObjectBox health before operation
+      if (!_objectBox.isHealthy()) {
+        throw StateError('ObjectBox is not healthy');
+      }
 
       // Use ObjectBox query builder with proper indexing
       final query = _memberBox
@@ -55,7 +68,16 @@ class MemberRepositoryImpl implements MemberRepository {
         error: e,
         stackTrace: stackTrace,
       );
-      return Left(DatabaseFailure('Failed to find member: $e'));
+
+      // Enhanced error context
+      final errorContext = _buildErrorContext('findByMemberNumber', {
+        'memberNumber': memberNumber.value,
+        'objectBoxStats': _objectBox.getStatistics(),
+      });
+
+      return Left(
+        DatabaseFailure('Failed to find member: $e\nContext: $errorContext'),
+      );
     }
   }
 
@@ -63,6 +85,10 @@ class MemberRepositoryImpl implements MemberRepository {
   Future<Either<Failure, Member?>> findById(MemberId memberId) async {
     try {
       _logger.d('Finding member by ID: ${memberId.value}');
+
+      if (!_objectBox.isHealthy()) {
+        throw StateError('ObjectBox is not healthy');
+      }
 
       final query = _memberBox
           .query(MemberEntity_.memberId.equals(memberId.value))
@@ -83,7 +109,15 @@ class MemberRepositoryImpl implements MemberRepository {
       }
     } catch (e, stackTrace) {
       _logger.e('Error finding member by ID', error: e, stackTrace: stackTrace);
-      return Left(DatabaseFailure('Failed to find member: $e'));
+
+      final errorContext = _buildErrorContext('findById', {
+        'memberId': memberId.value,
+        'objectBoxStats': _objectBox.getStatistics(),
+      });
+
+      return Left(
+        DatabaseFailure('Failed to find member: $e\nContext: $errorContext'),
+      );
     }
   }
 
@@ -91,6 +125,10 @@ class MemberRepositoryImpl implements MemberRepository {
   Future<Either<Failure, void>> save(Member member) async {
     try {
       _logger.d('Saving member: ${member.memberId.value}');
+
+      if (!_objectBox.isHealthy()) {
+        throw StateError('ObjectBox is not healthy');
+      }
 
       // Use transaction for data consistency
       _objectBox.store.runInTransaction(TxMode.write, () {
@@ -121,7 +159,15 @@ class MemberRepositoryImpl implements MemberRepository {
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e('Error saving member', error: e, stackTrace: stackTrace);
-      return Left(DatabaseFailure('Failed to save member: $e'));
+
+      final errorContext = _buildErrorContext('save', {
+        'memberId': member.memberId.value,
+        'objectBoxStats': _objectBox.getStatistics(),
+      });
+
+      return Left(
+        DatabaseFailure('Failed to save member: $e\nContext: $errorContext'),
+      );
     }
   }
 
@@ -135,6 +181,10 @@ class MemberRepositoryImpl implements MemberRepository {
   Future<Either<Failure, bool>> exists(MemberNumber memberNumber) async {
     try {
       _logger.d('Checking if member exists: ${memberNumber.value}');
+
+      if (!_objectBox.isHealthy()) {
+        throw StateError('ObjectBox is not healthy');
+      }
 
       final query = _memberBox
           .query(MemberEntity_.memberNumber.equals(memberNumber.value))
@@ -155,7 +205,17 @@ class MemberRepositoryImpl implements MemberRepository {
         error: e,
         stackTrace: stackTrace,
       );
-      return Left(DatabaseFailure('Failed to check member existence: $e'));
+
+      final errorContext = _buildErrorContext('exists', {
+        'memberNumber': memberNumber.value,
+        'objectBoxStats': _objectBox.getStatistics(),
+      });
+
+      return Left(
+        DatabaseFailure(
+          'Failed to check member existence: $e\nContext: $errorContext',
+        ),
+      );
     }
   }
 
@@ -164,12 +224,11 @@ class MemberRepositoryImpl implements MemberRepository {
     try {
       _logger.d('Syncing members with server');
 
-      // Placeholder for server sync implementation
-      // In real implementation, this would:
-      // 1. Fetch data from server
-      // 2. Compare with local data
-      // 3. Perform batch operations using transactions
+      if (!_objectBox.isHealthy()) {
+        throw StateError('ObjectBox is not healthy');
+      }
 
+      // Placeholder for server sync implementation
       await _objectBox.store.runInTransactionAsync(TxMode.write, (
         store,
         p,
@@ -193,18 +252,33 @@ class MemberRepositoryImpl implements MemberRepository {
   /// Get reactive stream of members for UI updates
   /// Following ObjectBox streaming best practices
   Stream<List<Member>> watchMembers() {
-    return _memberBox
-        .query()
-        .watch(triggerImmediately: true)
-        .map(
-          (query) => query.find().map((entity) => entity.toDomain()).toList(),
-        );
+    try {
+      if (!_objectBox.isHealthy()) {
+        _logger.w('ObjectBox is not healthy, returning empty stream');
+        return Stream.value([]);
+      }
+
+      return _memberBox
+          .query()
+          .watch(triggerImmediately: true)
+          .map(
+            (query) => query.find().map((entity) => entity.toDomain()).toList(),
+          );
+    } catch (e, stackTrace) {
+      _logger.e('Error in watchMembers', error: e, stackTrace: stackTrace);
+      // Return empty stream on error
+      return Stream.value([]);
+    }
   }
 
   /// Bulk save operation using transactions for performance
   Future<Either<Failure, void>> saveMany(List<Member> members) async {
     try {
       _logger.d('Bulk saving ${members.length} members');
+
+      if (!_objectBox.isHealthy()) {
+        throw StateError('ObjectBox is not healthy');
+      }
 
       await _objectBox.store.runInTransactionAsync(TxMode.write, (s, p) async {
         final entities = members.map(MemberEntity.fromDomain).toList();
@@ -215,7 +289,62 @@ class MemberRepositoryImpl implements MemberRepository {
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e('Error in bulk save', error: e, stackTrace: stackTrace);
-      return Left(DatabaseFailure('Failed to save members: $e'));
+
+      final errorContext = _buildErrorContext('saveMany', {
+        'memberCount': members.length,
+        'objectBoxStats': _objectBox.getStatistics(),
+      });
+
+      return Left(
+        DatabaseFailure('Failed to save members: $e\nContext: $errorContext'),
+      );
+    }
+  }
+
+  /// Build comprehensive error context for debugging
+  String _buildErrorContext(String operation, Map<String, dynamic> details) {
+    final context = {
+      'operation': operation,
+      'timestamp': DateTime.now().toIso8601String(),
+      'objectBoxHealth': _objectBox.isHealthy(),
+      ...details,
+    };
+
+    return context.entries.map((e) => '${e.key}: ${e.value}').join(', ');
+  }
+
+  /// Additional diagnostic methods for troubleshooting
+
+  /// Get repository health status
+  Map<String, dynamic> getHealthStatus() {
+    return {
+      'repositoryStatus': 'active',
+      'objectBoxHealth': _objectBox.isHealthy(),
+      'objectBoxStats': _objectBox.getStatistics(),
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /// Force member box reinitialization (for emergency recovery)
+  Future<Either<Failure, void>> reinitializeMemberBox() async {
+    try {
+      _logger.w('Force reinitializing member box');
+
+      // This will trigger lazy reinitialization on next access
+      // The new ObjectBox implementation handles this automatically
+
+      // Test access to ensure it works
+      _memberBox.isEmpty();
+
+      _logger.i('Member box reinitialized successfully');
+      return const Right(null);
+    } catch (e, stackTrace) {
+      _logger.e(
+        'Failed to reinitialize member box',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return Left(DatabaseFailure('Failed to reinitialize member box: $e'));
     }
   }
 }
