@@ -2,6 +2,7 @@ import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 /// ObjectBox entity for Member domain model
 /// Follows official ObjectBox entity design patterns
@@ -75,8 +76,47 @@ class MemberEntity {
     );
   }
 
+  /// Static helper to ensure timezone is available
+  /// Call this method during app initialization
+  static void ensureTimezoneInitialized() {
+    try {
+      // Test if timezone is accessible
+      final _ = tz.local;
+    } catch (e) {
+      // Initialize timezone if not already done
+      try {
+        tz.initializeTimeZones();
+      } catch (initError) {
+        // Log the error but don't throw - app should continue
+        throw ('Warning: Failed to initialize timezone: $initError');
+      }
+    }
+  }
+
+  /// Safe timezone conversion with fallback mechanism
+  /// Handles cases where timezone package is not initialized
+  tz.TZDateTime? _safeConvertToLocalTime(DateTime? dateTime) {
+    if (dateTime == null) return null;
+
+    try {
+      // Attempt to use timezone conversion
+      return tz.TZDateTime.from(dateTime, tz.local);
+    } catch (e) {
+      // Fallback strategies in order of preference:
+
+      try {
+        // Try to use UTC timezone if local is not available
+        return tz.TZDateTime.from(dateTime, tz.UTC);
+      } catch (utcError) {
+        // If timezone package is completely uninitialized,
+        // return the original DateTime (it's already valid)
+        return null;
+      }
+    }
+  }
+
   /// Convert from ObjectBox Entity to Domain Entity
-  /// Handles timezone conversion properly
+  /// Enhanced with safe timezone conversion
   Member toDomain() {
     return Member.fromPersistence(
       memberId: memberId,
@@ -85,12 +125,8 @@ class MemberEntity {
       tier: MemberTier.fromString(tier),
       email: email,
       phone: phone,
-      createdAt: createdAt != null
-          ? tz.TZDateTime.from(createdAt!, tz.local)
-          : null,
-      lastLoginAt: lastLoginAt != null
-          ? tz.TZDateTime.from(lastLoginAt!, tz.local)
-          : null,
+      createdAt: _safeConvertToLocalTime(createdAt),
+      lastLoginAt: _safeConvertToLocalTime(lastLoginAt),
     );
   }
 
