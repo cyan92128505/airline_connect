@@ -56,7 +56,7 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final memberService = ref.read(memberApplicationServiceProvider);
+      final memberService = ref.read(memberApplicationServiceRefProvider);
       final result = await memberService.authenticateMember(
         memberNumber: memberNumber.trim(),
         nameSuffix: nameSuffix.trim(),
@@ -121,7 +121,7 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
     state = state.copyWith(isLoading: true);
 
     try {
-      final memberService = ref.read(memberApplicationServiceProvider);
+      final memberService = ref.read(memberApplicationServiceRefProvider);
       final result = await memberService.getMemberProfile(
         state.member!.memberNumber,
       );
