@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/member/presentation/widgets/member_auth_form.dart';
@@ -10,23 +9,16 @@ import 'package:gap/gap.dart';
 
 /// Member authentication screen for login
 class MemberAuthScreen extends HookConsumerWidget {
+  static const Key errorMessageKey = Key('error_message');
+  static const Key validationErrorKey = Key('validation_error');
+  static const Key successMessageKey = Key('success_message');
+
   const MemberAuthScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(memberAuthNotifierProvider);
     final authNotifier = ref.read(memberAuthNotifierProvider.notifier);
-
-    // Auto-clear error after some time
-    useEffect(() {
-      if (authState.hasError) {
-        final timer = Future.delayed(const Duration(seconds: 5), () {
-          authNotifier.clearError();
-        });
-        return () => timer.ignore();
-      }
-      return null;
-    }, [authState.errorMessage]);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -35,18 +27,17 @@ class MemberAuthScreen extends HookConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
-              const Gap(60),
-
-              // Header section
-              _buildHeader(),
-
-              const Gap(48),
-
               // Authentication form
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
+                      const Gap(60),
+
+                      // Header section
+                      _buildHeader(),
+
+                      const Gap(48),
                       // Form card
                       Card(
                         elevation: 2,
@@ -99,6 +90,7 @@ class MemberAuthScreen extends HookConsumerWidget {
                       // Error display
                       if (authState.hasError)
                         ErrorDisplay(
+                          key: errorMessageKey,
                           message: authState.errorMessage!,
                           onRetry: () => authNotifier.clearError(),
                         ),
@@ -147,7 +139,7 @@ class MemberAuthScreen extends HookConsumerWidget {
         const Gap(16),
 
         Text(
-          'AirlineConnect',
+          'Airline Connect',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
@@ -195,7 +187,7 @@ class MemberAuthScreen extends HookConsumerWidget {
 
             const Gap(8),
 
-            _buildCredentialRow(context, '姓名後四碼：', '1234'),
+            _buildCredentialRow(context, '姓名後四碼：', 'Aoma'),
 
             const Gap(12),
 
