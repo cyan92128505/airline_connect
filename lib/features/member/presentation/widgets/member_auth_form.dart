@@ -6,6 +6,10 @@ import 'package:gap/gap.dart';
 
 /// Form widget for member authentication
 class MemberAuthForm extends HookWidget {
+  static const Key memberNumberFieldKey = Key('member_number_field');
+  static const Key nameSuffixFieldKey = Key('name_suffix_field');
+  static const Key submitButtonKey = Key('submit_button');
+
   final bool isLoading;
   final Function(String memberNumber, String nameSuffix) onSubmit;
 
@@ -27,7 +31,7 @@ class MemberAuthForm extends HookWidget {
     useEffect(() {
       // Pre-fill demo credentials for easier testing
       memberNumberController.text = 'AA123456';
-      nameSuffixController.text = '1234';
+      nameSuffixController.text = 'Aoma';
       return null;
     }, []);
 
@@ -68,6 +72,7 @@ class MemberAuthForm extends HookWidget {
 
           // Submit button
           ElevatedButton(
+            key: submitButtonKey,
             onPressed: isLoading ? null : handleSubmit,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -113,11 +118,12 @@ class MemberAuthForm extends HookWidget {
     required FocusNode nextFocus,
   }) {
     return TextFormField(
+      key: memberNumberFieldKey,
       controller: controller,
       focusNode: focusNode,
       decoration: InputDecoration(
         labelText: '會員號碼',
-        hintText: '例如：AA123456',
+        hintText: '請輸入會員號碼',
         prefixIcon: Icon(Icons.person_outline, color: AppColors.primary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -174,11 +180,12 @@ class MemberAuthForm extends HookWidget {
     required Function(String) onSubmitted,
   }) {
     return TextFormField(
+      key: nameSuffixFieldKey,
       controller: controller,
       focusNode: focusNode,
       decoration: InputDecoration(
         labelText: '姓名後四碼',
-        hintText: '請輸入姓名後四個字元',
+        hintText: '請輸入姓名後四碼',
         prefixIcon: Icon(Icons.security_outlined, color: AppColors.primary),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
