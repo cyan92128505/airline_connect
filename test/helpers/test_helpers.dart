@@ -1,5 +1,4 @@
-import 'package:app/features/boarding_pass/presentation/providers/boarding_pass_provider.dart';
-import 'package:app/features/member/presentation/providers/member_auth_provider.dart';
+import 'package:app/core/di/dependency_injection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
