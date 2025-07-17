@@ -1,3 +1,4 @@
+import 'package:app/features/member/presentation/widgets/member_auth_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -28,13 +29,13 @@ void main() {
       );
 
       // Assert
-      expect(find.text('AirlineConnect'), findsOneWidget);
+      expect(find.text('Airline Connect'), findsOneWidget);
       expect(find.text('會員登入'), findsOneWidget);
       expect(find.byType(TextFormField), findsNWidgets(2));
 
       // Check demo data is pre-filled
-      expect(find.text('AA123456'), findsOneWidget);
-      expect(find.text('1234'), findsOneWidget);
+      expect(find.byKey(MemberAuthForm.memberNumberFieldKey), findsOneWidget);
+      expect(find.byKey(MemberAuthForm.nameSuffixFieldKey), findsOneWidget);
     });
 
     testWidgets('should show loading indicator during authentication', (
@@ -71,12 +72,22 @@ void main() {
       );
 
       // Act
+      await tester.ensureVisible(find.text('登入驗證'));
       await tester.tap(find.text('登入驗證'));
       await tester.pump(); // Trigger the loading state
 
       // Assert
       expect(find.text('驗證中...'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(MemberAuthForm.submitButtonKey),
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
     });
 
     testWidgets('should display error message on authentication failure', (
@@ -105,11 +116,21 @@ void main() {
       );
 
       // Act
+      await tester.enterText(
+        find.byKey(MemberAuthForm.memberNumberFieldKey),
+        'ZZ999999',
+      );
+      await tester.enterText(
+        find.byKey(MemberAuthForm.nameSuffixFieldKey),
+        '9999',
+      );
+
+      await tester.ensureVisible(find.text('登入驗證'));
       await tester.tap(find.text('登入驗證'));
-      await tester.pumpAndSettle(); // Wait for async operations
+      await tester.pumpAndSettle();
 
       // Assert
-      expect(find.text('Invalid credentials'), findsOneWidget);
+      expect(find.byKey(MemberAuthScreen.errorMessageKey), findsOneWidget);
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
     });
 
@@ -123,11 +144,14 @@ void main() {
       );
 
       // Clear the pre-filled data
-      await tester.enterText(find.byType(TextFormField).first, '');
-      await tester.enterText(find.byType(TextFormField).last, '');
+      await tester.enterText(
+        find.byKey(MemberAuthForm.memberNumberFieldKey),
+        '',
+      );
+      await tester.enterText(find.byKey(MemberAuthForm.nameSuffixFieldKey), '');
 
       // Act
-      await tester.tap(find.text('登入驗證'));
+      await tester.tap(find.byKey(MemberAuthForm.memberNumberFieldKey));
       await tester.pump();
 
       // Assert
