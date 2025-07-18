@@ -219,17 +219,35 @@ class ObjectBox {
 
       // Use transaction for safety
       store.runInTransaction(TxMode.write, () {
-        memberBox.removeAll();
+        // Check if demo member already exists instead of removing all
+        final existingQuery = memberBox.query(
+          MemberEntity_.memberNumber.equals('AA123456'),
+        );
+        final existingMembers = existingQuery.build().find();
 
-        final testMember = MemberEntity()
-          ..memberNumber = 'AA123456'
-          ..fullName = 'Shinku Aoma'
-          ..email = 'test@example.com'
-          ..phone = '+886912345678'
-          ..tier = 'GOLD'
-          ..lastLoginAt = DateTime.now();
+        if (existingMembers.isNotEmpty) {
+          _logger.i('Demo member already exists, updating...');
+          // Update existing demo member
+          final existingMember = existingMembers.first;
+          existingMember.fullName = 'Shinku Aoma';
+          existingMember.email = 'test@example.com';
+          existingMember.phone = '+886912345678';
+          existingMember.tier = 'GOLD';
+          existingMember.lastLoginAt = DateTime.now();
+          memberBox.put(existingMember);
+        } else {
+          _logger.i('Creating new demo member...');
+          // Create new demo member only if it doesn't exist
+          final testMember = MemberEntity()
+            ..memberNumber = 'AA123456'
+            ..fullName = 'Shinku Aoma'
+            ..email = 'test@example.com'
+            ..phone = '+886912345678'
+            ..tier = 'GOLD'
+            ..lastLoginAt = DateTime.now();
 
-        memberBox.put(testMember);
+          memberBox.put(testMember);
+        }
       });
 
       _logger.i('Demo member setup completed successfully');
