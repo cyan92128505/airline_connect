@@ -1,6 +1,8 @@
+import 'package:app/core/constant/constant.dart';
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 part 'member_dto.freezed.dart';
 part 'member_dto.g.dart';
@@ -9,6 +11,7 @@ part 'member_dto.g.dart';
 /// Used for data exchange between Application and Presentation layers
 @freezed
 abstract class MemberDTO with _$MemberDTO {
+  const MemberDTO._();
   const factory MemberDTO({
     required String memberId,
     required String memberNumber,
@@ -22,6 +25,38 @@ abstract class MemberDTO with _$MemberDTO {
 
   factory MemberDTO.fromJson(Map<String, Object?> json) =>
       _$MemberDTOFromJson(json);
+
+  String get formatCreatedAt {
+    if (createdAt == null) {
+      return '';
+    }
+    try {
+      final tzDateTime = tz.TZDateTime.parse(
+        tz.getLocation(appDefaultLocation),
+        createdAt!,
+      );
+
+      return '${tzDateTime.year}/${tzDateTime.month.toString().padLeft(2, '0')}/${tzDateTime.day.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  String get formatLastLoginAt {
+    if (createdAt == null) {
+      return '';
+    }
+    try {
+      final tzDateTime = tz.TZDateTime.parse(
+        tz.getLocation(appDefaultLocation),
+        createdAt!,
+      );
+
+      return '${tzDateTime.year}/${tzDateTime.month.toString().padLeft(2, '0')}/${tzDateTime.day.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return '';
+    }
+  }
 }
 
 extension MemberDTOExtensions on MemberDTO {
