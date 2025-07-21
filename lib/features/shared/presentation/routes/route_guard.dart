@@ -19,7 +19,8 @@ class RouteGuard {
       return AppRoutes.memberAuth;
     }
 
-    // Redirect authenticated users from auth page to boarding pass
+    // Only redirect authenticated users from auth page to boarding pass
+    // Allow access to member profile for authenticated users
     if (isAuthenticated && currentPath == AppRoutes.memberAuth) {
       return AppRoutes.boardingPass;
     }
@@ -43,5 +44,15 @@ class RouteGuard {
       return isAuthenticated;
     }
     return true;
+  }
+
+  /// Check if authenticated user should be redirected from auth page
+  static bool shouldRedirectFromAuth(String currentPath, bool isAuthenticated) {
+    return isAuthenticated && currentPath == AppRoutes.memberAuth;
+  }
+
+  /// Get appropriate member route based on authentication state
+  static String getMemberRouteForState(bool isAuthenticated) {
+    return isAuthenticated ? AppRoutes.memberProfile : AppRoutes.memberAuth;
   }
 }
