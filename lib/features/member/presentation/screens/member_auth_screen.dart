@@ -1,3 +1,5 @@
+import 'package:app/features/shared/presentation/widgets/svg/logo.dart';
+import 'package:app/features/shared/presentation/widgets/svg/slogen.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
@@ -12,6 +14,7 @@ class MemberAuthScreen extends HookConsumerWidget {
   static const Key errorMessageKey = Key('error_message');
   static const Key validationErrorKey = Key('validation_error');
   static const Key successMessageKey = Key('success_message');
+  static const Key slogenWidgetKey = Key('slogen_widget');
 
   const MemberAuthScreen({super.key});
 
@@ -122,32 +125,13 @@ class MemberAuthScreen extends HookConsumerWidget {
     return Column(
       children: [
         // App logo placeholder
-        Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(
-            Icons.flight_takeoff,
-            color: Colors.white,
-            size: 40,
-          ),
-        ),
+        const LogoWidget(width: 80, height: 80),
 
         const Gap(16),
 
-        Text(
-          'Airline Connect',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
+        const SlogenWidget(key: slogenWidgetKey, height: 24),
 
-        const Gap(8),
+        const Gap(16),
 
         Text(
           '航空登機牌管理系統',
