@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:app/app/presentation/routes/navigation_service.dart';
+import 'package:app/features/shared/presentation/routes/navigation_service.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/shared/presentation/widgets/app_navigation_bar.dart';
 
@@ -14,6 +14,7 @@ class MainShell extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final memberAuthState = ref.watch(memberAuthNotifierProvider);
     final currentTabIndex = NavigationService.getCurrentTabIndex(context);
+    final isAuthenticated = memberAuthState.isAuthenticated;
 
     return Scaffold(
       body: Column(
@@ -27,8 +28,9 @@ class MainShell extends HookConsumerWidget {
       ),
       bottomNavigationBar: AppNavigationBar(
         currentIndex: currentTabIndex,
-        onTap: (index) => NavigationService.navigateToTab(context, index),
-        isAuthenticated: memberAuthState.isAuthenticated,
+        onTap: (index) =>
+            NavigationService.navigateToTab(context, index, isAuthenticated),
+        isAuthenticated: isAuthenticated,
       ),
     );
   }

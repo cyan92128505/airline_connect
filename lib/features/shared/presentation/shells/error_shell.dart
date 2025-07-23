@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:app/app/presentation/routes/navigation_service.dart';
+import 'package:app/features/shared/presentation/routes/navigation_service.dart';
 
 /// Error handling shell for navigation errors
 class ErrorShell extends StatelessWidget {
