@@ -210,57 +210,6 @@ class ObjectBox {
     }
   }
 
-  /// Setup demo member with enhanced error handling
-  void setupDemoMember() {
-    try {
-      if (_store == null || _store!.isClosed()) {
-        throw StateError('Cannot setup demo data: store not available');
-      }
-
-      // Use transaction for safety
-      store.runInTransaction(TxMode.write, () {
-        // Check if demo member already exists instead of removing all
-        final existingQuery = memberBox.query(
-          MemberEntity_.memberNumber.equals('AA123456'),
-        );
-        final existingMembers = existingQuery.build().find();
-
-        if (existingMembers.isNotEmpty) {
-          _logger.i('Demo member already exists, updating...');
-          // Update existing demo member
-          final existingMember = existingMembers.first;
-          existingMember.fullName = 'Shinku Aoma';
-          existingMember.email = 'test@example.com';
-          existingMember.phone = '+886912345678';
-          existingMember.tier = 'GOLD';
-          existingMember.lastLoginAt = DateTime.now();
-          memberBox.put(existingMember);
-        } else {
-          _logger.i('Creating new demo member...');
-          // Create new demo member only if it doesn't exist
-          final testMember = MemberEntity()
-            ..memberNumber = 'AA123456'
-            ..fullName = 'Shinku Aoma'
-            ..email = 'test@example.com'
-            ..phone = '+886912345678'
-            ..tier = 'GOLD'
-            ..lastLoginAt = DateTime.now();
-
-          memberBox.put(testMember);
-        }
-      });
-
-      _logger.i('Demo member setup completed successfully');
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Failed to setup demo member',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      rethrow;
-    }
-  }
-
   /// Get comprehensive statistics
   Map<String, dynamic> getStatistics() {
     if (_store == null || _store!.isClosed()) {
