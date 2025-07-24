@@ -1,4 +1,7 @@
-import 'package:app/app/presentation/app.dart';
+import 'package:app/core/constant/constant.dart';
+import 'package:app/features/shared/infrastructure/database/mock_data_seeder.dart';
+import 'package:app/features/shared/presentation/app.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -47,7 +50,7 @@ Future<void> _initializeTimezone() async {
     tz.initializeTimeZones();
 
     // Set local timezone
-    tz.setLocalLocation(tz.getLocation('Asia/Taipei'));
+    tz.setLocalLocation(tz.getLocation(appDefaultLocation));
 
     _logger.i('Timezone database initialized successfully');
   } catch (e, stackTrace) {
@@ -80,9 +83,15 @@ Future<ObjectBox> _initializeObjectBox() async {
 }
 
 /// Setup demo data with error handling
-void _setupDemoData(ObjectBox objectBox) {
+void _setupDemoData(ObjectBox objectBox) async {
   try {
-    objectBox.setupDemoMember();
+    if (kDebugMode) {
+      final seeder = MockDataSeeder(objectBox);
+
+      if (!await seeder.verifyEssentialData()) {
+        await seeder.seedMinimalMockData();
+      }
+    }
   } catch (e) {
     // Log but don't fail - demo data is not critical
     _logger.i('Warning: Failed to setup demo data: $e');
