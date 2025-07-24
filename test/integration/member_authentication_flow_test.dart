@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:app/app/presentation/app.dart';
-import 'package:app/app/presentation/routes/app_routes.dart';
+import 'package:app/features/shared/presentation/app.dart';
+import 'package:app/features/shared/presentation/routes/app_routes.dart';
 import 'package:app/core/di/dependency_injection.dart';
 import 'package:app/features/boarding_pass/presentation/screens/boarding_pass_screen.dart';
 import 'package:app/features/member/presentation/screens/member_auth_screen.dart';

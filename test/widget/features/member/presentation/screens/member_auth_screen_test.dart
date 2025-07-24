@@ -29,7 +29,7 @@ void main() {
       );
 
       // Assert
-      expect(find.text('Airline Connect'), findsOneWidget);
+      expect(find.byKey(MemberAuthScreen.slogenWidgetKey), findsOneWidget);
       expect(find.text('會員登入'), findsOneWidget);
       expect(find.byType(TextFormField), findsNWidgets(2));
 
