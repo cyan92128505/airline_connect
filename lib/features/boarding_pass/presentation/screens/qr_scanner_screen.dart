@@ -50,39 +50,42 @@ class QRScannerScreen extends HookConsumerWidget {
       body: Column(
         children: [
           // Scanner area
-          Expanded(
-            flex: 3,
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: _buildScannerContent(
-                  context,
-                  hasPermission.value,
-                  isScanning.value,
-                  (value) => isScanning.value = value,
-                  boardingPassNotifier,
-                ),
-              ),
-            ),
-          ),
 
           // Results area
           Expanded(
-            flex: 2,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              child: _buildResultsArea(
-                context,
-                boardingPassState,
-                boardingPassNotifier,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: _buildScannerContent(
+                        context,
+                        hasPermission.value,
+                        isScanning.value,
+                        (value) => isScanning.value = value,
+                        boardingPassNotifier,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    child: _buildResultsArea(
+                      context,
+                      boardingPassState,
+                      boardingPassNotifier,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
