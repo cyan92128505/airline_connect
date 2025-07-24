@@ -35,9 +35,11 @@ class ValidateQRCodeUseCase
       );
 
       return validationResult.fold(
-        (failure) => Right(
-          QRCodeValidationResponseDTO.invalid(errorMessage: failure.message),
-        ),
+        (failure) {
+          return Right(
+            QRCodeValidationResponseDTO.invalid(errorMessage: failure.message),
+          );
+        },
         (payload) {
           // Generate scan summary for additional metadata
           final summaryResult = _qrCodeService.generateScanSummary(payload);

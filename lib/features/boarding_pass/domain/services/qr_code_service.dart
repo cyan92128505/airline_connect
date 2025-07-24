@@ -29,21 +29,24 @@ class QRCodeService {
         passId,
       );
 
-      return boardingPassResult.fold((failure) => Left(failure), (
-        boardingPass,
-      ) {
-        if (boardingPass == null) {
-          return Left(NotFoundFailure('Boarding pass not found'));
-        }
+      return boardingPassResult.fold(
+        (failure) {
+          return Left(failure);
+        },
+        (boardingPass) {
+          if (boardingPass == null) {
+            return Left(NotFoundFailure('Boarding pass not found'));
+          }
 
-        if (!_verifyQRCodeIntegrity(payload, boardingPass)) {
-          return Left(
-            ValidationFailure('QR code data does not match boarding pass'),
-          );
-        }
+          if (!_verifyQRCodeIntegrity(payload, boardingPass)) {
+            return Left(
+              ValidationFailure('QR code data does not match boarding pass'),
+            );
+          }
 
-        return Right(payload);
-      });
+          return Right(payload);
+        },
+      );
     } on DomainException catch (e) {
       return Left(ValidationFailure(e.message));
     } catch (e) {
