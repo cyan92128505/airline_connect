@@ -1,3 +1,4 @@
+import 'package:app/features/boarding_pass/presentation/widgets/simple_boarding_pass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -192,7 +193,7 @@ class BoardingPassScreen extends HookConsumerWidget {
           ...state.todayPasses.map(
             (pass) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: BoardingPassCard(
+              child: SimpleBoardingPassCard(
                 boardingPass: pass,
                 onTap: () => notifier.selectBoardingPass(pass),
                 onActivate: state.isActivating
@@ -215,7 +216,7 @@ class BoardingPassScreen extends HookConsumerWidget {
         ...state.boardingPasses.map(
           (pass) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: BoardingPassCard(
+            child: SimpleBoardingPassCard(
               boardingPass: pass,
               onTap: () => notifier.selectBoardingPass(pass),
               onActivate: state.isActivating
