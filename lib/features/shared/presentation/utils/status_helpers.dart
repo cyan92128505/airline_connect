@@ -109,7 +109,7 @@ abstract class StatusHelpers {
   static String? getActionText(PassStatus status) {
     switch (status) {
       case PassStatus.issued:
-        return '啟用登機牌';
+        return '啟用登機證';
       case PassStatus.activated:
         return '顯示 QR Code';
       case PassStatus.used:
@@ -123,15 +123,15 @@ abstract class StatusHelpers {
   static String getStatusDescription(PassStatus status) {
     switch (status) {
       case PassStatus.issued:
-        return '登機牌已發行，請啟用後使用';
+        return '登機證已發行，請啟用後使用';
       case PassStatus.activated:
-        return '登機牌已啟用，可用於登機';
+        return '登機證已啟用，可用於登機';
       case PassStatus.used:
-        return '登機牌已使用，祝您旅途愉快';
+        return '登機證已使用，祝您旅途愉快';
       case PassStatus.expired:
-        return '登機牌已過期，請聯繫客服';
+        return '登機證已過期，請聯繫客服';
       case PassStatus.cancelled:
-        return '登機牌已取消，請聯繫客服';
+        return '登機證已取消，請聯繫客服';
     }
   }
 

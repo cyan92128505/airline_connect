@@ -10,7 +10,7 @@ class TestDataSeeder {
     final testMember = MemberEntity.create(
       memberId: '0',
       memberNumber: 'AA123456',
-      fullName: '測試用戶 1234',
+      fullName: '測試使用者 1234',
       email: 'test@example.com',
       phone: '+886912345678',
       tier: 'GOLD',

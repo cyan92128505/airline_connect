@@ -206,7 +206,7 @@ class _TestMainScreenState extends State<TestMainScreen> {
               children: [
                 Icon(Icons.airplane_ticket, size: 64, color: Colors.blue),
                 SizedBox(height: 16),
-                Text('登機牌功能', style: Theme.of(context).textTheme.headlineSmall),
+                Text('登機證功能', style: Theme.of(context).textTheme.headlineSmall),
               ],
             ),
           ),
@@ -242,7 +242,7 @@ class _TestMainScreenState extends State<TestMainScreen> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.airplane_ticket),
-            label: '登機牌',
+            label: '登機證',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.qr_code_scanner),

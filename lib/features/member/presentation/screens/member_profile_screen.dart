@@ -306,7 +306,7 @@ class MemberProfileScreen extends HookConsumerWidget {
                 ),
                 const Gap(8),
                 Text(
-                  '帳戶管理',
+                  '帳號管理',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.bold,
@@ -342,7 +342,7 @@ class MemberProfileScreen extends HookConsumerWidget {
             ListTile(
               leading: Icon(Icons.logout, color: AppColors.error),
               title: Text('登出', style: TextStyle(color: AppColors.error)),
-              subtitle: const Text('登出目前帳戶'),
+              subtitle: const Text('登出目前帳號'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _showLogoutDialog(context, authNotifier),
               contentPadding: EdgeInsets.zero,
@@ -366,7 +366,7 @@ class MemberProfileScreen extends HookConsumerWidget {
             const SlogenWidget(height: 24),
             const Gap(8),
             Text(
-              '航空登機牌管理系統',
+              '航空登機證管理系統',
               style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const Gap(8),

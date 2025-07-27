@@ -187,7 +187,7 @@ class BoardingPassCard extends StatelessWidget {
       child: ElevatedButton.icon(
         onPressed: onActivate,
         icon: const Icon(Icons.play_arrow),
-        label: const Text('啟用登機牌'),
+        label: const Text('啟用登機證'),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.success,
           foregroundColor: Colors.white,

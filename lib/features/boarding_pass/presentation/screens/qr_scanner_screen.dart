@@ -201,7 +201,7 @@ class QRScannerScreen extends HookConsumerWidget {
             const Gap(8),
 
             Text(
-              '點擊下方按鈕開始掃描登機牌上的 QR Code',
+              '點擊下方按鈕開始掃描登機證上的 QR Code',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
@@ -280,7 +280,7 @@ class QRScannerScreen extends HookConsumerWidget {
 
             const Gap(16),
 
-            _buildInstructionItem('1. 確保登機牌上的 QR Code 清晰可見', Icons.visibility),
+            _buildInstructionItem('1. 確保登機證上的 QR Code 清晰可見', Icons.visibility),
 
             const Gap(8),
 

@@ -134,7 +134,7 @@ class MemberAuthScreen extends HookConsumerWidget {
         const Gap(16),
 
         Text(
-          '航空登機牌管理系統',
+          '航空登機證管理系統',
           style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
         ),
       ],

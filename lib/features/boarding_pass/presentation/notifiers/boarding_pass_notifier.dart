@@ -116,7 +116,7 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
         },
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: '載入登機牌時發生錯誤');
+      state = state.copyWith(isLoading: false, errorMessage: '載入登機證時發生錯誤');
     }
   }
 
@@ -152,13 +152,13 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
           } else {
             state = state.copyWith(
               isActivating: false,
-              errorMessage: response.errorMessage ?? '啟用登機牌失敗',
+              errorMessage: response.errorMessage ?? '啟用登機證失敗',
             );
           }
         },
       );
     } catch (e) {
-      state = state.copyWith(isActivating: false, errorMessage: '啟用登機牌時發生錯誤');
+      state = state.copyWith(isActivating: false, errorMessage: '啟用登機證時發生錯誤');
     }
   }
 
@@ -244,19 +244,19 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
     final message = failureMessage.toLowerCase();
 
     if (message.contains('not found') || message.contains('不存在')) {
-      return '找不到登機牌';
+      return '找不到登機證';
     }
 
     if (message.contains('expired') || message.contains('已過期')) {
-      return '登機牌已過期';
+      return '登機證已過期';
     }
 
     if (message.contains('used') || message.contains('已使用')) {
-      return '登機牌已使用';
+      return '登機證已使用';
     }
 
     if (message.contains('invalid') || message.contains('無效')) {
-      return '登機牌資料無效';
+      return '登機證資料無效';
     }
 
     if (message.contains('network') || message.contains('connection')) {

@@ -65,7 +65,7 @@ class AppNavigationBar extends StatelessWidget {
                 ],
               ),
               activeIcon: const Icon(Icons.airplane_ticket),
-              label: '登機牌',
+              label: '登機證',
             ),
             const BottomNavigationBarItem(
               icon: Icon(Icons.qr_code_scanner_outlined),

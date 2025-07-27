@@ -142,7 +142,7 @@ class BoardingPassScreen extends HookConsumerWidget {
   ) {
     if (state.isLoading && state.boardingPasses.isEmpty) {
       return const SliverFillRemaining(
-        child: Center(child: LoadingIndicator(message: '載入登機牌中...')),
+        child: Center(child: LoadingIndicator(message: '載入登機證中...')),
       );
     }
 
@@ -207,7 +207,7 @@ class BoardingPassScreen extends HookConsumerWidget {
         // Section: All boarding passes
         _buildSectionHeader(
           context,
-          '所有登機牌',
+          '所有登機證',
           Icons.list_alt,
           AppColors.textSecondary,
         ),
@@ -276,7 +276,7 @@ class BoardingPassScreen extends HookConsumerWidget {
         ),
         const Gap(24),
         Text(
-          '尚無登機牌',
+          '尚無登機證',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.bold,
@@ -284,7 +284,7 @@ class BoardingPassScreen extends HookConsumerWidget {
         ),
         const Gap(12),
         Text(
-          '您目前沒有任何登機牌\n請聯繫客服或透過官網預訂機票',
+          '您目前沒有任何登機證\n請聯繫客服或透過官網預訂機票',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
@@ -332,7 +332,7 @@ class BoardingPassScreen extends HookConsumerWidget {
             ),
             const Gap(12),
             Text(
-              '需要登入會員才能查看登機牌',
+              '需要登入會員才能查看登機證',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ],

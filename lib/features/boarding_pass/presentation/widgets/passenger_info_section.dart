@@ -45,7 +45,7 @@ class PassengerInfoSection extends StatelessWidget {
               Expanded(
                 child: _buildInfoItem(
                   context,
-                  '登機牌編號',
+                  '登機證編號',
                   boardingPass.passId,
                   Icons.confirmation_number,
                 ),

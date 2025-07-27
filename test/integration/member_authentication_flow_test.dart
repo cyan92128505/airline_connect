@@ -280,7 +280,7 @@ Future<void> _seedTestData(ObjectBox objectBox) async {
   final testMember = MemberEntity()
     ..memberNumber = 'AA123456'
     ..fullName =
-        '測試用戶1234' // Last 4 chars should be "1234" for name suffix
+        '測試使用者1234' // Last 4 chars should be "1234" for name suffix
     ..email = 'test@example.com'
     ..phone = '+886912345678'
     ..tier = 'GOLD'
@@ -291,7 +291,7 @@ Future<void> _seedTestData(ObjectBox objectBox) async {
   // Add another test member for additional testing scenarios
   final testMember2 = MemberEntity()
     ..memberNumber = 'BB789012'
-    ..fullName = '另一個測試用戶5678'
+    ..fullName = '另一個測試使用者5678'
     ..email = 'test2@example.com'
     ..phone = '+886987654321'
     ..tier = 'SILVER'

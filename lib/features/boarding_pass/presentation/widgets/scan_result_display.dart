@@ -55,8 +55,8 @@ class ScanResultDisplay extends StatelessWidget {
 
             if (result.isValid) ...[
               // Valid result details
-              _buildResultSection(context, '登機牌資訊', [
-                _ResultItem('登機牌編號', result.passId ?? 'N/A'),
+              _buildResultSection(context, '登機證資訊', [
+                _ResultItem('登機證編號', result.passId ?? 'N/A'),
                 _ResultItem('航班號碼', result.flightNumber ?? 'N/A'),
                 _ResultItem('座位號碼', result.seatNumber ?? 'N/A'),
                 _ResultItem('會員號碼', result.memberNumber ?? 'N/A'),
@@ -101,7 +101,7 @@ class ScanResultDisplay extends StatelessWidget {
                     const Gap(12),
                     Expanded(
                       child: Text(
-                        'QR Code 驗證成功，登機牌有效',
+                        'QR Code 驗證成功，登機證有效',
                         style: TextStyle(
                           color: AppColors.success,
                           fontWeight: FontWeight.w500,
