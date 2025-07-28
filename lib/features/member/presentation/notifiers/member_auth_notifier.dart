@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
@@ -15,12 +16,14 @@ abstract class MemberAuthState with _$MemberAuthState {
     MemberDTO? member,
     String? errorMessage,
     @Default(false) bool isOffline,
+    @Default(false) bool isInitialized, // Track initialization status
   }) = _MemberAuthState;
 
   const MemberAuthState._();
 
   /// Whether user is logged in with valid member data
-  bool get hasValidMember => isAuthenticated && member != null;
+  bool get hasValidMember =>
+      isAuthenticated && member != null && member!.isAuthenticated;
 
   /// Whether there's an authentication error
   bool get hasError => errorMessage != null;
@@ -30,14 +33,38 @@ abstract class MemberAuthState with _$MemberAuthState {
 
   /// Member tier display
   String get memberTierDisplay => member?.tier.displayName ?? '';
+
+  /// Whether the authentication system has been initialized
+  /// This distinguishes between "not yet initialized" and "initialized but not authenticated"
+  bool get hasInitialized => isInitialized || member != null;
 }
 
 /// Provider for MemberAuthNotifier
-@riverpod
+@Riverpod(keepAlive: true)
 class MemberAuthNotifier extends _$MemberAuthNotifier {
   @override
   MemberAuthState build() {
-    return const MemberAuthState();
+    // Start with default unauthenticated state
+    // main.dart will call initializeWithRestoredState() after container creation
+    debugPrint(
+      'MemberAuthNotifier: Initializing with default unauthenticated state',
+    );
+    return MemberAuthState(
+      member: MemberDTOExtensions.unauthenticated(),
+      isInitialized:
+          false, // Will be set to true by initializeWithRestoredState()
+      isAuthenticated: false,
+    );
+  }
+
+  /// Initialize with restored state (called from main.dart after session restoration)
+  void initializeWithRestoredState(MemberAuthState restoredState) {
+    debugPrint(
+      'MemberAuthNotifier: Initializing with restored state - '
+      'authenticated: ${restoredState.isAuthenticated}, '
+      'member: ${restoredState.member?.memberNumber}',
+    );
+    state = restoredState.copyWith(isInitialized: true);
   }
 
   /// Authenticate member with credentials
@@ -67,7 +94,7 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
           state = state.copyWith(
             isLoading: false,
             isAuthenticated: false,
-            member: null,
+            member: MemberDTOExtensions.unauthenticated(),
             errorMessage: _mapFailureToMessage(failure.message),
           );
         },
@@ -83,7 +110,7 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
             state = state.copyWith(
               isLoading: false,
               isAuthenticated: false,
-              member: null,
+              member: MemberDTOExtensions.unauthenticated(),
               errorMessage: response.errorMessage ?? '認證失敗',
             );
           }
@@ -93,7 +120,7 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
       state = state.copyWith(
         isLoading: false,
         isAuthenticated: false,
-        member: null,
+        member: MemberDTOExtensions.unauthenticated(),
         errorMessage: '網路連線異常，請稍後再試',
       );
     }
@@ -101,7 +128,17 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
 
   /// Logout member
   void logout() {
-    state = const MemberAuthState(isAuthenticated: false, member: null);
+    final memberService = ref.read(memberApplicationServiceRefProvider);
+    if (state.member != null && !state.member!.isUnauthenticated) {
+      memberService.logout(state.member!.memberNumber);
+    }
+
+    // Set to unauthenticated state, not null
+    state = MemberAuthState(
+      isAuthenticated: false,
+      member: MemberDTOExtensions.unauthenticated(),
+      isInitialized: true,
+    );
   }
 
   /// Clear error message
@@ -116,7 +153,11 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
 
   /// Refresh member profile
   Future<void> refreshMemberProfile() async {
-    if (!state.isAuthenticated || state.member == null) return;
+    if (!state.isAuthenticated ||
+        state.member == null ||
+        state.member!.isUnauthenticated) {
+      return;
+    }
 
     state = state.copyWith(isLoading: true);
 
