@@ -43,13 +43,13 @@ abstract class MemberDTO with _$MemberDTO {
   }
 
   String get formatLastLoginAt {
-    if (createdAt == null) {
+    if (lastLoginAt == null) {
       return '';
     }
     try {
       final tzDateTime = tz.TZDateTime.parse(
         tz.getLocation(appDefaultLocation),
-        createdAt!,
+        lastLoginAt!,
       );
 
       return '${tzDateTime.year}/${tzDateTime.month.toString().padLeft(2, '0')}/${tzDateTime.day.toString().padLeft(2, '0')}';
@@ -57,9 +57,41 @@ abstract class MemberDTO with _$MemberDTO {
       return '';
     }
   }
+
+  static MemberDTO fromDomain(Member member) {
+    return MemberDTO(
+      memberId: member.memberId.value,
+      memberNumber: member.memberNumber.value,
+      fullName: member.fullName.value,
+      email: member.contactInfo.email,
+      phone: member.contactInfo.phone,
+      tier: member.tier,
+      createdAt: member.createdAt?.toIso8601String(),
+      lastLoginAt: member.lastLoginAt?.toIso8601String(),
+    );
+  }
 }
 
 extension MemberDTOExtensions on MemberDTO {
+  /// Create an unauthenticated marker instance
+  /// This represents "initialized but not authenticated" state
+  static MemberDTO unauthenticated() {
+    return const MemberDTO(
+      memberId: '__unauthenticated__',
+      memberNumber: '',
+      fullName: '',
+      email: '',
+      phone: '',
+      tier: MemberTier.bronze,
+    );
+  }
+
+  /// Check if this is an unauthenticated marker instance
+  bool get isUnauthenticated => memberId == '__unauthenticated__';
+
+  /// Check if this is a valid authenticated member
+  bool get isAuthenticated => !isUnauthenticated && memberNumber.isNotEmpty;
+
   /// Convert from Domain Entity to DTO
   static MemberDTO fromDomain(Member member) {
     return MemberDTO(

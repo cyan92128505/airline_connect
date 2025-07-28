@@ -4,7 +4,7 @@ import 'package:app/features/member/domain/value_objects/contact_info.dart';
 import 'package:app/features/member/domain/value_objects/full_name.dart';
 import 'package:app/features/member/domain/value_objects/member_id.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
-import 'package:timezone/timezone.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class Member {
   final MemberId memberId;
@@ -12,8 +12,8 @@ class Member {
   final FullName fullName;
   final MemberTier tier;
   final ContactInfo contactInfo;
-  final TZDateTime? createdAt;
-  final TZDateTime? lastLoginAt;
+  final tz.TZDateTime? createdAt;
+  final tz.TZDateTime? lastLoginAt;
 
   const Member._({
     required this.memberId,
@@ -38,7 +38,7 @@ class Member {
       fullName: FullName(fullName),
       tier: tier,
       contactInfo: ContactInfo(email: email, phone: phone),
-      createdAt: TZDateTime.now(local),
+      createdAt: tz.TZDateTime.now(tz.local),
     );
   }
 
@@ -49,8 +49,8 @@ class Member {
     required MemberTier tier,
     required String email,
     required String phone,
-    TZDateTime? createdAt,
-    TZDateTime? lastLoginAt,
+    tz.TZDateTime? createdAt,
+    tz.TZDateTime? lastLoginAt,
   }) {
     return Member._(
       memberId: MemberId(memberId),
@@ -71,7 +71,7 @@ class Member {
       tier: tier,
       contactInfo: contactInfo,
       createdAt: createdAt,
-      lastLoginAt: TZDateTime.now(local),
+      lastLoginAt: tz.TZDateTime.now(tz.local),
     );
   }
 
