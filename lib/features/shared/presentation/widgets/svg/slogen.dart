@@ -7,13 +7,21 @@ const slogenSVG =
 </svg>''';
 
 class SlogenWidget extends StatelessWidget {
-  const SlogenWidget({super.key, this.width, this.height});
+  const SlogenWidget({super.key, this.width, this.height, this.color});
 
   final double? width;
   final double? height;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.string(slogenSVG, height: height, width: width);
+    return SvgPicture.string(
+      slogenSVG,
+      height: height,
+      width: width,
+      colorFilter: color != null
+          ? ColorFilter.mode(color!, BlendMode.modulate)
+          : null,
+    );
   }
 }

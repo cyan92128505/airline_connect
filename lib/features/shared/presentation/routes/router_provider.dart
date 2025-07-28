@@ -1,3 +1,4 @@
+import 'package:app/features/shared/presentation/screens/splash_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:app/features/shared/presentation/shells/error_shell.dart';
@@ -19,14 +20,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.root,
     debugLogDiagnostics: true,
     redirect: (context, state) {
-      return RouteGuard.handleRedirect(
-        context,
-        state,
-        authState.isAuthenticated,
-      );
+      return RouteGuard.handleRedirect(context, state, authState);
     },
     errorBuilder: (context, state) => ErrorShell(error: state.error!),
     routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        name: AppRoutes.splashName,
+        builder: (context, state) => const SplashScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [

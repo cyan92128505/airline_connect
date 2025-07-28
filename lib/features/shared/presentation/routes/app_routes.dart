@@ -5,12 +5,14 @@ class AppRoutes {
 
   // Route paths
   static const String root = '/';
+  static const String splash = '/splash';
   static const String boardingPass = '/boarding-pass';
   static const String qrScanner = '/qr-scanner';
   static const String memberAuth = '/member-auth';
   static const String memberProfile = '/member/profile';
 
   // Route names for type-safe navigation
+  static const String splashName = 'splash';
   static const String boardingPassName = 'boarding-pass';
   static const String qrScannerName = 'qr-scanner';
   static const String memberAuthName = 'member-auth';
@@ -22,6 +24,9 @@ class AppRoutes {
     qrScanner,
     memberProfile,
   ];
+
+  // Routes that should show splash screen first
+  static const List<String> splashRoutes = [root];
 
   // Get route for tab index based on authentication state
   static String getTabRoute(int index, bool isAuthenticated) {

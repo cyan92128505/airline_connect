@@ -7,13 +7,28 @@ const logoSVG =
 </svg>''';
 
 class LogoWidget extends StatelessWidget {
-  const LogoWidget({super.key, this.width, this.height});
+  const LogoWidget({
+    super.key,
+    this.width,
+    this.height,
+    this.color,
+    this.colorFilter,
+  });
 
   final double? width;
   final double? height;
+  final Color? color;
+  final ColorFilter? colorFilter;
 
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.string(logoSVG, height: height, width: width);
+    return SvgPicture.string(
+      logoSVG,
+      height: height,
+      width: width,
+      colorFilter:
+          colorFilter ??
+          (color != null ? ColorFilter.mode(color!, BlendMode.srcIn) : null),
+    );
   }
 }
