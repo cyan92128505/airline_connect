@@ -3,6 +3,7 @@ import 'package:app/features/member/application/dtos/authentication_dto.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
 import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
 import 'package:app/features/member/application/use_cases/get_member_profile_use_case.dart';
+import 'package:app/features/member/application/use_cases/logout_member_use_case.dart';
 import 'package:app/features/member/application/use_cases/register_member_use_case.dart';
 import 'package:app/features/member/application/use_cases/update_member_contact_use_case.dart';
 import 'package:app/features/member/application/use_cases/upgrade_member_tier_use_case.dart';
@@ -20,6 +21,7 @@ class MemberApplicationService {
   final UpdateMemberContactUseCase _updateMemberContactUseCase;
   final UpgradeMemberTierUseCase _upgradeMemberTierUseCase;
   final ValidateMemberEligibilityUseCase _validateMemberEligibilityUseCase;
+  final LogoutMemberUseCase _logoutMemberUseCase;
 
   const MemberApplicationService(
     this._authenticateMemberUseCase,
@@ -28,6 +30,7 @@ class MemberApplicationService {
     this._updateMemberContactUseCase,
     this._upgradeMemberTierUseCase,
     this._validateMemberEligibilityUseCase,
+    this._logoutMemberUseCase,
   );
 
   /// Authenticate member with credentials
@@ -102,5 +105,9 @@ class MemberApplicationService {
     String memberNumber,
   ) async {
     return _validateMemberEligibilityUseCase(memberNumber);
+  }
+
+  Future<Either<Failure, bool>> logout(String memberNumber) {
+    return _logoutMemberUseCase(memberNumber);
   }
 }

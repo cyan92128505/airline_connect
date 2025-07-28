@@ -1,0 +1,32 @@
+import 'package:app/core/failures/failure.dart';
+import 'package:app/core/use_cases/use_case.dart';
+import 'package:app/features/member/domain/services/member_auth_service.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
+import 'package:dartz/dartz.dart';
+import 'package:injectable/injectable.dart';
+
+/// Use case for authenticating a member
+/// Handles member logout with member number
+@injectable
+class LogoutMemberUseCase implements UseCase<bool, String> {
+  final MemberAuthService _memberAuthService;
+
+  const LogoutMemberUseCase(this._memberAuthService);
+
+  @override
+  Future<Either<Failure, bool>> call(String memberNumber) async {
+    try {
+      // Authenticate member using domain service
+      final authResult = await _memberAuthService.logoutMember(
+        MemberNumber.create(memberNumber),
+      );
+
+      return authResult.fold(
+        (failure) => Right(false),
+        (member) => Right(true),
+      );
+    } catch (e) {
+      return Left(UnknownFailure('Authentication failed: $e'));
+    }
+  }
+}
