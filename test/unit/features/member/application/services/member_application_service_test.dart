@@ -1,3 +1,4 @@
+import 'package:app/features/member/application/use_cases/logout_member_use_case.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
@@ -23,6 +24,7 @@ import 'member_application_service_test.mocks.dart';
   UpdateMemberContactUseCase,
   UpgradeMemberTierUseCase,
   ValidateMemberEligibilityUseCase,
+  LogoutMemberUseCase,
 ])
 void main() {
   late MemberApplicationService service;
@@ -32,6 +34,7 @@ void main() {
   late MockUpdateMemberContactUseCase mockUpdateContactUseCase;
   late MockUpgradeMemberTierUseCase mockUpgradeTierUseCase;
   late MockValidateMemberEligibilityUseCase mockValidateEligibilityUseCase;
+  late MockLogoutMemberUseCase mockLogoutMemberUseCase;
 
   setUp(() {
     mockAuthenticateUseCase = MockAuthenticateMemberUseCase();
@@ -40,6 +43,7 @@ void main() {
     mockUpdateContactUseCase = MockUpdateMemberContactUseCase();
     mockUpgradeTierUseCase = MockUpgradeMemberTierUseCase();
     mockValidateEligibilityUseCase = MockValidateMemberEligibilityUseCase();
+    mockLogoutMemberUseCase = MockLogoutMemberUseCase();
 
     service = MemberApplicationService(
       mockAuthenticateUseCase,
@@ -48,6 +52,7 @@ void main() {
       mockUpdateContactUseCase,
       mockUpgradeTierUseCase,
       mockValidateEligibilityUseCase,
+      mockLogoutMemberUseCase,
     );
   });
 

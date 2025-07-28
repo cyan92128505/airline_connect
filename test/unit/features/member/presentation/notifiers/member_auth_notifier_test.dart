@@ -18,6 +18,11 @@ void main() {
     setUp(() {
       mockMemberService = MockMemberApplicationService();
 
+      // Set up default mock behaviors
+      when(
+        () => mockMemberService.logout(any()),
+      ).thenAnswer((_) async => const Right(true));
+
       container = ProviderContainer(
         overrides: [
           memberApplicationServiceProvider.overrideWithValue(mockMemberService),
@@ -139,7 +144,7 @@ void main() {
           final state = container.read(memberAuthNotifierProvider);
           expect(state.isLoading, isFalse);
           expect(state.isAuthenticated, isFalse);
-          expect(state.member, isNull);
+          expect(state.member!.isUnauthenticated, isTrue);
           expect(state.errorMessage, equals('會員號碼或姓名後四碼錯誤'));
         },
       );
@@ -168,6 +173,10 @@ void main() {
 
     group('logout', () {
       test('should clear authentication state', () async {
+        when(
+          () => mockMemberService.logout(any()),
+        ).thenAnswer((_) async => const Right(true));
+
         // Arrange - Set initial authenticated state
         when(
           () => mockMemberService.authenticateMember(
@@ -208,7 +217,7 @@ void main() {
         // Assert
         final state = container.read(memberAuthNotifierProvider);
         expect(state.isAuthenticated, isFalse);
-        expect(state.member, isNull);
+        expect(state.member!.isUnauthenticated, isTrue);
         expect(state.errorMessage, isNull);
       });
     });

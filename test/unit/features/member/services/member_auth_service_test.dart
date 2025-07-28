@@ -2,6 +2,7 @@ import 'package:app/core/failures/failure.dart';
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/domain/repositories/secure_storage_repository.dart';
 import 'package:app/features/member/domain/services/member_auth_service.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,7 +13,7 @@ import 'package:timezone/data/latest.dart' as tz;
 
 import 'member_auth_service_test.mocks.dart';
 
-@GenerateMocks([MemberRepository])
+@GenerateMocks([MemberRepository, SecureStorageRepository])
 void main() {
   setUpAll(() {
     tz.initializeTimeZones();
@@ -21,10 +22,15 @@ void main() {
   group('MemberAuthService Tests', () {
     late MemberAuthService authService;
     late MockMemberRepository mockRepository;
+    late MockSecureStorageRepository mockSecureStorageRepository;
 
     setUp(() {
       mockRepository = MockMemberRepository();
-      authService = MemberAuthService(mockRepository);
+      mockSecureStorageRepository = MockSecureStorageRepository();
+      authService = MemberAuthService(
+        mockRepository,
+        mockSecureStorageRepository,
+      );
     });
 
     test('should authenticate member successfully', () async {
@@ -40,6 +46,9 @@ void main() {
         mockRepository.findByMemberNumber(any),
       ).thenAnswer((_) async => Right(member));
       when(mockRepository.save(any)).thenAnswer((_) async => const Right(null));
+      when(
+        mockSecureStorageRepository.saveMember(any),
+      ).thenAnswer((_) async => const Right(null));
 
       final result = await authService.authenticateMember(
         memberNumber: 'AA123456',
@@ -54,6 +63,36 @@ void main() {
 
       verify(mockRepository.findByMemberNumber(any)).called(1);
       verify(mockRepository.save(any)).called(1);
+      verify(mockSecureStorageRepository.saveMember(any)).called(1);
+    });
+
+    test('should authenticate successfully even if storage fails', () async {
+      // Arrange
+      final member = Member.create(
+        memberNumber: 'AA123456',
+        fullName: '王小明1234',
+        tier: MemberTier.gold,
+        email: 'test@example.com',
+        phone: '+886912345678',
+      );
+
+      when(
+        mockRepository.findByMemberNumber(any),
+      ).thenAnswer((_) async => Right(member));
+      when(mockRepository.save(any)).thenAnswer((_) async => const Right(null));
+      when(
+        mockSecureStorageRepository.saveMember(any),
+      ).thenAnswer((_) async => Left(StorageFailure('Storage error')));
+
+      // Act
+      final result = await authService.authenticateMember(
+        memberNumber: 'AA123456',
+        nameSuffix: '1234',
+      );
+
+      // Assert - Should still succeed despite storage failure
+      expect(result.isRight(), isTrue);
+      verify(mockSecureStorageRepository.saveMember(any)).called(1);
     });
 
     test('should fail authentication for wrong name suffix', () async {
