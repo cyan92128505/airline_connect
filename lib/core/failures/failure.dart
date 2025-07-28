@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 abstract class Failure {
   final String message;
   final String? code;
@@ -34,4 +36,13 @@ class UnknownFailure extends Failure {
 
 class DatabaseFailure extends Failure {
   const DatabaseFailure(String message) : super(message, 'DATABASE_FAILURE');
+}
+
+class SecurityFailure extends Failure {
+  const SecurityFailure(String message, PlatformException e)
+    : super(message, 'SECURITY_FAILURE');
+}
+
+class StorageFailure extends Failure {
+  const StorageFailure(String message) : super(message, 'STORAGE_FAILURE');
 }
