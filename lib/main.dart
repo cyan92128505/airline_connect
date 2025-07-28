@@ -11,6 +11,11 @@ import 'package:logger/logger.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+// Authentication pre-initialization imports
+import 'package:app/features/member/infrastructure/repositories/secure_storage_repository_impl.dart';
+import 'package:app/features/member/application/dtos/member_dto.dart';
+import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
+
 final Logger _logger = Logger();
 
 void main() async {
@@ -29,15 +34,96 @@ void main() async {
     // Configure system UI
     await _configureSystemUI();
 
+    // Create ProviderContainer for the app
+    final container = ProviderContainer(
+      overrides: [objectBoxProvider.overrideWithValue(objectBox)],
+    );
+
+    // Initialize authentication state after container is created
+    await _initializeAuthStateAfterContainer(container);
+
     runApp(
-      ProviderScope(
-        overrides: [objectBoxProvider.overrideWithValue(objectBox)],
+      UncontrolledProviderScope(
+        container: container,
         child: const AirlineConnectApp(),
       ),
     );
   } catch (e, stackTrace) {
     // Critical initialization failure handling
     _handleInitializationFailure(e, stackTrace);
+  }
+}
+
+/// Initialize authentication state after ProviderContainer is created
+/// This approach ensures proper initialization order
+Future<void> _initializeAuthStateAfterContainer(
+  ProviderContainer container,
+) async {
+  _logger.i('Initializing authentication state after container creation...');
+
+  try {
+    // Use existing secure storage repository
+    final secureStorage = SecureStorageRepositoryImpl();
+
+    // Try to restore member from secure storage
+    final memberResult = await secureStorage.getMember();
+
+    final initialAuthState = memberResult.fold(
+      (failure) {
+        _logger.i('No existing session found: ${failure.message}');
+        // Return unauthenticated state (initialized but not authenticated)
+        return MemberAuthState(
+          member: MemberDTOExtensions.unauthenticated(),
+          isAuthenticated: false,
+          isInitialized: true,
+        );
+      },
+      (member) {
+        if (member != null) {
+          _logger.i(
+            'Session restored for member: ${member.memberNumber.value}',
+          );
+          // Convert domain member to DTO and mark as authenticated
+          return MemberAuthState(
+            member: MemberDTOExtensions.fromDomain(member),
+            isAuthenticated: true,
+            isInitialized: true,
+          );
+        } else {
+          _logger.i('No member found in secure storage');
+          return MemberAuthState(
+            member: MemberDTOExtensions.unauthenticated(),
+            isAuthenticated: false,
+            isInitialized: true,
+          );
+        }
+      },
+    );
+
+    // Get the MemberAuthNotifier and initialize it with the restored state
+    final authNotifier = container.read(memberAuthNotifierProvider.notifier);
+    authNotifier.initializeWithRestoredState(initialAuthState);
+
+    _logger.i('Authentication state initialized successfully');
+  } catch (e, stackTrace) {
+    _logger.e('Failed to initialize auth state: $e');
+    _logger.e('StackTrace: $stackTrace');
+
+    // Even if session restoration fails, we still provide initialized state
+    final fallbackState = MemberAuthState(
+      member: MemberDTOExtensions.unauthenticated(),
+      isAuthenticated: false,
+      isInitialized: true,
+      errorMessage: 'Session restoration failed',
+    );
+
+    try {
+      final authNotifier = container.read(memberAuthNotifierProvider.notifier);
+      authNotifier.initializeWithRestoredState(fallbackState);
+    } catch (e) {
+      _logger.e('Failed to set fallback auth state: $e');
+      // Continue anyway - the app will use default unauthenticated state
+    }
   }
 }
 
