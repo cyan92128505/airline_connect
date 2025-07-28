@@ -1,37 +1,48 @@
-import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
-import 'package:app/features/flight/domain/repositories/flight_repository.dart';
-import 'package:app/features/flight/domain/services/flight_status_service.dart';
-import 'package:app/features/member/application/services/member_application_service.dart';
-import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
-import 'package:app/features/member/application/use_cases/get_member_profile_use_case.dart';
-import 'package:app/features/member/application/use_cases/register_member_use_case.dart';
-import 'package:app/features/member/application/use_cases/update_member_contact_use_case.dart';
-import 'package:app/features/member/application/use_cases/upgrade_member_tier_use_case.dart';
-import 'package:app/features/member/application/use_cases/validate_member_eligibility_use_case.dart';
-import 'package:app/features/member/infrastructure/repositories/member_repository_impl.dart';
-import 'package:app/features/member/domain/repositories/member_repository.dart';
-import 'package:app/features/member/domain/services/member_auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
-import 'package:app/features/boarding_pass/application/services/boarding_pass_application_service.dart';
-import 'package:app/features/boarding_pass/application/use_cases/create_boarding_pass_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/activate_boarding_pass_use_case.dart';
+import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
+import 'package:app/features/member/infrastructure/repositories/secure_storage_repository_impl.dart';
+import 'package:app/features/member/infrastructure/repositories/member_repository_impl.dart';
+import 'package:app/features/member/domain/services/member_auth_service.dart';
+import 'package:app/features/member/domain/repositories/secure_storage_repository.dart';
+import 'package:app/features/member/domain/repositories/member_repository.dart';
+import 'package:app/features/member/application/use_cases/validate_member_eligibility_use_case.dart';
+import 'package:app/features/member/application/use_cases/upgrade_member_tier_use_case.dart';
+import 'package:app/features/member/application/use_cases/update_member_contact_use_case.dart';
+import 'package:app/features/member/application/use_cases/register_member_use_case.dart';
+import 'package:app/features/member/application/use_cases/logout_member_use_case.dart';
+import 'package:app/features/member/application/use_cases/get_member_profile_use_case.dart';
+import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
+import 'package:app/features/member/application/services/member_application_service.dart';
+import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
+import 'package:app/features/flight/domain/services/flight_status_service.dart';
+import 'package:app/features/flight/domain/repositories/flight_repository.dart';
+import 'package:app/features/boarding_pass/infrastructure/repositories/boarding_pass_repository_impl.dart';
+import 'package:app/features/boarding_pass/domain/services/qr_code_service.dart';
+import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
+import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
+import 'package:app/features/boarding_pass/application/use_cases/validate_qr_code_use_case.dart';
+import 'package:app/features/boarding_pass/application/use_cases/validate_boarding_eligibility_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/use_boarding_pass_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/update_seat_assignment_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/validate_qr_code_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/get_boarding_passes_for_member_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/get_boarding_pass_details_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/validate_boarding_eligibility_use_case.dart';
+import 'package:app/features/boarding_pass/application/use_cases/create_boarding_pass_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/auto_expire_boarding_passes_use_case.dart';
-import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
-import 'package:app/features/boarding_pass/infrastructure/repositories/boarding_pass_repository_impl.dart';
-import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
-import 'package:app/features/boarding_pass/domain/services/qr_code_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:app/features/boarding_pass/application/use_cases/activate_boarding_pass_use_case.dart';
+import 'package:app/features/boarding_pass/application/services/boarding_pass_application_service.dart';
 
 /// Global ObjectBox instance provider
 /// Should be initialized in main() before app starts
 final objectBoxProvider = Provider<ObjectBox>((ref) {
   throw UnimplementedError('ObjectBox must be initialized in main()');
+});
+
+/// Will be overridden in main.dart with pre-initialized state
+final initialAuthStateProvider = Provider<MemberAuthState>((ref) {
+  throw UnimplementedError(
+    'Initial auth state must be provided via override in main.dart',
+  );
 });
 
 // ================================================================
@@ -44,10 +55,17 @@ final memberRepositoryProvider = Provider<MemberRepository>((ref) {
   return MemberRepositoryImpl(objectBox);
 });
 
+final secureStorageRepositoryProvider = Provider<SecureStorageRepository>((
+  ref,
+) {
+  return SecureStorageRepositoryImpl();
+});
+
 /// Service providers
 final memberAuthServiceProvider = Provider<MemberAuthService>((ref) {
   final memberRepository = ref.watch(memberRepositoryProvider);
-  return MemberAuthService(memberRepository);
+  final secureStorageRepository = ref.watch(secureStorageRepositoryProvider);
+  return MemberAuthService(memberRepository, secureStorageRepository);
 });
 
 /// Use Case providers
@@ -90,6 +108,11 @@ final validateMemberEligibilityUseCaseProvider =
       return ValidateMemberEligibilityUseCase(memberAuthService);
     });
 
+final logoutMemberUseCaseProvider = Provider<LogoutMemberUseCase>((ref) {
+  final memberAuthService = ref.watch(memberAuthServiceProvider);
+  return LogoutMemberUseCase(memberAuthService);
+});
+
 /// Application Service provider
 final memberApplicationServiceProvider = Provider<MemberApplicationService>((
   ref,
@@ -101,6 +124,7 @@ final memberApplicationServiceProvider = Provider<MemberApplicationService>((
     ref.watch(updateMemberContactUseCaseProvider),
     ref.watch(upgradeMemberTierUseCaseProvider),
     ref.watch(validateMemberEligibilityUseCaseProvider),
+    ref.watch(logoutMemberUseCaseProvider),
   );
 });
 
