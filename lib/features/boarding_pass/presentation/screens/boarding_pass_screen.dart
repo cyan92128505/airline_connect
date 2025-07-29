@@ -61,7 +61,7 @@ class BoardingPassScreen extends HookConsumerWidget {
             SliverAppBar(
               expandedHeight: 200,
               floating: false,
-              pinned: true,
+              pinned: false,
               backgroundColor: AppColors.primary,
               flexibleSpace: FlexibleSpaceBar(
                 background: Container(

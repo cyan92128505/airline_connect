@@ -34,44 +34,60 @@ class QRCodeDisplay extends StatelessWidget {
       child: Column(
         children: [
           // Header
-          Row(
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              Icon(Icons.qr_code, color: AppColors.primary, size: 24),
-              const Gap(8),
-              Text(
-                '登機 QR Code',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+              Positioned(
+                child: Row(
+                  children: [
+                    Icon(Icons.qr_code, color: AppColors.primary, size: 24),
+                    const Gap(8),
+                    Text(
+                      '登機 QR Code',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Spacer(),
               if (qrCodeData.isValid)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.success.withAlpha(77)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                Positioned(
+                  right: -5,
+                  child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: AppColors.success,
-                        size: 12,
-                      ),
-                      const Gap(4),
-                      Text(
-                        '有效',
-                        style: TextStyle(
-                          color: AppColors.success,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withAlpha(25),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.success.withAlpha(77),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle,
+                              color: AppColors.success,
+                              size: 12,
+                            ),
+                            const Gap(4),
+                            Text(
+                              '有效',
+                              style: TextStyle(
+                                color: AppColors.success,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

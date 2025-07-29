@@ -1,5 +1,7 @@
+import 'package:app/features/shared/presentation/routes/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:app/features/boarding_pass/presentation/notifiers/boarding_pass_notifier.dart';
@@ -41,6 +43,7 @@ class QRScannerScreen extends HookConsumerWidget {
           IconButton(
             onPressed: () {
               boardingPassNotifier.clearScanResult();
+              context.go(AppRoutes.boardingPass);
             },
             icon: const Icon(Icons.clear),
             tooltip: '清除結果',
