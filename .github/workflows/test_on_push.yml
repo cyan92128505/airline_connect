@@ -31,7 +31,7 @@ jobs:
         run: flutter doctor -v
 
       - name: Cache Flutter dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.pub-cache
@@ -44,7 +44,7 @@ jobs:
         run: flutter pub get
 
       - name: Cache generated code
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./lib/**/*.g.dart
@@ -147,7 +147,7 @@ jobs:
           fi
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ github.sha }}
