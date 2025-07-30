@@ -8,6 +8,14 @@ import 'package:logger/logger.dart';
 
 final Logger _logger = Logger();
 
+BootstrapConfig _createBootstrapConfig() {
+  if (kDebugMode) {
+    return BootstrapConfig.development();
+  } else {
+    return BootstrapConfig.production();
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -30,14 +38,8 @@ void main() async {
   }
 }
 
-BootstrapConfig _createBootstrapConfig() {
-  return BootstrapConfig(
-    enableDebugMode: kDebugMode,
-    enableDemoData: kDebugMode,
-    enableDetailedLogging: kDebugMode,
-    timezoneName: 'Asia/Taipei',
-  );
-}
+/// Global navigator key for error dialog
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// Handle critical initialization failures with fallback UI
 void _handleCriticalFailure(Object error, StackTrace stackTrace) {
@@ -61,6 +63,7 @@ void _handleCriticalFailure(Object error, StackTrace stackTrace) {
                 const Text(
                   '應用程式初始化失敗',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -83,11 +86,34 @@ void _handleCriticalFailure(Object error, StackTrace stackTrace) {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    // Show detailed error information
+                    showDialog(
+                      context: navigatorKey.currentContext!,
+                      builder: (context) => AlertDialog(
+                        title: const Text('詳細錯誤資訊'),
+                        content: SingleChildScrollView(
+                          child: Text('$error\n\n$stackTrace'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            child: const Text('關閉'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  child: const Text('查看詳細錯誤'),
+                ),
               ],
             ),
           ),
         ),
       ),
+      navigatorKey: navigatorKey,
     ),
   );
 }
