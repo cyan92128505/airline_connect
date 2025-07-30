@@ -1,6 +1,6 @@
+import 'package:app/core/bootstrap/contracts/initialization_context.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
-import 'package:app/core/bootstrap/initialization_step.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
 
 import 'initialization_context_test.mocks.dart';

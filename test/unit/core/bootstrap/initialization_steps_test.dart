@@ -1,5 +1,6 @@
 // ignore_for_file: unused_local_variable
 
+import 'package:app/core/bootstrap/contracts/initialization_context.dart';
 import 'package:app/features/boarding_pass/infrastructure/entities/boarding_pass_entity.dart';
 import 'package:app/features/flight/infrastructure/entities/flight_entity.dart';
 import 'package:app/features/member/infrastructure/entities/member_entity.dart';
