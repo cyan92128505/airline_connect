@@ -44,26 +44,14 @@ abstract class MemberAuthState with _$MemberAuthState {
 class MemberAuthNotifier extends _$MemberAuthNotifier {
   @override
   MemberAuthState build() {
-    // Start with default unauthenticated state
-    // main.dart will call initializeWithRestoredState() after container creation
-    debugPrint(
-      'MemberAuthNotifier: Initializing with default unauthenticated state',
-    );
     return MemberAuthState(
       member: MemberDTOExtensions.unauthenticated(),
-      isInitialized:
-          false, // Will be set to true by initializeWithRestoredState()
+      isInitialized: false,
       isAuthenticated: false,
     );
   }
 
-  /// Initialize with restored state (called from main.dart after session restoration)
   void initializeWithRestoredState(MemberAuthState restoredState) {
-    debugPrint(
-      'MemberAuthNotifier: Initializing with restored state - '
-      'authenticated: ${restoredState.isAuthenticated}, '
-      'member: ${restoredState.member?.memberNumber}',
-    );
     state = restoredState.copyWith(isInitialized: true);
   }
 
@@ -105,6 +93,7 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
               isAuthenticated: true,
               member: response.member,
               errorMessage: null,
+              isInitialized: true,
             );
           } else {
             state = state.copyWith(
@@ -133,7 +122,6 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
       memberService.logout(state.member!.memberNumber);
     }
 
-    // Set to unauthenticated state, not null
     state = MemberAuthState(
       isAuthenticated: false,
       member: MemberDTOExtensions.unauthenticated(),
