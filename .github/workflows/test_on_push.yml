@@ -1,0 +1,167 @@
+name: Test on Push
+on:
+  push:
+    branches: [main, develop, "feature/*", "hotfix/*", "TK-*"]
+  pull_request:
+    branches: [main, develop, "TK-*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java environment
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.6"
+          channel: "stable"
+          cache: true
+
+      - name: Verify Flutter installation
+        run: flutter doctor -v
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ./.dart_tool
+          key: flutter-test-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            flutter-test-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Cache generated code
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./lib/**/*.g.dart
+            ./lib/**/*.freezed.dart
+            ./.dart_tool/build
+          key: generated-test-${{ runner.os }}-${{ hashFiles('**/pubspec.lock', '**/lib/**/*.dart') }}
+          restore-keys: |
+            generated-test-${{ runner.os }}-
+
+      - name: Generate code if needed
+        run: |
+          # Execute build_runner only when necessary to optimize CI time
+          if [ ! -d ".dart_tool/build" ] || [ "$(find lib -name "*.dart" -newer .dart_tool/build 2>/dev/null | head -1)" ]; then
+            echo "Running code generation..."
+            flutter pub run build_runner build --delete-conflicting-outputs
+          else
+            echo "Generated code is current, skipping build_runner"
+          fi
+
+      - name: Analyze code quality
+        run: |
+          echo "=== Static Analysis Report ==="
+          # Use --no-fatal-infos to allow warnings but fail on errors
+          flutter analyze --no-fatal-infos || {
+            echo "❌ Static analysis failed - code quality issues detected"
+            echo "Please fix all analysis errors before proceeding"
+            exit 1
+          }
+
+          # Check for analysis warnings (non-blocking but reported)
+          WARNINGS=$(flutter analyze --no-fatal-infos 2>&1 | grep -c "warning •" || echo "0")
+          if [ "$WARNINGS" -gt "0" ]; then
+            echo "⚠️  Found $WARNINGS analysis warnings - consider fixing these"
+          else
+            echo "✅ No analysis warnings found"
+          fi
+
+      - name: Check code formatting
+        run: |
+          echo "=== Code Formatting Verification ==="
+          if ! dart format --set-exit-if-changed lib/ test/; then
+            echo "❌ Code formatting issues detected"
+            echo "Run 'dart format lib/ test/' to fix formatting"
+            exit 1
+          fi
+          echo "✅ Code formatting is consistent"
+
+      - name: Execute unit tests
+        run: |
+          echo "=== Unit Test Execution ==="
+          flutter test --coverage --reporter=expanded || {
+            echo "❌ Unit tests failed"
+            exit 1
+          }
+
+      - name: Execute integration tests
+        run: |
+          echo "=== Integration Test Execution ==="
+          if [ -d "test/integration" ] && [ "$(ls -A test/integration/*.dart 2>/dev/null)" ]; then
+            flutter test test/integration/ || {
+              echo "❌ Integration tests failed"
+              exit 1
+            }
+          else
+            echo "ℹ️  No integration tests found, skipping"
+          fi
+
+      - name: Generate test coverage report
+        if: always()
+        run: |
+          if [ -f "coverage/lcov.info" ]; then
+            echo "=== Test Coverage Summary ==="
+            
+            # Calculate basic coverage metrics
+            LINES_FOUND=$(grep -o "LF:[0-9]*" coverage/lcov.info | cut -d: -f2 | awk '{sum+=$1} END {print sum}')
+            LINES_HIT=$(grep -o "LH:[0-9]*" coverage/lcov.info | cut -d: -f2 | awk '{sum+=$1} END {print sum}')
+            
+            if [ "$LINES_FOUND" -gt "0" ]; then
+              COVERAGE_PERCENT=$(echo "scale=2; $LINES_HIT * 100 / $LINES_FOUND" | bc -l)
+              echo "📊 Test Coverage: ${COVERAGE_PERCENT}% ($LINES_HIT/$LINES_FOUND lines)"
+              
+              # Set coverage threshold
+              THRESHOLD=70
+              if (( $(echo "$COVERAGE_PERCENT < $THRESHOLD" | bc -l) )); then
+                echo "⚠️  Coverage below threshold (${THRESHOLD}%) - consider adding more tests"
+              else
+                echo "✅ Coverage meets threshold (${THRESHOLD}%)"
+              fi
+            else
+              echo "ℹ️  Unable to calculate coverage percentage"
+            fi
+            
+            # Generate HTML report if genhtml is available
+            if command -v genhtml >/dev/null 2>&1; then
+              genhtml coverage/lcov.info --output-directory coverage/html --quiet
+              echo "📄 HTML coverage report generated in coverage/html/"
+            fi
+          else
+            echo "ℹ️  No coverage data generated"
+          fi
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results-${{ github.sha }}
+          path: |
+            coverage/
+            test/reports/
+          retention-days: 30
+
+      - name: Validate build capability
+        run: |
+          echo "=== Build Validation ==="
+          # Verify that code compiles without actually building full artifacts
+          flutter build apk --debug --target-platform android-arm64 --split-debug-info=build/debug-info || {
+            echo "❌ Android build validation failed"
+            exit 1
+          }
+          echo "✅ Build validation passed"

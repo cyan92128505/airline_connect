@@ -1,0 +1,243 @@
+name: Deploy iOS workflow
+on:
+  workflow_dispatch:
+
+jobs:
+  # Quality gate - must pass before deployment
+  quality_gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      test_passed: ${{ steps.test_status.outputs.passed }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.6"
+          channel: "stable"
+          cache: true
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ./.dart_tool
+          key: flutter-ios-test-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            flutter-ios-test-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code if needed
+        run: |
+          if [ ! -d ".dart_tool/build" ] || [ "$(find lib -name "*.dart" -newer .dart_tool/build 2>/dev/null | head -1)" ]; then
+            flutter pub run build_runner build --delete-conflicting-outputs
+          else
+            echo "Generated code is current, skipping build_runner"
+          fi
+
+      - name: Run comprehensive tests
+        run: |
+          echo "=== Pre-deployment Quality Verification ==="
+
+          # Static analysis
+          flutter analyze --no-fatal-infos || {
+            echo "❌ Static analysis failed"
+            exit 1
+          }
+
+          # Unit tests with coverage
+          flutter test --coverage || {
+            echo "❌ Unit tests failed"
+            exit 1
+          }
+
+          # Integration tests if available
+          if [ -d "test/integration" ]; then
+            flutter test test/integration/ || {
+              echo "❌ Integration tests failed"
+              exit 1
+            }
+          fi
+
+          echo "✅ All quality checks passed"
+
+      - name: Set test status
+        id: test_status
+        run: echo "passed=true" >> $GITHUB_OUTPUT
+
+  # iOS build and deployment - depends on quality gate
+  build_and_deploy:
+    needs: quality_gate
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - name: Verify quality gate
+        run: |
+          if [ "${{ needs.quality_gate.outputs.test_passed }}" != "true" ]; then
+            echo "❌ Quality gate failed - deployment blocked"
+            exit 1
+          fi
+          echo "✅ Quality gate passed - proceeding with deployment"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display Xcode version
+        run: xcodebuild -version
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.6"
+          channel: "stable"
+          cache: true
+
+      - name: Display Flutter version
+        run: flutter --version
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ./.dart_tool
+          key: flutter-ios-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            flutter-ios-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Cache CocoaPods dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./ios/Pods
+            ./ios/Podfile.lock
+            ~/.cocoapods
+          key: pods-${{ runner.os }}-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            pods-${{ runner.os }}-
+
+      - name: Cache generated code
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./lib/**/*.g.dart
+            ./lib/**/*.freezed.dart
+            ./.dart_tool/build
+          key: generated-ios-${{ runner.os }}-${{ hashFiles('**/pubspec.lock', '**/lib/**/*.dart') }}
+          restore-keys: |
+            generated-ios-${{ runner.os }}-
+
+      - name: Generate code if needed
+        run: |
+          # Only run if cache miss or files changed
+          if [ ! -d ".dart_tool/build" ] || [ "$(find lib -name "*.dart" -newer .dart_tool/build 2>/dev/null | head -1)" ]; then
+            flutter pub run build_runner build --delete-conflicting-outputs
+          else
+            echo "Generated code is up to date, skipping build_runner"
+          fi
+
+      - name: Cache Xcode build artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./ios/build
+            ./build/ios
+            ~/Library/Developer/Xcode/DerivedData
+          key: xcode-${{ runner.os }}-${{ hashFiles('**/ios/**', '**/lib/**/*.dart', '**/pubspec.lock') }}
+          restore-keys: |
+            xcode-${{ runner.os }}-
+
+      - name: Configure Apple certificates and provisioning
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Create secure variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          APP_PATH=$RUNNER_TEMP/build_app.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # Import certificate and provisioning profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $APP_PATH
+
+          # Create temporary keychain with security settings
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $APP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
+
+      - name: Build production IPA
+        run: |
+          echo "=== Building iOS Release ==="
+          flutter build ipa --export-options-plist=ios/ExportOptions.plist --no-pub --release
+
+          # Verify IPA creation
+          IPAFILE=build/ios/ipa/*.ipa
+          if test -f "$IPAFILE"; then
+            echo "✅ IPA build successful: $(du -h $IPAFILE | cut -f1)"
+            ls -la $IPAFILE
+          else
+            echo "❌ IPA build failed - file not found"
+            exit 1
+          fi
+
+      - name: Validate IPA with App Store
+        env:
+          APPLE_ID_EMAIL: ${{ secrets.APPLE_ID_EMAIL }}
+          APPLE_ID_APP_PASSWORD: ${{ secrets.APPLE_ID_APP_PASSWORD }}
+        run: |
+          echo "=== Validating with App Store ==="
+          xcrun altool --validate-app \
+            --type ios \
+            --file build/ios/ipa/*.ipa \
+            --username "$APPLE_ID_EMAIL" \
+            --password "$APPLE_ID_APP_PASSWORD" || {
+            echo "❌ IPA validation failed"
+            exit 1
+          }
+          echo "✅ IPA validation successful"
+
+      - name: Upload to TestFlight
+        env:
+          APPLE_ID_EMAIL: ${{ secrets.APPLE_ID_EMAIL }}
+          APPLE_ID_APP_PASSWORD: ${{ secrets.APPLE_ID_APP_PASSWORD }}
+        run: |
+          echo "=== Uploading to TestFlight ==="
+          xcrun altool --upload-app \
+            --type ios \
+            --file build/ios/ipa/*.ipa \
+            --username "$APPLE_ID_EMAIL" \
+            --password "$APPLE_ID_APP_PASSWORD" || {
+            echo "❌ TestFlight upload failed"
+            exit 1
+          }
+          echo "✅ TestFlight upload successful"
+
+      - name: Cleanup security artifacts
+        if: ${{ always() }}
+        run: |
+          # Remove temporary keychain and provisioning profile
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+          rm -f ~/Library/MobileDevice/Provisioning\ Profiles/build_app.mobileprovision || true
+          echo "🧹 Security cleanup completed"

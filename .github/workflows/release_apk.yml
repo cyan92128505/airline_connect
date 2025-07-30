@@ -1,0 +1,377 @@
+name: Release Android APK & AAB
+on:
+  workflow_dispatch:
+
+jobs:
+  # Quality gate - mandatory before deployment
+  quality_gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      test_passed: ${{ steps.test_status.outputs.passed }}
+      app_version: ${{ steps.version.outputs.APP_VERSION }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract application version
+        id: version
+        run: |
+          export APP_VERSION
+          APP_VERSION=$(sed -n -e '/^version/ s/.*\: *//p' pubspec.yaml)
+          APP_VERSION=v$APP_VERSION.${{ github.run_number }}
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building version: $APP_VERSION"
+
+      - name: Setup Java environment
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.6"
+          channel: "stable"
+          cache: true
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ./.dart_tool
+          key: flutter-android-test-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            flutter-android-test-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code if needed
+        run: |
+          if [ ! -d ".dart_tool/build" ] || [ "$(find lib -name "*.dart" -newer .dart_tool/build 2>/dev/null | head -1)" ]; then
+            flutter pub run build_runner build --delete-conflicting-outputs
+          else
+            echo "Generated code is current, skipping build_runner"
+          fi
+
+      - name: Execute comprehensive quality checks
+        run: |
+          echo "=== Pre-deployment Quality Verification ==="
+
+          # Static analysis with strict rules
+          flutter analyze --no-fatal-infos || {
+            echo "❌ Static analysis failed - code quality issues detected"
+            exit 1
+          }
+
+          # Code formatting verification
+          if ! dart format --set-exit-if-changed lib/ test/; then
+            echo "❌ Code formatting issues detected"
+            exit 1
+          fi
+
+          # Unit tests with coverage
+          flutter test --coverage || {
+            echo "❌ Unit tests failed"
+            exit 1
+          }
+
+          # Integration tests if available
+          if [ -d "test/integration" ] && [ "$(ls -A test/integration/*.dart 2>/dev/null)" ]; then
+            flutter test test/integration/ || {
+              echo "❌ Integration tests failed"
+              exit 1
+            }
+          fi
+
+          # Build validation
+          flutter build apk --debug --target-platform android-arm64 || {
+            echo "❌ Build validation failed"
+            exit 1
+          }
+
+          echo "✅ All quality checks passed - ready for production build"
+
+      - name: Set test status
+        id: test_status
+        run: echo "passed=true" >> $GITHUB_OUTPUT
+
+  # Android build and release - depends on quality gate
+  build_and_release:
+    needs: quality_gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Verify quality gate
+        run: |
+          if [ "${{ needs.quality_gate.outputs.test_passed }}" != "true" ]; then
+            echo "❌ Quality gate failed - release blocked"
+            exit 1
+          fi
+          echo "✅ Quality gate passed - proceeding with release build"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display build version
+        run: |
+          echo "🚀 Building release: ${{ needs.quality_gate.outputs.app_version }}"
+
+      - name: Cache Flutter dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ./.dart_tool
+          key: flutter-android-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            flutter-android-${{ runner.os }}-
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ./android/.gradle
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/gradle-wrapper.properties', '**/build.gradle*', '**/gradle.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Configure release signing
+        run: |
+          echo "=== Configuring Release Signing ==="
+
+          # Create key.properties from secrets
+          echo "${{ secrets.RELEASE_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
+          if [ -f "android/key.properties" ]; then
+            echo "✅ Release key properties configured"
+          else
+            echo "❌ Failed to create key.properties"
+            exit 1
+          fi
+
+          # Create KeyStore from secrets
+          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > android/key.jks
+          if [ -f "android/key.jks" ]; then
+            echo "✅ Release keystore configured"
+          else
+            echo "❌ Failed to create keystore"
+            exit 1
+          fi
+
+      - name: Setup Java environment
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.6"
+          channel: "stable"
+          cache: true
+
+      - name: Display Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Cache generated code
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./lib/**/*.g.dart
+            ./lib/**/*.freezed.dart
+            ./.dart_tool/build
+          key: generated-android-${{ runner.os }}-${{ hashFiles('**/pubspec.lock', '**/lib/**/*.dart') }}
+          restore-keys: |
+            generated-android-${{ runner.os }}-
+
+      - name: Generate code if needed
+        run: |
+          # Only run if cache miss or files changed
+          if [ ! -d ".dart_tool/build" ] || [ "$(find lib -name "*.dart" -newer .dart_tool/build 2>/dev/null | head -1)" ]; then
+            flutter pub run build_runner build --delete-conflicting-outputs
+          else
+            echo "Generated code is up to date, skipping build_runner"
+          fi
+
+      - name: Build release APK
+        run: |
+          echo "=== Building Release APK ==="
+          flutter build apk --release --shrink || {
+            echo "❌ APK build failed"
+            exit 1
+          }
+          echo "✅ APK build completed"
+
+      - name: Build release AAB
+        run: |
+          echo "=== Building Release AAB ==="
+          flutter build appbundle --release --shrink || {
+            echo "❌ AAB build failed"
+            exit 1
+          }
+          echo "✅ AAB build completed"
+
+      - name: Install compression utilities
+        run: sudo apt-get update && sudo apt-get install -y zip bc
+
+      - name: Generate native libraries package
+        run: |
+          echo "=== Packaging Native Libraries ==="
+
+          # Auto-detect Flutter native libs path
+          SCRIPT_DIR="$(pwd)"
+          DEST_ZIP="$SCRIPT_DIR/build/app/outputs/bundle/release/compressed_libs.zip"
+
+          # Try multiple possible paths for version compatibility
+          POSSIBLE_PATHS=(
+            "$SCRIPT_DIR/build/app/intermediates/merged_native_libs/release/mergeReleaseNativeLibs/out/lib"
+            "$SCRIPT_DIR/build/app/intermediates/merged_native_libs/release/out/lib"
+            "$SCRIPT_DIR/build/app/intermediates/merged_native_libs/release/zip/out/lib"
+          )
+
+          SRC_DIR=""
+          for path in "${POSSIBLE_PATHS[@]}"; do
+            if [ -d "$path" ]; then
+              SRC_DIR="$path"
+              echo "✅ Found native libs at: $SRC_DIR"
+              break
+            fi
+          done
+
+          if [ -z "$SRC_DIR" ]; then
+            echo "⚠️  Native libs directory not found"
+            echo "Searched paths:"
+            for path in "${POSSIBLE_PATHS[@]}"; do
+              echo "   - $path"
+            done
+            
+            # Create empty marker instead of failing
+            mkdir -p "$(dirname "$DEST_ZIP")"
+            echo "No native libraries found" > "${DEST_ZIP%.zip}.txt"
+            echo "Created marker file: ${DEST_ZIP%.zip}.txt"
+            exit 0
+          fi
+
+          # Define valid ABI directories
+          VALID_ABIS=("arm64-v8a" "armeabi-v7a" "x86_64" "x86")
+
+          echo "Creating compressed libraries package..."
+          echo "Source: $SRC_DIR"
+          echo "Destination: $DEST_ZIP"
+
+          # Ensure destination directory exists
+          mkdir -p "$(dirname "$DEST_ZIP")"
+          [ -f "$DEST_ZIP" ] && rm "$DEST_ZIP"
+
+          # Find available ABIs
+          FOUND_ABIS=()
+          for abi in "${VALID_ABIS[@]}"; do
+            if [ -d "$SRC_DIR/$abi" ]; then
+              FOUND_ABIS+=("$abi")
+              echo "📦 Found ABI: $abi ($(du -sh "$SRC_DIR/$abi" | cut -f1))"
+            fi
+          done
+
+          if [ ${#FOUND_ABIS[@]} -eq 0 ]; then
+            echo "⚠️  No valid ABI directories found"
+            echo "No native libraries" > "${DEST_ZIP%.zip}.txt"
+            exit 0
+          fi
+
+          # Create ZIP package
+          cd "$SRC_DIR"
+          zip -r "$DEST_ZIP" "${FOUND_ABIS[@]}" || {
+            echo "❌ ZIP creation failed"
+            exit 1
+          }
+
+          echo "✅ Native libraries packaged: $(du -h "$DEST_ZIP" | cut -f1)"
+
+      - name: Verify build artifacts
+        run: |
+          echo "=== Build Verification Report ==="
+
+          # Verify APK
+          APK_FILE="build/app/outputs/flutter-apk/app-release.apk"
+          if [ -f "$APK_FILE" ]; then
+            APK_SIZE=$(du -h "$APK_FILE" | cut -f1)
+            echo "✅ APK: $APK_SIZE - $APK_FILE"
+          else
+            echo "❌ APK not found: $APK_FILE"
+            exit 1
+          fi
+
+          # Verify AAB
+          AAB_FILE="build/app/outputs/bundle/release/app-release.aab"
+          if [ -f "$AAB_FILE" ]; then
+            AAB_SIZE=$(du -h "$AAB_FILE" | cut -f1)
+            echo "✅ AAB: $AAB_SIZE - $AAB_FILE"
+          else
+            echo "❌ AAB not found: $AAB_FILE"
+            exit 1
+          fi
+
+          # Verify compressed libs
+          ZIP_FILE="build/app/outputs/bundle/release/compressed_libs.zip"
+          if [ -f "$ZIP_FILE" ]; then
+            ZIP_SIZE=$(du -h "$ZIP_FILE" | cut -f1)
+            echo "✅ Native Libs: $ZIP_SIZE - $ZIP_FILE"
+          elif [ -f "${ZIP_FILE%.zip}.txt" ]; then
+            echo "ℹ️  No native libraries marker found"
+          else
+            echo "⚠️  Compressed libs not found (non-critical)"
+          fi
+
+          echo "📊 All build artifacts verified successfully"
+
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/bundle/release/compressed_libs.zip*
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit: main
+          tag: release-android-${{ needs.quality_gate.outputs.app_version }}
+          name: "Android Release ${{ needs.quality_gate.outputs.app_version }}"
+          body: |
+            ## 📱 Android Release ${{ needs.quality_gate.outputs.app_version }}
+
+            ### ✅ Quality Assurance
+            - Static analysis passed
+            - Code formatting verified  
+            - Unit tests executed successfully
+            - Integration tests validated
+            - Build verification completed
+
+            ### 📦 Release Artifacts
+            - **APK**: Direct installation package
+            - **AAB**: Google Play Store deployment bundle
+            - **Native Libs**: Compressed native libraries
+
+            ### 🔧 Build Environment
+            - **Flutter**: 3.32.5 (stable)
+            - **Java**: 17 (Temurin)
+            - **Build Number**: ${{ github.run_number }}
+            - **Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+            ### 📋 Deployment Notes
+            - All quality gates passed before build
+            - Release signed with production certificates
+            - Optimized build with code shrinking enabled
+          draft: false
+          prerelease: false
+          allowUpdates: true
+          artifactErrorsFailBuild: true
