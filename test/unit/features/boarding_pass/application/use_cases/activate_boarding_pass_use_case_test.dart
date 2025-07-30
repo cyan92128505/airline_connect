@@ -107,11 +107,13 @@ void main() {
       });
 
       // Verify the service was called with correct PassId
-      verifyNever(
+      verify(
         mockBoardingPassService.activateBoardingPass(
-          argThat(predicate<PassId>((passIdVO) => passIdVO.value == passId)),
+          argThat(
+            predicate<PassId>((passIdVO) => passIdVO.value == passId.value),
+          ),
         ),
-      );
+      ).called(1);
     });
 
     test('should return error for empty pass ID', () async {

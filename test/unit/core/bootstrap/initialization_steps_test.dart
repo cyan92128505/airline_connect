@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
-import 'package:app/core/bootstrap/initialization_step.dart';
 import 'package:app/core/bootstrap/steps/timezone_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/system_ui_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/database_initialization_step.dart';
