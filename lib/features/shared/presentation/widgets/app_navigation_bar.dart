@@ -28,79 +28,136 @@ class AppNavigationBar extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: BottomNavigationBar(
-          currentIndex: currentIndex,
-          onTap: onTap,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: AppColors.primary,
-          unselectedItemColor: AppColors.textSecondary,
-          selectedLabelStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.normal,
-          ),
-          items: [
-            BottomNavigationBarItem(
-              icon: Stack(
+        child: Row(
+          children: [
+            _buildNavItem(
+              index: 0,
+              icon: Icons.airplane_ticket_outlined,
+              activeIcon: Icons.airplane_ticket,
+              label: '登機證',
+              isEnabled: isAuthenticated,
+            ),
+            _buildNavItem(
+              index: 1,
+              icon: Icons.qr_code_scanner_outlined,
+              activeIcon: Icons.qr_code_scanner,
+              label: '掃描器',
+              isEnabled: isAuthenticated,
+            ),
+            _buildProfileNavItem(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required bool isEnabled,
+  }) {
+    final isSelected = currentIndex == index;
+
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          splashColor: isEnabled ? null : Colors.transparent,
+          highlightColor: isEnabled ? null : Colors.transparent,
+          onTap: () => onTap(index),
+          child: Opacity(
+            opacity: isEnabled ? 1.0 : 0.5,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.airplane_ticket_outlined),
-                  if (!isAuthenticated)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: AppColors.warning,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                  Icon(
+                    isSelected ? activeIcon : icon,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
                     ),
+                  ),
                 ],
               ),
-              activeIcon: const Icon(Icons.airplane_ticket),
-              label: '登機證',
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.qr_code_scanner_outlined),
-              activeIcon: Icon(Icons.qr_code_scanner),
-              label: '掃描器',
-            ),
-            BottomNavigationBarItem(
-              icon: Stack(
-                children: [
-                  Icon(isAuthenticated ? Icons.person : Icons.person_outline),
-                  if (!isAuthenticated)
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: AppColors.error,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.surface,
-                            width: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileNavItem() {
+    final isSelected = currentIndex == 2;
+
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => onTap(2),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  children: [
+                    Icon(
+                      isAuthenticated ? Icons.person : Icons.person_outline,
+                      color: isSelected
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
+                    if (!isAuthenticated)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColors.error,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: AppColors.surface,
+                              width: 1,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-              activeIcon: Icon(
-                isAuthenticated ? Icons.person : Icons.person_outline,
-              ),
-              label: isAuthenticated ? '會員' : '登入',
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isAuthenticated ? '會員' : '登入',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
