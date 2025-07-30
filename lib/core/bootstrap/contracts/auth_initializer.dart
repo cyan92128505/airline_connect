@@ -7,7 +7,7 @@ import 'package:dartz/dartz.dart';
 abstract class AuthInitializer {
   /// Human-readable name of this initializer for logging
   String get name;
-  
+
   /// Whether this initializer is required for app functionality
   /// If true, initialization failure will prevent app startup
   bool get isRequired;
