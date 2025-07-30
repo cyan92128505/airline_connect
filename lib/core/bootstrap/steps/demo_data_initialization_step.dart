@@ -1,3 +1,4 @@
+import 'package:app/core/bootstrap/contracts/initialization_context.dart';
 import 'package:app/core/bootstrap/initialization_step.dart';
 import 'package:app/features/shared/infrastructure/database/mock_data_seeder.dart';
 import 'package:logger/logger.dart';

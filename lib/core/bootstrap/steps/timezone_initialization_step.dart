@@ -1,3 +1,4 @@
+import 'package:app/core/bootstrap/contracts/initialization_context.dart';
 import 'package:app/core/bootstrap/initialization_step.dart';
 import 'package:logger/logger.dart';
 import 'package:timezone/data/latest.dart' as tz;
