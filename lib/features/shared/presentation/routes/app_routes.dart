@@ -42,18 +42,19 @@ class AppRoutes {
     }
   }
 
+  static const Map<String, int> pagePositions = {
+    boardingPass: 0, // Leftmost
+    qrScanner: 1, // Middle
+    memberAuth: 2, // Rightmost (same position as profile)
+    memberProfile: 2, // Rightmost (same position as auth)
+    splash: -1, // Special case, no animation needed
+  };
+
   // Get tab index for route
   static int getTabIndex(String route) {
-    switch (route) {
-      case boardingPass:
-        return 0;
-      case qrScanner:
-        return 1;
-      case memberAuth:
-      case memberProfile:
-        return 2;
-      default:
-        return 0;
+    if (pagePositions.containsKey(route)) {
+      return pagePositions[route]!;
     }
+    return 0;
   }
 }

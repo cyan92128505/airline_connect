@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'app_routes.dart';
 
-/// Navigation service for programmatic navigation
+/// Navigation service focused purely on navigation operations
+/// Animation logic is handled by buildSlideTransitionAnimatedPage
 class NavigationService {
   NavigationService._();
 
-  // Direct navigation methods
+  // Simple navigation methods - no animation state management
   static void goToBoardingPass(BuildContext context) {
     context.go(AppRoutes.boardingPass);
   }
@@ -23,7 +24,7 @@ class NavigationService {
     context.go(AppRoutes.memberProfile);
   }
 
-  // Smart member navigation based on authentication state
+  /// Smart member navigation based on authentication state
   static void goToMember(BuildContext context, bool isAuthenticated) {
     final route = isAuthenticated
         ? AppRoutes.memberProfile
@@ -31,7 +32,7 @@ class NavigationService {
     context.go(route);
   }
 
-  // Tab navigation with authentication awareness
+  /// Tab navigation with authentication awareness
   static void navigateToTab(
     BuildContext context,
     int tabIndex,
@@ -50,7 +51,7 @@ class NavigationService {
     context.go(AppRoutes.memberAuth);
   }
 
-  // Member flow navigation
+  /// Member flow navigation
   static void handleMemberAccess(BuildContext context, bool isAuthenticated) {
     if (isAuthenticated) {
       context.go(AppRoutes.memberProfile);
@@ -59,7 +60,7 @@ class NavigationService {
     }
   }
 
-  // Utility methods
+  // Route utility methods
   static bool isCurrentRoute(BuildContext context, String route) {
     final currentLocation = GoRouterState.of(context).uri.path;
     return currentLocation == route;
@@ -70,18 +71,19 @@ class NavigationService {
     return AppRoutes.getTabIndex(currentLocation);
   }
 
-  // Check if current route requires authentication
+  static String getCurrentLocation(BuildContext context) {
+    return GoRouterState.of(context).uri.path;
+  }
+
   static bool isCurrentRouteProtected(BuildContext context) {
     final currentLocation = GoRouterState.of(context).uri.path;
     return AppRoutes.protectedRoutes.contains(currentLocation);
   }
 
-  // Get appropriate member route based on authentication state
   static String getMemberRoute(bool isAuthenticated) {
     return isAuthenticated ? AppRoutes.memberProfile : AppRoutes.memberAuth;
   }
 
-  // Check if current route is a member-related route
   static bool isCurrentRouteMemberRelated(BuildContext context) {
     final currentLocation = GoRouterState.of(context).uri.path;
     return currentLocation == AppRoutes.memberAuth ||
