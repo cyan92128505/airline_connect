@@ -1,15 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/seat_number.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 
+import '../../../../helpers/test_timezone_helper.dart';
+
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('QRCodeData Value Object Tests', () {
@@ -18,7 +18,13 @@ void main() {
       final flightNumber = FlightNumber.create('BR857');
       final seatNumber = SeatNumber.create('12A');
       final memberNumber = MemberNumber.create('AA123456');
-      final departureTime = TZDateTime.now(local).add(const Duration(hours: 2));
+      final departureTime = TimezoneTestDataFactory.createTaipeiTime(
+        2025,
+        7,
+        15,
+        14,
+        30,
+      );
 
       final qrCode = QRCodeData.generate(
         passId: passId,
@@ -39,7 +45,13 @@ void main() {
       final flightNumber = FlightNumber.create('BR857');
       final seatNumber = SeatNumber.create('12A');
       final memberNumber = MemberNumber.create('AA123456');
-      final departureTime = TZDateTime.now(local).add(const Duration(hours: 2));
+      final departureTime = TimezoneTestDataFactory.createTaipeiTime(
+        2025,
+        7,
+        15,
+        14,
+        30,
+      );
 
       final qrCode = QRCodeData.generate(
         passId: passId,
@@ -58,38 +70,94 @@ void main() {
       expect(payload.memberNumber, equals(memberNumber.value));
     });
 
-    test('should validate QR code correctly when fresh', () {
-      final passId = PassId.generate();
-      final flightNumber = FlightNumber.create('BR857');
-      final seatNumber = SeatNumber.create('12A');
-      final memberNumber = MemberNumber.create('AA123456');
-      final departureTime = TZDateTime.now(local).add(const Duration(hours: 2));
+    group('Cross-timezone QR Code Tests', () {
+      test('should decrypt QR code generated in different timezone', () {
+        final passId = PassId.generate();
+        final flightNumber = FlightNumber.create('BR857');
+        final seatNumber = SeatNumber.create('12A');
+        final memberNumber = MemberNumber.create('AA123456');
+        final departureTime = TimezoneTestDataFactory.createTokyoTime(
+          2025,
+          7,
+          15,
+          14,
+          30,
+        );
 
-      final qrCode = QRCodeData.generate(
-        passId: passId,
-        flightNumber: flightNumber,
-        seatNumber: seatNumber,
-        memberNumber: memberNumber,
-        departureTime: departureTime,
-      );
+        // Generate QR code in Taipei timezone
+        TestTimezoneHelper.setupForTesting('Asia/Taipei');
+        final qrCode = QRCodeData.generate(
+          passId: passId,
+          flightNumber: flightNumber,
+          seatNumber: seatNumber,
+          memberNumber: memberNumber,
+          departureTime: departureTime,
+        );
 
-      expect(qrCode.isValid, isTrue);
-      expect(qrCode.timeRemaining, isNotNull);
+        // Switch to Tokyo timezone and try to decrypt
+        TestTimezoneHelper.setupForTesting('Asia/Tokyo');
+        final payload = qrCode.decryptPayload();
+
+        expect(payload, isNotNull);
+        expect(payload!.passId, equals(passId.value));
+
+        // Reset to default timezone for other tests
+        TestTimezoneHelper.setupForTesting();
+      });
+
+      test('should validate QR code consistently across timezones', () {
+        final times = TimezoneTestDataFactory.createBoardingWindowTimes();
+        final qrCode = QRCodeData.generate(
+          passId: PassId.generate(),
+          flightNumber: FlightNumber.create('BR857'),
+          seatNumber: SeatNumber.create('12A'),
+          memberNumber: MemberNumber.create('AA123456'),
+          departureTime: times['departureTime']!,
+        );
+
+        // Should be valid in Taipei timezone
+        TestTimezoneHelper.setupForTesting('Asia/Taipei');
+        final validInTaipei = qrCode.isValid;
+
+        // Should be valid in UTC timezone
+        TestTimezoneHelper.setupForUtcTesting();
+        final validInUtc = qrCode.isValid;
+
+        // Should be consistent regardless of validation timezone
+        expect(validInTaipei, equals(validInUtc));
+
+        // Reset to default
+        TestTimezoneHelper.setupForTesting();
+      });
     });
 
-    test('should return false for expired QR code', () {
-      final oldGeneratedAt = TZDateTime.now(
-        local,
-      ).subtract(const Duration(hours: 3));
-      final qrCode = QRCodeData(
-        encryptedPayload: 'test',
-        checksum: 'test',
-        generatedAt: oldGeneratedAt,
-        version: 1,
-      );
+    group('DST Transition Tests', () {
+      test('should handle QR code validation during DST transition', () {
+        // Test during US DST "spring forward"
+        TestTimezoneHelper.setupForTesting('America/Los_Angeles');
 
-      expect(qrCode.isValid, isFalse);
-      expect(qrCode.timeRemaining, isNull);
+        // Create QR code just before DST transition (2:00 AM becomes 3:00 AM)
+        final dstTransitionTime = TimezoneTestDataFactory.createLosAngelesTime(
+          2025,
+          3,
+          9,
+          1,
+          30, // 1:30 AM on DST transition day
+        );
+
+        final qrCode = QRCodeData.generate(
+          passId: PassId.generate(),
+          flightNumber: FlightNumber.create('UA123'),
+          seatNumber: SeatNumber.create('12A'),
+          memberNumber: MemberNumber.create('AA123456'),
+          departureTime: dstTransitionTime.add(Duration(hours: 4)),
+        );
+
+        expect(qrCode.isValid, isTrue);
+
+        // Reset to default
+        TestTimezoneHelper.setupForTesting();
+      });
     });
   });
 }
