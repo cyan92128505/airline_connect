@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_dto.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/qr_code_display.dart';
 import 'package:app/features/shared/presentation/utils/date_formatter.dart';
-import 'package:app/features/shared/presentation/utils/status_helpers.dart';
 import 'package:app/features/shared/presentation/theme/app_colors.dart';
 import 'package:gap/gap.dart';
 
@@ -652,8 +651,8 @@ class SimpleBoardingPassCard extends StatelessWidget {
 
   /// Build status badge
   Widget _buildStatusBadge(BuildContext context, PassStatus status) {
-    final statusColor = StatusHelpers.getStatusColor(boardingPass.status);
-    final statusText = StatusHelpers.getStatusText(boardingPass.status);
+    final statusColor = status.displayColor;
+    final statusText = status.displayName;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

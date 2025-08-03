@@ -4,7 +4,6 @@ import 'package:app/features/boarding_pass/presentation/widgets/qr_code_display.
 import 'package:app/features/boarding_pass/presentation/widgets/flight_info_section.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/passenger_info_section.dart';
 import 'package:app/features/shared/presentation/utils/date_formatter.dart';
-import 'package:app/features/shared/presentation/utils/status_helpers.dart';
 import 'package:app/features/shared/presentation/theme/app_colors.dart';
 import 'package:gap/gap.dart';
 
@@ -110,8 +109,9 @@ class BoardingPassCard extends StatelessWidget {
 
   /// Build card header with status and flight info
   Widget _buildHeader(BuildContext context) {
-    final statusColor = StatusHelpers.getStatusColor(boardingPass.status);
-    final statusText = StatusHelpers.getStatusText(boardingPass.status);
+    final status = boardingPass.status;
+    final statusColor = status.displayColor;
+    final statusText = status.displayName;
 
     return Row(
       children: [
