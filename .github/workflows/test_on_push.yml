@@ -20,6 +20,29 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 12266719
+          packages: |
+            platform-tools
+            build-tools;35.0.0
+            platforms;android-35
+            platforms;android-21
+            ndk;27.0.12077973
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/sdk/ndk/27.0.12077973
+            ${{ runner.temp }}/android-sdk/ndk/27.0.12077973
+          key: android-ndk-27.0.12077973-${{ runner.os }}
+          restore-keys: |
+            android-ndk-27.0.12077973-
+
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
@@ -146,6 +169,29 @@ jobs:
             echo "ℹ️  No coverage data generated"
           fi
 
+      - name: Validate Android configuration
+        run: |
+          echo "=== Android Configuration Validation ==="
+          # Verify Android SDK components are properly installed
+          sdkmanager --list_installed | grep -E "build-tools|platforms|ndk" || {
+            echo "❌ Required Android SDK components not found"
+            exit 1
+          }
+
+          # Check Gradle configuration without full build
+          cd android && ./gradlew dependencies --configuration=debugRuntimeClasspath || {
+            echo "❌ Android Gradle configuration failed"
+            exit 1
+          }
+
+          # Quick compile validation without creating full APK
+          flutter build apk --debug --target-platform android-arm64 --split-debug-info=build/debug-info --no-tree-shake-icons || {
+            echo "❌ Android build validation failed"
+            exit 1
+          }
+
+          echo "✅ Android configuration validated successfully"
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
@@ -154,14 +200,5 @@ jobs:
           path: |
             coverage/
             test/reports/
+            build/debug-info/
           retention-days: 30
-
-      - name: Validate build capability
-        run: |
-          echo "=== Build Validation ==="
-          # Verify that code compiles without actually building full artifacts
-          flutter build apk --debug --target-platform android-arm64 --split-debug-info=build/debug-info || {
-            echo "❌ Android build validation failed"
-            exit 1
-          }
-          echo "✅ Build validation passed"

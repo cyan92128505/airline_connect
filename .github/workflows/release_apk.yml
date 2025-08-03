@@ -3,7 +3,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Quality gate - mandatory before deployment
   quality_gate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -58,7 +57,7 @@ jobs:
             echo "Generated code is current, skipping build_runner"
           fi
 
-      - name: Execute comprehensive quality checks
+      - name: Execute quality checks only
         run: |
           echo "=== Pre-deployment Quality Verification ==="
 
@@ -88,23 +87,17 @@ jobs:
             }
           fi
 
-          # Build validation
-          flutter build apk --debug --target-platform android-arm64 || {
-            echo "❌ Build validation failed"
-            exit 1
-          }
-
           echo "✅ All quality checks passed - ready for production build"
 
       - name: Set test status
         id: test_status
         run: echo "passed=true" >> $GITHUB_OUTPUT
 
-  # Android build and release - depends on quality gate
+  # Android build and release - optimized with proper caching
   build_and_release:
     needs: quality_gate
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
 
     steps:
       - name: Verify quality gate
@@ -121,6 +114,45 @@ jobs:
       - name: Display build version
         run: |
           echo "🚀 Building release: ${{ needs.quality_gate.outputs.app_version }}"
+
+      - name: Setup Java environment
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: 12266719
+          packages: |
+            platform-tools
+            build-tools;35.0.0
+            platforms;android-35
+            platforms;android-21
+            ndk;27.0.12077973
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+
+      - name: Cache Android NDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/sdk/ndk/27.0.12077973
+            ${{ runner.temp }}/android-sdk/ndk/27.0.12077973
+          key: android-ndk-27.0.12077973-${{ runner.os }}
+          restore-keys: |
+            android-ndk-27.0.12077973-
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.6"
+          channel: "stable"
+          cache: true
+
+      - name: Display Flutter version
+        run: flutter --version
 
       - name: Cache Flutter dependencies
         uses: actions/cache@v4
@@ -143,44 +175,6 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      - name: Configure release signing
-        run: |
-          echo "=== Configuring Release Signing ==="
-
-          # Create key.properties from secrets
-          echo "${{ secrets.RELEASE_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
-          if [ -f "android/key.properties" ]; then
-            echo "✅ Release key properties configured"
-          else
-            echo "❌ Failed to create key.properties"
-            exit 1
-          fi
-
-          # Create KeyStore from secrets
-          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > android/key.jks
-          if [ -f "android/key.jks" ]; then
-            echo "✅ Release keystore configured"
-          else
-            echo "❌ Failed to create keystore"
-            exit 1
-          fi
-
-      - name: Setup Java environment
-        uses: actions/setup-java@v4
-        with:
-          java-version: "17"
-          distribution: "temurin"
-
-      - name: Setup Flutter SDK
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.32.6"
-          channel: "stable"
-          cache: true
-
-      - name: Display Flutter version
-        run: flutter --version
-
       - name: Install dependencies
         run: flutter pub get
 
@@ -202,6 +196,28 @@ jobs:
             flutter pub run build_runner build --delete-conflicting-outputs
           else
             echo "Generated code is up to date, skipping build_runner"
+          fi
+
+      - name: Configure release signing
+        run: |
+          echo "=== Configuring Release Signing ==="
+
+          # Create key.properties from secrets
+          echo "${{ secrets.RELEASE_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
+          if [ -f "android/key.properties" ]; then
+            echo "✅ Release key properties configured"
+          else
+            echo "❌ Failed to create key.properties"
+            exit 1
+          fi
+
+          # Create KeyStore from secrets
+          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > android/key.jks
+          if [ -f "android/key.jks" ]; then
+            echo "✅ Release keystore configured"
+          else
+            echo "❌ Failed to create keystore"
+            exit 1
           fi
 
       - name: Build release APK
@@ -362,7 +378,7 @@ jobs:
             - **Native Libs**: Compressed native libraries
 
             ### 🔧 Build Environment
-            - **Flutter**: 3.32.5 (stable)
+            - **Flutter**: 3.32.6 (stable)
             - **Java**: 17 (Temurin)
             - **Build Number**: ${{ github.run_number }}
             - **Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
