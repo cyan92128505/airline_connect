@@ -3,6 +3,7 @@ import 'package:app/core/bootstrap/initialization_step.dart';
 import 'package:logger/logger.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:intl/date_symbol_data_local.dart';
 
 final Logger _logger = Logger();
 
@@ -17,6 +18,10 @@ class TimezoneInitializationStep extends InitializationStep {
   Future<void> execute(InitializationContext context) async {
     // Initialize timezone database
     tz.initializeTimeZones();
+
+    // Initialize date formatting for supported locales
+    await initializeDateFormatting('zh_TW', null);
+    await initializeDateFormatting('en_US', null);
 
     // Set local timezone - fallback to UTC if timezone not found
     try {

@@ -4,6 +4,7 @@ import 'package:app/features/shared/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'routes/router_provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 /// Main application widget with router configuration
 class AirlineConnectApp extends ConsumerWidget {
@@ -18,7 +19,12 @@ class AirlineConnectApp extends ConsumerWidget {
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('zh', 'TW'), Locale('en', 'US')],
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(
