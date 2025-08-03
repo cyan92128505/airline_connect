@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 import 'package:app/features/boarding_pass/domain/services/qr_code_service.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
@@ -14,12 +13,13 @@ import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:app/core/failures/failure.dart';
 
+import '../../../../helpers/test_timezone_helper.dart';
 import 'qr_code_service_test.mocks.dart';
 
 @GenerateMocks([BoardingPassRepository])
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('QRCodeService Tests', () {

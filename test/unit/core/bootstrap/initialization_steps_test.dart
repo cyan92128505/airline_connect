@@ -20,8 +20,8 @@ import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/core/failures/failure.dart';
 import 'package:dartz/dartz.dart';
 import 'package:objectbox/objectbox.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../helpers/test_timezone_helper.dart';
 import 'initialization_steps_test.mocks.dart';
 
 @GenerateMocks([
@@ -34,7 +34,7 @@ import 'initialization_steps_test.mocks.dart';
 ])
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('TimezoneInitializationStep', () {

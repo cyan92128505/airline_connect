@@ -13,8 +13,8 @@ import 'package:app/features/boarding_pass/application/use_cases/auto_expire_boa
 import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:timezone/timezone.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'auto_expire_boarding_passes_use_case_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<BoardingPassService>(), MockSpec<BoardingPass>()])
@@ -67,7 +67,7 @@ void main() {
     }
 
     setUpAll(() {
-      tz.initializeTimeZones();
+      TestTimezoneHelper.setupForTesting();
     });
 
     setUp(() {

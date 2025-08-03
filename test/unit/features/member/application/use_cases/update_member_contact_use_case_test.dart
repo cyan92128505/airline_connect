@@ -6,8 +6,8 @@ import 'package:app/features/member/application/use_cases/update_member_contact_
 import 'package:app/features/member/domain/repositories/member_repository.dart';
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'update_member_contact_use_case_test.mocks.dart';
 
 @GenerateMocks([MemberRepository])
@@ -16,7 +16,7 @@ void main() {
   late MockMemberRepository mockRepository;
 
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   setUp(() {

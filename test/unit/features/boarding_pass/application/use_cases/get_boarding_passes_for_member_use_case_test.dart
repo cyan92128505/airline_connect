@@ -14,9 +14,9 @@ import 'package:app/features/boarding_pass/application/use_cases/get_boarding_pa
 import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_operation_dto.dart';
-import 'package:timezone/timezone.dart';
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'get_boarding_passes_for_member_use_case_test.mocks.dart';
 
 class TestTimeConstants {
@@ -61,7 +61,7 @@ void main() {
       final memberNumber = MemberNumber.create(memberNumberStr);
       final flightNumber = FlightNumber.create(flightNumberStr);
       final seatNumber = SeatNumber.create(seatNumberStr);
-      final departureTime = TZDateTime.from(departureDateTime, local);
+      final departureTime = tz.TZDateTime.from(departureDateTime, tz.local);
       final boardingTime = departureTime.subtract(const Duration(minutes: 30));
       final qrCode = QRCodeData.generate(
         passId: passId,
@@ -93,7 +93,7 @@ void main() {
     }
 
     setUpAll(() {
-      tz.initializeTimeZones();
+      TestTimezoneHelper.setupForTesting();
     });
 
     setUp(() {

@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 import 'package:app/features/flight/domain/services/flight_status_service.dart';
 import 'package:app/features/flight/domain/repositories/flight_repository.dart';
@@ -12,12 +11,13 @@ import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
 import 'package:app/features/flight/domain/enums/flight_status.dart';
 import 'package:app/core/failures/failure.dart';
 
+import '../../../../helpers/test_timezone_helper.dart';
 import 'flight_status_service_test.mocks.dart';
 
 @GenerateMocks([FlightRepository])
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('FlightStatusService Tests', () {

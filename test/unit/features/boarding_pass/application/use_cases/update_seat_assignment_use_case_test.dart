@@ -15,8 +15,8 @@ import 'package:app/features/boarding_pass/domain/services/boarding_pass_service
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_operation_dto.dart';
 import 'package:timezone/timezone.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'update_seat_assignment_use_case_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<BoardingPassService>(), MockSpec<BoardingPass>()])
@@ -66,7 +66,7 @@ void main() {
     }
 
     setUpAll(() {
-      tz.initializeTimeZones();
+      TestTimezoneHelper.setupForTesting();
     });
 
     setUp(() {

@@ -9,8 +9,8 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 @GenerateMocks([GetFlightDetailsUseCase, SearchAvailableFlightsUseCase])
 import 'flight_support_service_test.mocks.dart';
 
@@ -38,7 +38,7 @@ void main() {
   }
 
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   setUp(() {

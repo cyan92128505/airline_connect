@@ -5,8 +5,8 @@ import 'package:dartz/dartz.dart';
 import 'package:app/features/member/application/use_cases/register_member_use_case.dart';
 import 'package:app/features/member/application/dtos/authentication_dto.dart';
 import 'package:app/features/member/domain/repositories/member_repository.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'register_member_use_case_test.mocks.dart';
 
 @GenerateMocks([MemberRepository])
@@ -15,7 +15,7 @@ void main() {
   late MockMemberRepository mockRepository;
 
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   setUp(() {

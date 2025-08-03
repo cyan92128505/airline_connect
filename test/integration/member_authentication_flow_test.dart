@@ -17,7 +17,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
 
 // Import actual app components and new auth initialization
 import 'package:app/features/member/infrastructure/entities/member_entity.dart';
@@ -29,6 +28,8 @@ import 'package:app/core/failures/failure.dart';
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:dartz/dartz.dart';
 
+import '../helpers/test_timezone_helper.dart';
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -37,7 +38,7 @@ void main() {
     late Directory tempDir;
 
     setUpAll(() async {
-      tz.initializeTimeZones();
+      TestTimezoneHelper.setupForTesting();
 
       // Create test database in temporary directory
       tempDir = await Directory.systemTemp.createTemp(

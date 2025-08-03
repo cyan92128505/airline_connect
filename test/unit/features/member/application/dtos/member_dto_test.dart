@@ -1,13 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
 import 'package:app/features/member/application/dtos/member_dto.dart';
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 
+import '../../../../../helpers/test_timezone_helper.dart';
+
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
   group('MemberDTO Tests', () {
     test('should create valid member DTO', () {

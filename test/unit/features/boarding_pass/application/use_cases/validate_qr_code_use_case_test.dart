@@ -9,8 +9,8 @@ import 'package:app/features/boarding_pass/domain/services/qr_code_service.dart'
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_operation_dto.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:timezone/timezone.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'validate_qr_code_use_case_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<QRCodeService>()])
@@ -21,7 +21,7 @@ void main() {
     late QRPayload mockPayload;
 
     setUpAll(() {
-      tz.initializeTimeZones();
+      TestTimezoneHelper.setupForTesting();
     });
 
     setUp(() {

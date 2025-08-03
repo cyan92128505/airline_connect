@@ -1,12 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:app/core/exceptions/domain_exception.dart';
 
+import '../../../../helpers/test_timezone_helper.dart';
+
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('Member Entity Tests', () {

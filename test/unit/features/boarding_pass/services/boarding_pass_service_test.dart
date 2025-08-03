@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
@@ -16,12 +15,13 @@ import 'package:app/features/flight/domain/entities/flight.dart';
 import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
 import 'package:app/core/failures/failure.dart';
 
+import '../../../../helpers/test_timezone_helper.dart';
 import 'boarding_pass_service_test.mocks.dart';
 
 @GenerateMocks([BoardingPassRepository])
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('BoardingPassService Tests', () {

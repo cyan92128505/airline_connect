@@ -4,11 +4,12 @@ import 'package:app/features/flight/domain/enums/flight_status.dart';
 import 'package:app/features/flight/domain/value_objects/flight_schedule.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
+
+import '../../../../../helpers/test_timezone_helper.dart';
 
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('FlightDTO Tests', () {

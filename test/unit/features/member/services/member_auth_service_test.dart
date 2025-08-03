@@ -9,14 +9,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:dartz/dartz.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../helpers/test_timezone_helper.dart';
 import 'member_auth_service_test.mocks.dart';
 
 @GenerateMocks([MemberRepository, SecureStorageRepository])
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('MemberAuthService Tests', () {

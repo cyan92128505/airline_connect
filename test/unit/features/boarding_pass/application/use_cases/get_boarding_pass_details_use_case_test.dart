@@ -14,8 +14,8 @@ import 'package:app/features/boarding_pass/application/use_cases/get_boarding_pa
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:timezone/timezone.dart';
-import 'package:timezone/data/latest.dart' as tz;
 
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'get_boarding_pass_details_use_case_test.mocks.dart';
 
 @GenerateNiceMocks([
@@ -65,7 +65,7 @@ void main() {
     }
 
     setUpAll(() {
-      tz.initializeTimeZones();
+      TestTimezoneHelper.setupForTesting();
     });
 
     setUp(() {

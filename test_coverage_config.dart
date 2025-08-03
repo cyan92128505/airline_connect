@@ -1,4 +1,4 @@
-// test_coverage_config.dart - Configure test coverage exclusions
+// Configure test coverage exclusions
 // Place this file in your project root directory
 
 // Coverage configuration for Flutter tests

@@ -19,8 +19,8 @@ import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/flight/domain/entities/flight.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:app/features/flight/domain/enums/flight_status.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
+import '../../../../../helpers/test_timezone_helper.dart';
 import 'create_boarding_pass_use_case_test.mocks.dart';
 
 @GenerateNiceMocks([
@@ -33,7 +33,7 @@ import 'create_boarding_pass_use_case_test.mocks.dart';
 ])
 void main() {
   setUpAll(() {
-    tz.initializeTimeZones();
+    TestTimezoneHelper.setupForTesting();
   });
 
   group('CreateBoardingPassUseCase', () {
