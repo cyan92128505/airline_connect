@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
 import 'package:app/features/shared/presentation/utils/date_formatter.dart';
 import 'package:gap/gap.dart';
 

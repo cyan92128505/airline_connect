@@ -4,7 +4,7 @@ import 'package:app/features/boarding_pass/presentation/widgets/qr_code_display.
 import 'package:app/features/boarding_pass/presentation/widgets/flight_info_section.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/passenger_info_section.dart';
 import 'package:app/features/shared/presentation/utils/date_formatter.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
 import 'package:gap/gap.dart';
 
 /// Widget for displaying boarding pass information

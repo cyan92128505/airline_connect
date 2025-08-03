@@ -1,9 +1,9 @@
 // Presentation imports will be added here
 
-import 'package:app/features/shared/presentation/theme/app_theme.dart';
+import 'package:app/features/shared/presentation/routes/router_provider.dart';
+import 'package:app/core/presentation/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'routes/router_provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 /// Main application widget with router configuration

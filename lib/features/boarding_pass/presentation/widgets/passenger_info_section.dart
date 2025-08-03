@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_dto.dart';
 import 'package:app/features/shared/presentation/utils/date_formatter.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
 
 /// Widget for displaying passenger information section
 class PassengerInfoSection extends StatelessWidget {

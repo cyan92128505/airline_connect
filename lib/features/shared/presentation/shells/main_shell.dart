@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:app/features/shared/presentation/routes/navigation_service.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
-import 'package:app/features/shared/presentation/widgets/app_navigation_bar.dart';
+import 'package:app/core/presentation/widgets/app_navigation_bar.dart';
 
 /// Main application shell with bottom navigation
 class MainShell extends HookConsumerWidget {

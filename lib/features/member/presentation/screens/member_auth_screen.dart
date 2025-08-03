@@ -1,12 +1,12 @@
-import 'package:app/features/shared/presentation/widgets/svg/logo.dart';
-import 'package:app/features/shared/presentation/widgets/svg/slogen.dart';
+import 'package:app/core/presentation/widgets/svg/logo.dart';
+import 'package:app/core/presentation/widgets/svg/slogen.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/member/presentation/widgets/member_auth_form.dart';
-import 'package:app/features/shared/presentation/widgets/loading_indicator.dart';
-import 'package:app/features/shared/presentation/widgets/error_display.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/widgets/loading_indicator.dart';
+import 'package:app/core/presentation/widgets/error_display.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
 import 'package:gap/gap.dart';
 
 /// Member authentication screen for login

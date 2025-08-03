@@ -7,9 +7,9 @@ import 'package:gap/gap.dart';
 import 'package:app/features/boarding_pass/presentation/notifiers/boarding_pass_notifier.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/qr_scanner_view.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/scan_result_display.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
-import 'package:app/features/shared/presentation/widgets/loading_indicator.dart';
-import 'package:app/features/shared/presentation/widgets/error_display.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/widgets/loading_indicator.dart';
+import 'package:app/core/presentation/widgets/error_display.dart';
 
 /// QR Scanner screen for validating boarding passes
 class QRScannerScreen extends HookConsumerWidget {

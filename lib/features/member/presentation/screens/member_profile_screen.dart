@@ -6,9 +6,9 @@ import 'package:app/features/member/application/dtos/member_dto.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/shared/presentation/routes/app_routes.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
-import 'package:app/features/shared/presentation/widgets/loading_indicator.dart';
-import 'package:app/features/shared/presentation/widgets/svg/slogen.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/widgets/loading_indicator.dart';
+import 'package:app/core/presentation/widgets/svg/slogen.dart';
 
 /// Member profile screen for authenticated users
 class MemberProfileScreen extends HookConsumerWidget {

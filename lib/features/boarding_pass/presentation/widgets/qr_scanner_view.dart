@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';

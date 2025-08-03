@@ -5,9 +5,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/shared/presentation/routes/app_routes.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
-import 'package:app/features/shared/presentation/widgets/svg/logo.dart';
-import 'package:app/features/shared/presentation/widgets/svg/slogen.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/widgets/svg/logo.dart';
+import 'package:app/core/presentation/widgets/svg/slogen.dart';
 import 'package:gap/gap.dart';
 
 /// Splash screen for app initialization display

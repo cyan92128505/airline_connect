@@ -1,3 +1,4 @@
+import 'package:app/core/presentation/widgets/svg/logo.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/simple_boarding_pass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -6,10 +7,10 @@ import 'package:app/features/boarding_pass/presentation/notifiers/boarding_pass_
 import 'package:app/features/boarding_pass/presentation/widgets/boarding_pass_card.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/member/presentation/widgets/member_info_card.dart';
-import 'package:app/features/shared/presentation/widgets/loading_indicator.dart';
-import 'package:app/features/shared/presentation/widgets/error_display.dart';
-import 'package:app/features/shared/presentation/widgets/offline_indicator.dart';
-import 'package:app/features/shared/presentation/theme/app_colors.dart';
+import 'package:app/core/presentation/widgets/loading_indicator.dart';
+import 'package:app/core/presentation/widgets/error_display.dart';
+import 'package:app/core/presentation/widgets/offline_indicator.dart';
+import 'package:app/core/presentation/theme/app_colors.dart';
 import 'package:gap/gap.dart';
 
 /// Main boarding pass screen showing member's passes
@@ -59,7 +60,7 @@ class BoardingPassScreen extends HookConsumerWidget {
           slivers: [
             // App bar with member info
             SliverAppBar(
-              expandedHeight: 200,
+              expandedHeight: 160,
               floating: false,
               pinned: false,
               backgroundColor: AppColors.primary,
@@ -84,10 +85,10 @@ class BoardingPassScreen extends HookConsumerWidget {
                           const Gap(16),
                           Row(
                             children: [
-                              Icon(
-                                Icons.flight_takeoff,
+                              const LogoWidget(
+                                width: 28,
+                                height: 28,
                                 color: Colors.white,
-                                size: 28,
                               ),
                               const Gap(12),
                               Text(
