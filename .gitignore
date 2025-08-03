@@ -60,3 +60,4 @@ app.*.map.json
 *.diff
 
 coverage/
+.vscode/
