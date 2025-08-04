@@ -1,6 +1,6 @@
 import 'package:app/core/bootstrap/contracts/initialization_context.dart';
 import 'package:app/core/bootstrap/initialization_step.dart';
-import 'package:app/core/di/dependency_injection.dart';
+import 'package:app/di/dependency_injection.dart';
 import 'package:logger/logger.dart';
 
 final Logger _logger = Logger();

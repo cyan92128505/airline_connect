@@ -4,7 +4,7 @@ import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/shared/presentation/app.dart';
 import 'package:app/features/shared/presentation/routes/app_routes.dart';
-import 'package:app/core/di/dependency_injection.dart';
+import 'package:app/di/dependency_injection.dart';
 import 'package:app/features/boarding_pass/presentation/screens/boarding_pass_screen.dart';
 import 'package:app/features/member/presentation/screens/member_auth_screen.dart';
 import 'package:app/features/member/presentation/widgets/member_auth_form.dart';

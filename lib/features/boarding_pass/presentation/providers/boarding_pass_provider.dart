@@ -1,4 +1,4 @@
-import 'package:app/core/di/dependency_injection.dart';
+import 'package:app/di/dependency_injection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:app/features/boarding_pass/application/services/boarding_pass_application_service.dart';

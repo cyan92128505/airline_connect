@@ -7,7 +7,7 @@ import 'package:app/core/bootstrap/steps/database_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/demo_data_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/system_ui_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/timezone_initialization_step.dart';
-import 'package:app/core/di/dependency_injection.dart';
+import 'package:app/di/dependency_injection.dart';
 import 'package:app/features/member/infrastructure/bootstrap/member_auth_initializer.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';

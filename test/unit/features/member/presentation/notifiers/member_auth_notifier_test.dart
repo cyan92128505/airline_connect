@@ -1,4 +1,4 @@
-import 'package:app/core/di/dependency_injection.dart';
+import 'package:app/di/dependency_injection.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
