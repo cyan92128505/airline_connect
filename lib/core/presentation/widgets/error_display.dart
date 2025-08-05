@@ -4,6 +4,7 @@ import 'package:app/core/presentation/theme/app_colors.dart';
 /// Error display widget with retry option
 class ErrorDisplay extends StatelessWidget {
   final String message;
+  final String? retryText;
   final VoidCallback? onRetry;
   final bool isCompact;
 
@@ -12,6 +13,7 @@ class ErrorDisplay extends StatelessWidget {
     required this.message,
     this.onRetry,
     this.isCompact = false,
+    this.retryText,
   });
 
   @override
@@ -38,7 +40,7 @@ class ErrorDisplay extends StatelessWidget {
               TextButton(
                 onPressed: onRetry,
                 child: Text(
-                  '重試',
+                  retryText ?? '重試',
                   style: TextStyle(color: AppColors.error, fontSize: 12),
                 ),
               ),
@@ -69,7 +71,7 @@ class ErrorDisplay extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('重試'),
+            label: Text(retryText ?? '重試'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.error,
               foregroundColor: Colors.white,
