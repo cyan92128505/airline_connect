@@ -95,7 +95,10 @@ class SimpleBoardingPassCard extends StatelessWidget {
                     isActivated &&
                     boardingPass.qrCode.isValid) ...[
                   const Gap(16),
-                  _buildCompactQRCode(context),
+                  QRCodeDisplay(
+                    qrCodeData: boardingPass.qrCode,
+                    passId: boardingPass.passId,
+                  ),
                 ],
 
                 const Gap(16),
@@ -527,81 +530,6 @@ class SimpleBoardingPassCard extends StatelessWidget {
     );
   }
 
-  /// Build compact QR code for activated passes
-  Widget _buildCompactQRCode(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(Icons.qr_code, color: AppColors.primary, size: 20),
-
-              const Gap(8),
-
-              Text(
-                '登機 QR Code',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const Spacer(),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withAlpha(25),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: AppColors.success,
-                      size: 12,
-                    ),
-                    const Gap(4),
-                    Text(
-                      '有效',
-                      style: TextStyle(
-                        color: AppColors.success,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const Gap(12),
-
-          // Simplified QR code display
-          QRCodeDisplay(
-            qrCodeData: boardingPass.qrCode,
-            passId: boardingPass.passId,
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Build action buttons
   Widget _buildActionButtons(BuildContext context, bool isActivated) {
     if (isActivated) {
@@ -756,35 +684,31 @@ class SimpleBoardingPassCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '登機 QR Code',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            QRCodeDisplay(
+              qrCodeData: boardingPass.qrCode,
+              passId: boardingPass.passId,
+            ),
+
+            const Gap(16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.all(Radius.circular(16)),
               ),
-
-              const Gap(16),
-
-              QRCodeDisplay(
-                qrCodeData: boardingPass.qrCode,
-                passId: boardingPass.passId,
-              ),
-
-              const Gap(16),
-
-              TextButton(
+              child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('關閉'),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [const Text('關閉')],
+                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
