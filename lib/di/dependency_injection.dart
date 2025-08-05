@@ -30,7 +30,10 @@ import 'package:app/features/member/domain/services/member_auth_service.dart';
 import 'package:app/features/member/infrastructure/repositories/member_repository_impl.dart';
 import 'package:app/features/member/infrastructure/repositories/secure_storage_repository_impl.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:http/http.dart' as http;
 
 /// Global ObjectBox instance provider
 /// Should be initialized in main() before app starts
@@ -43,6 +46,20 @@ final authInitializerProvider = Provider<AuthInitializer>((ref) {
   throw UnimplementedError(
     'AuthInitializer must be provided via override in bootstrap',
   );
+});
+
+// ================================================================
+// NETWORK CONNECTIVITY PROVIDERS
+// ================================================================
+
+/// Connectivity instance provider - can be overridden for testing
+final connectivityProvider = Provider<Connectivity>((ref) {
+  return Connectivity();
+});
+
+/// HttpClient instance provider - can be overridden for testing
+final httpClientProvider = Provider<http.Client>((ref) {
+  return http.Client();
 });
 
 // ================================================================
