@@ -9,6 +9,10 @@ class BootstrapConfig {
     this.maxInitializationTimeoutSeconds = 30,
     this.enableAuthInitialization = true,
     this.enableOfflineMode = false,
+    this.enableNetworkMonitoring = true,
+    this.networkHeartbeatIntervalSeconds = 30,
+    this.networkQualityCheckIntervalSeconds = 60,
+    this.maxNetworkRetryAttempts = 3,
   });
 
   /// Whether debug features should be enabled
@@ -32,6 +36,18 @@ class BootstrapConfig {
   /// Whether offline mode support should be enabled
   final bool enableOfflineMode;
 
+  /// Whether network connectivity monitoring should be enabled
+  final bool enableNetworkMonitoring;
+
+  /// Interval for network heartbeat checks (in seconds)
+  final int networkHeartbeatIntervalSeconds;
+
+  /// Interval for network quality assessment (in seconds)
+  final int networkQualityCheckIntervalSeconds;
+
+  /// Maximum number of network retry attempts
+  final int maxNetworkRetryAttempts;
+
   @override
   String toString() {
     return 'BootstrapConfig('
@@ -41,7 +57,11 @@ class BootstrapConfig {
         'timezone: $timezoneName, '
         'timeout: ${maxInitializationTimeoutSeconds}s, '
         'auth: $enableAuthInitialization, '
-        'offline: $enableOfflineMode'
+        'offline: $enableOfflineMode, '
+        'networkMonitoring: $enableNetworkMonitoring, '
+        'heartbeat: ${networkHeartbeatIntervalSeconds}s, '
+        'qualityCheck: ${networkQualityCheckIntervalSeconds}s, '
+        'maxRetries: $maxNetworkRetryAttempts'
         ')';
   }
 
@@ -53,6 +73,10 @@ class BootstrapConfig {
       enableDetailedLogging: false,
       timezoneName: timezoneName,
       maxInitializationTimeoutSeconds: 15,
+      enableNetworkMonitoring: true,
+      networkHeartbeatIntervalSeconds: 60, // Less frequent in production
+      networkQualityCheckIntervalSeconds: 120,
+      maxNetworkRetryAttempts: 3,
     );
   }
 
@@ -64,6 +88,10 @@ class BootstrapConfig {
       enableDetailedLogging: true,
       timezoneName: timezoneName,
       maxInitializationTimeoutSeconds: 60,
+      enableNetworkMonitoring: true,
+      networkHeartbeatIntervalSeconds: 30,
+      networkQualityCheckIntervalSeconds: 60,
+      maxNetworkRetryAttempts: 5, // More retries in development
     );
   }
 
@@ -76,6 +104,23 @@ class BootstrapConfig {
       timezoneName: timezoneName,
       maxInitializationTimeoutSeconds: 10,
       enableAuthInitialization: false, // Skip auth in tests
+      enableNetworkMonitoring: false, // Skip network monitoring in tests
+    );
+  }
+
+  /// Create configuration with network monitoring disabled
+  factory BootstrapConfig.offlineOnly({
+    String timezoneName = 'Asia/Taipei',
+    bool enableDebugMode = false,
+  }) {
+    return BootstrapConfig(
+      enableDebugMode: enableDebugMode,
+      enableDemoData: enableDebugMode,
+      enableDetailedLogging: enableDebugMode,
+      timezoneName: timezoneName,
+      enableOfflineMode: true,
+      enableNetworkMonitoring: false,
+      maxInitializationTimeoutSeconds: 20,
     );
   }
 }

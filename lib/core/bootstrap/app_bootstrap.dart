@@ -5,6 +5,7 @@ import 'package:app/core/bootstrap/initialization_step.dart';
 import 'package:app/core/bootstrap/steps/auth_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/database_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/demo_data_initialization_step.dart';
+import 'package:app/core/bootstrap/steps/network_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/system_ui_initialization_step.dart';
 import 'package:app/core/bootstrap/steps/timezone_initialization_step.dart';
 import 'package:app/di/dependency_injection.dart';
@@ -90,6 +91,8 @@ class AppBootstrap {
       TimezoneInitializationStep(config.timezoneName),
       SystemUIInitializationStep(),
       DatabaseInitializationStep(),
+      // Network initialization after database but before auth
+      if (config.enableNetworkMonitoring) NetworkInitializationStep(),
       if (config.enableDemoData) DemoDataInitializationStep(),
     ];
 
@@ -154,6 +157,28 @@ class AppBootstrap {
     if (context.objectBox != null) {
       if (!context.objectBox!.isHealthy()) {
         throw InitializationException('Database validation failed');
+      }
+    }
+
+    // Validate network initialization if enabled
+    if (config.enableNetworkMonitoring) {
+      final networkError = context.getData('network_init_error');
+      if (networkError != null) {
+        _logger.w('Network initialization had errors: $networkError');
+      }
+
+      final isOnline = context.getData('initial_network_online') ?? false;
+      final connectionType =
+          context.getData('initial_connection_type') ?? 'unknown';
+
+      _logger.i(
+        'Network validation - Online: $isOnline, Type: $connectionType',
+      );
+
+      if (!isOnline && !config.enableOfflineMode) {
+        _logger.w(
+          'App starting without network connection and offline mode disabled',
+        );
       }
     }
 
