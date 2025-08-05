@@ -1,44 +1,57 @@
 import 'dart:io';
-import 'package:app/features/member/domain/enums/member_tier.dart';
-import 'package:app/features/member/domain/value_objects/member_number.dart';
-import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
-import 'package:app/features/shared/presentation/app.dart';
-import 'package:app/features/shared/presentation/routes/app_routes.dart';
+import 'package:app/core/failures/failure.dart';
 import 'package:app/di/dependency_injection.dart';
 import 'package:app/features/boarding_pass/presentation/screens/boarding_pass_screen.dart';
+import 'package:app/features/member/application/dtos/member_dto.dart';
+import 'package:app/features/member/domain/entities/member.dart';
+import 'package:app/features/member/domain/enums/member_tier.dart';
+import 'package:app/features/member/domain/repositories/secure_storage_repository.dart';
+import 'package:app/features/member/domain/value_objects/member_number.dart';
+import 'package:app/features/member/infrastructure/entities/member_entity.dart';
+import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/member/presentation/screens/member_auth_screen.dart';
 import 'package:app/features/member/presentation/widgets/member_auth_form.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
+import 'package:app/features/shared/presentation/app.dart';
+import 'package:app/features/shared/presentation/routes/app_routes.dart';
 import 'package:app/features/shared/presentation/screens/splash_screen.dart';
 import 'package:app/objectbox.g.dart';
-import 'package:flutter/material.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:timezone/timezone.dart' as tz;
-
-// Import actual app components and new auth initialization
-import 'package:app/features/member/infrastructure/entities/member_entity.dart';
-import 'package:app/features/member/application/dtos/member_dto.dart';
-
-// NEW: Mock imports
-import 'package:app/features/member/domain/repositories/secure_storage_repository.dart';
-import 'package:app/core/failures/failure.dart';
-import 'package:app/features/member/domain/entities/member.dart';
-import 'package:dartz/dartz.dart';
 
 import '../helpers/test_timezone_helper.dart';
 
+import 'member_authentication_flow_test.mocks.dart';
+
+@GenerateMocks([Connectivity])
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Go Router Authentication Flow Integration Tests', () {
     late ObjectBox objectBox;
     late Directory tempDir;
+    late MockConnectivity mockConnectivity;
 
     setUpAll(() async {
       TestTimezoneHelper.setupForTesting();
+
+      mockConnectivity = MockConnectivity();
+
+      when(
+        mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+
+      when(
+        mockConnectivity.onConnectivityChanged,
+      ).thenAnswer((_) => Stream.value([ConnectivityResult.wifi]));
 
       // Create test database in temporary directory
       tempDir = await Directory.systemTemp.createTemp(
@@ -75,6 +88,7 @@ void main() {
       final app = await TestAppWithGoRouter.create(
         objectBox: objectBox,
         useMockSecureStorage: true,
+        mockConnectivity: mockConnectivity,
       );
       await tester.pumpWidget(app);
 
@@ -163,6 +177,7 @@ void main() {
         objectBox: objectBox,
         useMockSecureStorage: true,
         mockSecureStorage: mockStorage,
+        mockConnectivity: mockConnectivity,
       );
       await tester.pumpWidget(app);
 
@@ -281,9 +296,11 @@ class TestAppWithGoRouter extends ConsumerWidget {
     required ObjectBox objectBox,
     bool useMockSecureStorage = false,
     MockSecureStorageRepository? mockSecureStorage,
+    required MockConnectivity mockConnectivity,
   }) async {
     final overrides = <Override>[
       objectBoxProvider.overrideWithValue(objectBox),
+      connectivityProvider.overrideWithValue(mockConnectivity),
     ];
 
     // Add mock secure storage if needed
