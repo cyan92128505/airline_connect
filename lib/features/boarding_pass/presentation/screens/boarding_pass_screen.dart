@@ -1,4 +1,11 @@
+import 'package:app/core/presentation/widgets/network_status_icon.dart';
 import 'package:app/core/presentation/widgets/svg/logo.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/bottom_network_summary.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/empty_state.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/network_status_sliver.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/not_authenticated_view.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/offline_warning.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/section_header.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/simple_boarding_pass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -9,11 +16,11 @@ import 'package:app/features/member/presentation/notifiers/member_auth_notifier.
 import 'package:app/features/member/presentation/widgets/member_info_card.dart';
 import 'package:app/core/presentation/widgets/loading_indicator.dart';
 import 'package:app/core/presentation/widgets/error_display.dart';
-import 'package:app/core/presentation/widgets/offline_indicator.dart';
 import 'package:app/core/presentation/theme/app_colors.dart';
+import 'package:app/features/shared/presentation/providers/network_connectivity_provider.dart';
 import 'package:gap/gap.dart';
 
-/// Main boarding pass screen showing member's passes
+/// Main boarding pass screen with network awareness
 class BoardingPassScreen extends HookConsumerWidget {
   const BoardingPassScreen({super.key});
 
@@ -21,6 +28,7 @@ class BoardingPassScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final memberAuthState = ref.watch(memberAuthNotifierProvider);
     final boardingPassState = ref.watch(boardingPassNotifierProvider);
+    final networkState = ref.watch(networkConnectivityProvider);
     final boardingPassNotifier = ref.read(
       boardingPassNotifierProvider.notifier,
     );
@@ -35,32 +43,59 @@ class BoardingPassScreen extends HookConsumerWidget {
       return null;
     }, [memberAuthState.isAuthenticated]);
 
-    // Auto refresh every 30 seconds for real-time updates
-    useEffect(() {
-      if (memberAuthState.isAuthenticated) {
-        final timer = Stream.periodic(const Duration(seconds: 30)).listen((_) {
-          boardingPassNotifier.refresh();
-        });
-        return timer.cancel;
-      }
-      return null;
-    }, [memberAuthState.isAuthenticated]);
+    // Smart refresh - adjust frequency based on network conditions
+    useEffect(
+      () {
+        if (memberAuthState.isAuthenticated) {
+          // Reduce refresh frequency when network is poor or offline
+          final refreshInterval =
+              networkState.isOnline && !networkState.isPoorConnection
+              ? const Duration(seconds: 30)
+              : const Duration(minutes: 2);
+
+          final timer = Stream.periodic(refreshInterval).listen((_) {
+            if (networkState.isOnline) {
+              boardingPassNotifier.refresh();
+            }
+          });
+          return timer.cancel;
+        }
+        return null;
+      },
+      [
+        memberAuthState.isAuthenticated,
+        networkState.isOnline,
+        networkState.quality,
+      ],
+    );
 
     if (!memberAuthState.isAuthenticated) {
-      return _buildNotAuthenticatedView();
+      return const NotAuthenticatedView();
     }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: RefreshIndicator(
         onRefresh: () async {
-          await boardingPassNotifier.refresh();
+          if (networkState.isOnline) {
+            await boardingPassNotifier.refresh();
+          } else {
+            // Show offline message but still try to refresh local data
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('離線模式：顯示本地資料'),
+                backgroundColor: AppColors.warning,
+                duration: Duration(seconds: 2),
+              ),
+            );
+            await boardingPassNotifier.refresh();
+          }
         },
         child: CustomScrollView(
           slivers: [
-            // App bar with member info
+            // App bar with member info and network status
             SliverAppBar(
-              expandedHeight: 160,
+              expandedHeight: 180, // Increased height for network status
               floating: false,
               pinned: false,
               backgroundColor: AppColors.primary,
@@ -99,6 +134,8 @@ class BoardingPassScreen extends HookConsumerWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              const Spacer(),
+                              NetworkStatusIcon(networkState),
                             ],
                           ),
                           const Spacer(),
@@ -115,9 +152,8 @@ class BoardingPassScreen extends HookConsumerWidget {
               ),
             ),
 
-            // Offline indicator
-            if (boardingPassState.isOffline)
-              const SliverToBoxAdapter(child: OfflineIndicator()),
+            // Enhanced network status indicator
+            const NetworkStatusSliver(),
 
             // Content
             SliverPadding(
@@ -126,6 +162,7 @@ class BoardingPassScreen extends HookConsumerWidget {
                 context,
                 boardingPassState,
                 boardingPassNotifier,
+                networkState,
                 ref,
               ),
             ),
@@ -135,16 +172,21 @@ class BoardingPassScreen extends HookConsumerWidget {
     );
   }
 
-  /// Build main content based on state
+  /// Build main content with network awareness
   Widget _buildContent(
     BuildContext context,
     BoardingPassState state,
     BoardingPassNotifier notifier,
+    NetworkConnectivityState networkState,
     WidgetRef ref,
   ) {
     if (state.isLoading && state.boardingPasses.isEmpty) {
-      return const SliverFillRemaining(
-        child: Center(child: LoadingIndicator(message: '載入登機證中...')),
+      return SliverFillRemaining(
+        child: Center(
+          child: LoadingIndicator(
+            message: networkState.isOnline ? '載入登機證中...' : '載入本地資料中...',
+          ),
+        ),
       );
     }
 
@@ -154,42 +196,47 @@ class BoardingPassScreen extends HookConsumerWidget {
           child: ErrorDisplay(
             message: state.errorMessage!,
             onRetry: () => notifier.refresh(),
+            // Show different retry text based on network status
+            retryText: networkState.isOnline ? '重試' : '重新載入',
           ),
         ),
       );
     }
 
     if (!state.hasBoardingPasses) {
-      return SliverFillRemaining(child: _buildEmptyState(context, ref));
+      return SliverFillRemaining(child: const EmptyState());
     }
 
     return SliverList(
       delegate: SliverChildListDelegate([
         // Section: Next departure
         if (state.nextDeparture != null) ...[
-          _buildSectionHeader(
-            context,
-            '即將起飛',
-            Icons.schedule,
-            AppColors.warning,
+          SectionHeader(
+            title: '即將起飛',
+            icon: Icons.schedule,
+            color: AppColors.warning,
           ),
           const Gap(12),
           BoardingPassCard(
             boardingPass: state.nextDeparture!,
             isHighlighted: true,
             onTap: () => notifier.selectBoardingPass(state.nextDeparture!),
-            onActivate: state.isActivating
-                ? null
-                : () => notifier.activateBoardingPass(
-                    state.nextDeparture!.passId,
-                  ),
+            onActivate: _canActivatePass(state, networkState)
+                ? () =>
+                      notifier.activateBoardingPass(state.nextDeparture!.passId)
+                : null,
           ),
+          if (!networkState.isOnline) const OfflineWarning('登機證啟用需要網路連線'),
           const Gap(24),
         ],
 
         // Section: Today's flights
         if (state.todayPasses.isNotEmpty) ...[
-          _buildSectionHeader(context, '今日航班', Icons.today, AppColors.info),
+          SectionHeader(
+            title: '今日航班',
+            icon: Icons.today,
+            color: AppColors.info,
+          ),
           const Gap(12),
           ...state.todayPasses.map(
             (pass) => Padding(
@@ -197,9 +244,9 @@ class BoardingPassScreen extends HookConsumerWidget {
               child: SimpleBoardingPassCard(
                 boardingPass: pass,
                 onTap: () => notifier.selectBoardingPass(pass),
-                onActivate: state.isActivating
-                    ? null
-                    : () => notifier.activateBoardingPass(pass.passId),
+                onActivate: _canActivatePass(state, networkState)
+                    ? () => notifier.activateBoardingPass(pass.passId)
+                    : null,
               ),
             ),
           ),
@@ -207,11 +254,10 @@ class BoardingPassScreen extends HookConsumerWidget {
         ],
 
         // Section: All boarding passes
-        _buildSectionHeader(
-          context,
-          '所有登機證',
-          Icons.list_alt,
-          AppColors.textSecondary,
+        SectionHeader(
+          title: '所有登機證',
+          icon: Icons.list_alt,
+          color: AppColors.textSecondary,
         ),
         const Gap(12),
         ...state.boardingPasses.map(
@@ -220,12 +266,16 @@ class BoardingPassScreen extends HookConsumerWidget {
             child: SimpleBoardingPassCard(
               boardingPass: pass,
               onTap: () => notifier.selectBoardingPass(pass),
-              onActivate: state.isActivating
-                  ? null
-                  : () => notifier.activateBoardingPass(pass.passId),
+              onActivate: _canActivatePass(state, networkState)
+                  ? () => notifier.activateBoardingPass(pass.passId)
+                  : null,
             ),
           ),
         ),
+
+        // Network status summary at bottom
+        if (!networkState.isOnline || state.needsSync)
+          const BottomNetworkSummary(),
 
         // Error display at bottom if exists
         if (state.hasError)
@@ -244,102 +294,11 @@ class BoardingPassScreen extends HookConsumerWidget {
     );
   }
 
-  /// Build section header
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title,
-    IconData icon,
-    Color color,
+  /// Check if boarding pass can be activated
+  bool _canActivatePass(
+    BoardingPassState state,
+    NetworkConnectivityState networkState,
   ) {
-    return Row(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const Gap(8),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Build empty state when no boarding passes
-  Widget _buildEmptyState(BuildContext context, WidgetRef ref) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.airplane_ticket_outlined,
-          size: 80,
-          color: AppColors.textSecondary.withAlpha(127),
-        ),
-        const Gap(24),
-        Text(
-          '尚無登機證',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const Gap(12),
-        Text(
-          '您目前沒有任何登機證\n請聯繫客服或透過官網預訂機票',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-          textAlign: TextAlign.center,
-        ),
-        const Gap(32),
-        OutlinedButton.icon(
-          onPressed: () {
-            // Trigger refresh
-            ref.read(boardingPassNotifierProvider.notifier).refresh();
-          },
-          icon: const Icon(Icons.refresh),
-          label: const Text('重新載入'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: BorderSide(color: AppColors.primary),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Build not authenticated view
-  Widget _buildNotAuthenticatedView() {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.login,
-              size: 80,
-              color: AppColors.textSecondary.withAlpha(127),
-            ),
-            const Gap(24),
-            Text(
-              '請先登入會員',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const Gap(12),
-            Text(
-              '需要登入會員才能查看登機證',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
+    return !state.isActivating && networkState.isOnline;
   }
 }
