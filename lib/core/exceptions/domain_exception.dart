@@ -26,3 +26,37 @@ class InfrastructureException implements Exception {
   @override
   String toString() => 'InfrastructureException: $message';
 }
+
+class InitializationException implements Exception {
+  final String message;
+  final Object? originalError;
+  final StackTrace? stackTrace;
+
+  const InitializationException(
+    this.message, {
+    this.originalError,
+    this.stackTrace,
+  });
+
+  @override
+  String toString() {
+    final buffer = StringBuffer('InitializationException: $message');
+
+    if (originalError != null) {
+      buffer.write(' (caused by: $originalError)');
+    }
+
+    return buffer.toString();
+  }
+}
+
+class NetworkInitializationException implements Exception {
+  final String message;
+  final Object? cause;
+
+  const NetworkInitializationException(this.message, [this.cause]);
+
+  @override
+  String toString() =>
+      'NetworkInitializationException: $message${cause != null ? ' (caused by: $cause)' : ''}';
+}
