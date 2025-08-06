@@ -134,47 +134,6 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
     state = state.copyWith(errorMessage: null);
   }
 
-  /// Set offline status
-  void setOfflineStatus(bool isOffline) {
-    state = state.copyWith(isOffline: isOffline);
-  }
-
-  /// Refresh member profile
-  Future<void> refreshMemberProfile() async {
-    if (!state.isAuthenticated ||
-        state.member == null ||
-        state.member!.isUnauthenticated) {
-      return;
-    }
-
-    state = state.copyWith(isLoading: true);
-
-    try {
-      final memberService = ref.read(memberApplicationServiceRefProvider);
-      final result = await memberService.getMemberProfile(
-        state.member!.memberNumber,
-      );
-
-      result.fold(
-        (failure) {
-          state = state.copyWith(
-            isLoading: false,
-            errorMessage: '無法更新會員資料: ${failure.message}',
-          );
-        },
-        (updatedMember) {
-          state = state.copyWith(
-            isLoading: false,
-            member: updatedMember,
-            errorMessage: null,
-          );
-        },
-      );
-    } catch (e) {
-      state = state.copyWith(isLoading: false, errorMessage: '更新會員資料時發生錯誤');
-    }
-  }
-
   /// Map failure messages to user-friendly Chinese messages
   String _mapFailureToMessage(String failureMessage) {
     final message = failureMessage.toLowerCase();

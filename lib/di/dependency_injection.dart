@@ -1,13 +1,7 @@
 import 'package:app/core/bootstrap/contracts/auth_initializer.dart';
 import 'package:app/features/boarding_pass/application/services/boarding_pass_application_service.dart';
 import 'package:app/features/boarding_pass/application/use_cases/activate_boarding_pass_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/auto_expire_boarding_passes_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/create_boarding_pass_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/get_boarding_pass_details_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/get_boarding_passes_for_member_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/update_seat_assignment_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/use_boarding_pass_use_case.dart';
-import 'package:app/features/boarding_pass/application/use_cases/validate_boarding_eligibility_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/validate_qr_code_use_case.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
@@ -18,12 +12,7 @@ import 'package:app/features/flight/domain/services/flight_status_service.dart';
 import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
 import 'package:app/features/member/application/services/member_application_service.dart';
 import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
-import 'package:app/features/member/application/use_cases/get_member_profile_use_case.dart';
 import 'package:app/features/member/application/use_cases/logout_member_use_case.dart';
-import 'package:app/features/member/application/use_cases/register_member_use_case.dart';
-import 'package:app/features/member/application/use_cases/update_member_contact_use_case.dart';
-import 'package:app/features/member/application/use_cases/upgrade_member_tier_use_case.dart';
-import 'package:app/features/member/application/use_cases/validate_member_eligibility_use_case.dart';
 import 'package:app/features/member/domain/repositories/member_repository.dart';
 import 'package:app/features/member/domain/repositories/secure_storage_repository.dart';
 import 'package:app/features/member/domain/services/member_auth_service.dart';
@@ -93,38 +82,6 @@ final authenticateMemberUseCaseProvider = Provider<AuthenticateMemberUseCase>((
   return AuthenticateMemberUseCase(memberAuthService);
 });
 
-final getMemberProfileUseCaseProvider = Provider<GetMemberProfileUseCase>((
-  ref,
-) {
-  final memberRepository = ref.watch(memberRepositoryProvider);
-  return GetMemberProfileUseCase(memberRepository);
-});
-
-final registerMemberUseCaseProvider = Provider<RegisterMemberUseCase>((ref) {
-  final memberRepository = ref.watch(memberRepositoryProvider);
-  return RegisterMemberUseCase(memberRepository);
-});
-
-final updateMemberContactUseCaseProvider = Provider<UpdateMemberContactUseCase>(
-  (ref) {
-    final memberRepository = ref.watch(memberRepositoryProvider);
-    return UpdateMemberContactUseCase(memberRepository);
-  },
-);
-
-final upgradeMemberTierUseCaseProvider = Provider<UpgradeMemberTierUseCase>((
-  ref,
-) {
-  final memberRepository = ref.watch(memberRepositoryProvider);
-  return UpgradeMemberTierUseCase(memberRepository);
-});
-
-final validateMemberEligibilityUseCaseProvider =
-    Provider<ValidateMemberEligibilityUseCase>((ref) {
-      final memberAuthService = ref.watch(memberAuthServiceProvider);
-      return ValidateMemberEligibilityUseCase(memberAuthService);
-    });
-
 final logoutMemberUseCaseProvider = Provider<LogoutMemberUseCase>((ref) {
   final memberAuthService = ref.watch(memberAuthServiceProvider);
   return LogoutMemberUseCase(memberAuthService);
@@ -136,11 +93,6 @@ final memberApplicationServiceProvider = Provider<MemberApplicationService>((
 ) {
   return MemberApplicationService(
     ref.watch(authenticateMemberUseCaseProvider),
-    ref.watch(getMemberProfileUseCaseProvider),
-    ref.watch(registerMemberUseCaseProvider),
-    ref.watch(updateMemberContactUseCaseProvider),
-    ref.watch(upgradeMemberTierUseCaseProvider),
-    ref.watch(validateMemberEligibilityUseCaseProvider),
     ref.watch(logoutMemberUseCaseProvider),
   );
 });
@@ -167,34 +119,11 @@ final qrCodeServiceProvider = Provider<QRCodeService>((ref) {
 });
 
 /// Use Case providers
-final createBoardingPassUseCaseProvider = Provider<CreateBoardingPassUseCase>((
-  ref,
-) {
-  final boardingPassService = ref.watch(boardingPassServiceProvider);
-  final memberRepository = ref.watch(memberRepositoryProvider);
-  final flightRepository = ref.watch(flightRepositoryProvider);
-  return CreateBoardingPassUseCase(
-    boardingPassService,
-    memberRepository,
-    flightRepository,
-  );
-});
 
 final activateBoardingPassUseCaseProvider =
     Provider<ActivateBoardingPassUseCase>((ref) {
       final boardingPassService = ref.watch(boardingPassServiceProvider);
       return ActivateBoardingPassUseCase(boardingPassService);
-    });
-
-final useBoardingPassUseCaseProvider = Provider<UseBoardingPassUseCase>((ref) {
-  final boardingPassService = ref.watch(boardingPassServiceProvider);
-  return UseBoardingPassUseCase(boardingPassService);
-});
-
-final updateSeatAssignmentUseCaseProvider =
-    Provider<UpdateSeatAssignmentUseCase>((ref) {
-      final boardingPassService = ref.watch(boardingPassServiceProvider);
-      return UpdateSeatAssignmentUseCase(boardingPassService);
     });
 
 final validateQRCodeUseCaseProvider = Provider<ValidateQRCodeUseCase>((ref) {
@@ -208,41 +137,13 @@ final getBoardingPassesForMemberUseCaseProvider =
       return GetBoardingPassesForMemberUseCase(boardingPassService);
     });
 
-final getBoardingPassDetailsUseCaseProvider =
-    Provider<GetBoardingPassDetailsUseCase>((ref) {
-      final boardingPassRepository = ref.watch(boardingPassRepositoryProvider);
-      return GetBoardingPassDetailsUseCase(boardingPassRepository);
-    });
-
-final validateBoardingEligibilityUseCaseProvider =
-    Provider<ValidateBoardingEligibilityUseCase>((ref) {
-      final boardingPassService = ref.watch(boardingPassServiceProvider);
-      final boardingPassRepository = ref.watch(boardingPassRepositoryProvider);
-      return ValidateBoardingEligibilityUseCase(
-        boardingPassService,
-        boardingPassRepository,
-      );
-    });
-
-final autoExpireBoardingPassesUseCaseProvider =
-    Provider<AutoExpireBoardingPassesUseCase>((ref) {
-      final boardingPassService = ref.watch(boardingPassServiceProvider);
-      return AutoExpireBoardingPassesUseCase(boardingPassService);
-    });
-
 /// Application Service provider
 final boardingPassApplicationServiceProvider =
     Provider<BoardingPassApplicationService>((ref) {
       return BoardingPassApplicationService(
-        ref.watch(createBoardingPassUseCaseProvider),
         ref.watch(activateBoardingPassUseCaseProvider),
-        ref.watch(useBoardingPassUseCaseProvider),
-        ref.watch(updateSeatAssignmentUseCaseProvider),
         ref.watch(validateQRCodeUseCaseProvider),
         ref.watch(getBoardingPassesForMemberUseCaseProvider),
-        ref.watch(getBoardingPassDetailsUseCaseProvider),
-        ref.watch(validateBoardingEligibilityUseCaseProvider),
-        ref.watch(autoExpireBoardingPassesUseCaseProvider),
       );
     });
 

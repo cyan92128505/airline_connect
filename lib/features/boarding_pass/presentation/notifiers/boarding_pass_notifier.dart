@@ -481,21 +481,9 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
     return networkState.connectionDescription;
   }
 
-  /// Check if operation requires network
-  bool requiresNetwork(String operation) {
-    // Define which operations require network connectivity
-    const networkRequiredOps = ['activate', 'sync', 'validate_remote'];
-
-    return networkRequiredOps.contains(operation);
-  }
-
   // Existing methods remain unchanged...
   void selectBoardingPass(BoardingPassDTO pass) {
     state = state.copyWith(selectedPass: pass);
-  }
-
-  void clearSelection() {
-    state = state.copyWith(selectedPass: null);
   }
 
   void clearScanResult() {
@@ -508,14 +496,6 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
 
   Future<void> refresh() async {
     await loadBoardingPasses();
-  }
-
-  BoardingPassDTO? getBoardingPassById(String passId) {
-    try {
-      return state.boardingPasses.firstWhere((pass) => pass.passId == passId);
-    } catch (e) {
-      return null;
-    }
   }
 
   String _mapFailureToMessage(String failureMessage) {
