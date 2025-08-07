@@ -48,4 +48,11 @@ abstract class DateFormatter {
       return isoDateString;
     }
   }
+
+  static String formatDuration(Duration duration) {
+    if (duration.inDays > 0) return '${duration.inDays}天';
+    if (duration.inHours > 0) return '${duration.inHours}小時';
+    if (duration.inMinutes > 0) return '${duration.inMinutes}分鐘';
+    return '${duration.inSeconds}秒';
+  }
 }

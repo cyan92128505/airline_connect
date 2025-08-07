@@ -61,7 +61,16 @@ enum NetworkQuality {
   unknown,
   poor, // > 1000ms latency
   fair, // 500-1000ms latency
-  good, // < 500ms latency
+  good; // < 500ms latency
+
+  String get displayText {
+    return switch (this) {
+      NetworkQuality.good => '良好',
+      NetworkQuality.fair => '普通',
+      NetworkQuality.poor => '差',
+      NetworkQuality.unknown => '未知',
+    };
+  }
 }
 
 /// Network event for history tracking
