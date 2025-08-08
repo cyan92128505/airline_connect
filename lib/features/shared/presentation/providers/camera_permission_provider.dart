@@ -58,20 +58,13 @@ class CameraPermission extends _$CameraPermission {
 
   @override
   CameraPermissionState build() {
-    _setup();
-
     return const CameraPermissionState();
   }
 
-  Future<void> _setup() async {
+  Future<void> setup() async {
     _permissionAppService = ref.watch(permissionApplicationServiceProvider);
 
     // Auto-check permission status on initialization
-    _checkPermissionStatus();
-  }
-
-  /// Check current permission status without requesting
-  Future<void> checkPermissionStatus() async {
     await _checkPermissionStatus();
   }
 
@@ -181,8 +174,6 @@ class CameraPermission extends _$CameraPermission {
   /// Private method to check permission status
   Future<void> _checkPermissionStatus() async {
     try {
-      _logger.d('Checking current camera permission status');
-
       final status = await Permission.camera.status;
 
       _logger.i('Current camera permission status: $status');

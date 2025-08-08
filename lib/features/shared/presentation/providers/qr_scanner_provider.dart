@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:app/di/dependency_injection.dart';
+import 'package:app/features/shared/infrastructure/services/mobile_scanner_service_impl.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -82,6 +84,61 @@ abstract class QRScannerState with _$QRScannerState {
       ScannerStatus.error => '掃描器錯誤',
     };
   }
+
+  String get appBarTitle {
+    return switch (status) {
+      ScannerStatus.scanning => 'QR Code 掃描中...',
+      ScannerStatus.processing => '處理掃描結果...',
+      ScannerStatus.completed => 'QR Code 掃描完成',
+      ScannerStatus.error => 'QR Code 掃描器錯誤',
+      _ => 'QR Code 掃描器',
+    };
+  }
+
+  /// Get instruction icon based on scanner state
+  IconData get instructionIcon {
+    return switch (status) {
+      ScannerStatus.ready || ScannerStatus.scanning => Icons.qr_code_scanner,
+      ScannerStatus.completed => Icons.check_circle_outline,
+      ScannerStatus.error => Icons.error_outline,
+      _ => Icons.info_outline,
+    };
+  }
+
+  /// Get instruction title based on scanner state and environment
+  String get instructionTitle {
+    return switch (status) {
+      ScannerStatus.ready || ScannerStatus.scanning => '掃描進行中',
+      ScannerStatus.completed => '掃描完成',
+      ScannerStatus.error => '掃描錯誤',
+      _ => '掃描說明',
+    };
+  }
+
+  List<String> get instructionItems {
+    final items = <String>[];
+
+    if (status == ScannerStatus.ready || status == ScannerStatus.scanning) {
+      items.addAll(['保持 QR Code 清晰可見', '將 QR Code 對準掃描框中央', '保持穩定直到掃描成功']);
+    } else {
+      items.addAll(['確保登機證上的 QR Code 清晰可見', '在光線充足的環境下掃描效果更佳', '掃描時請保持手機穩定']);
+    }
+
+    return items;
+  }
+
+  String get statusMessage {
+    return switch (status) {
+      ScannerStatus.ready => '將 QR Code 對準掃描框\n保持穩定等待掃描',
+      ScannerStatus.scanning => '正在掃描 QR Code...',
+      ScannerStatus.processing => '正在處理掃描結果...',
+      ScannerStatus.initializing => '正在初始化相機，請稍候...',
+      ScannerStatus.permissionRequired => '需要相機權限才能掃描',
+      ScannerStatus.error => errorMessage ?? '掃描器發生錯誤',
+      ScannerStatus.completed => '掃描完成！',
+      ScannerStatus.inactive => '點擊開始掃描按鈕開始掃描',
+    };
+  }
 }
 
 /// Provider for QR scanner state and operations
@@ -156,11 +213,6 @@ class QRScanner extends _$QRScanner {
   }
 
   Future<void> setupScannerContorller() async {
-    if (!canStart) {
-      _logger.w('Cannot start scanner in current state: ${state.status}');
-      return;
-    }
-
     _logger.d('Starting QR scanner...');
 
     // Check camera permission first
@@ -191,6 +243,14 @@ class QRScanner extends _$QRScanner {
   /// Start QR scanner
   Future<bool> startScanner() async {
     state = state.copyWith(status: ScannerStatus.ready);
+
+    final scannerService = ref.read(scannerServiceProvider);
+    if (scannerService is MobileScannerServiceImpl &&
+        scannerService.controller == null) {
+      final config = ref.read(scannerConfigProvider);
+      await scannerService.config(config);
+    }
+
     await _completer!.future;
     return _startScannerService();
   }
@@ -327,13 +387,4 @@ class QRScanner extends _$QRScanner {
 
   // Getter to expose canStart for external use
   bool get canStart => state.canStart;
-
-  /// Check if scanner service is available
-  Future<bool> get isServiceAvailable async {
-    final scannerService = ref.read(scannerServiceProvider);
-    return await scannerService.isAvailable;
-  }
-
-  /// Get the underlying scanner service (for advanced use cases)
-  ScannerService get scannerService => ref.read(scannerServiceProvider);
 }

@@ -9,11 +9,13 @@ class MobileScannerServiceImpl implements ScannerService {
 
   final StreamController<String> _scanResultsController =
       StreamController<String>.broadcast();
+
   final StreamController<ScannerError> _errorsController =
       StreamController<ScannerError>.broadcast();
 
   MobileScannerController? _controller;
   StreamSubscription<BarcodeCapture>? _scanSubscription;
+
   bool _isScanning = false;
   bool _isDisposed = false;
 
@@ -72,9 +74,6 @@ class MobileScannerServiceImpl implements ScannerService {
         _handleBarcodeCapture,
         onError: _handleScanError,
       );
-
-      // Start the scanner
-      await _controller!.start();
 
       _isScanning = true;
       _logger.i('Mobile scanner service started successfully');
