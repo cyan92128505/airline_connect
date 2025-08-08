@@ -196,8 +196,6 @@ class BoardingPassScreen extends HookConsumerWidget {
           child: ErrorDisplay(
             message: state.errorMessage!,
             onRetry: () => notifier.refresh(),
-            // Show different retry text based on network status
-            retryText: networkState.isOnline ? '重試' : '重新載入',
           ),
         ),
       );
@@ -284,7 +282,6 @@ class BoardingPassScreen extends HookConsumerWidget {
             child: ErrorDisplay(
               message: state.errorMessage!,
               onRetry: () => notifier.clearError(),
-              isCompact: true,
             ),
           ),
 

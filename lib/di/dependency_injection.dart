@@ -18,7 +18,12 @@ import 'package:app/features/member/domain/repositories/secure_storage_repositor
 import 'package:app/features/member/domain/services/member_auth_service.dart';
 import 'package:app/features/member/infrastructure/repositories/member_repository_impl.dart';
 import 'package:app/features/member/infrastructure/repositories/secure_storage_repository_impl.dart';
+import 'package:app/features/shared/application/services/permission_application_service.dart';
+import 'package:app/features/shared/domain/services/scanner_service.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
+import 'package:app/features/shared/infrastructure/services/mobile_scanner_service_impl.dart';
+import 'package:app/features/shared/domain/services/permission_service.dart';
+import 'package:app/features/shared/infrastructure/services/permission_service_impl.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -38,7 +43,7 @@ final authInitializerProvider = Provider<AuthInitializer>((ref) {
 });
 
 // ================================================================
-// NETWORK CONNECTIVITY PROVIDERS
+// SHARED MODULE PROVIDERS
 // ================================================================
 
 /// Connectivity instance provider - can be overridden for testing
@@ -49,6 +54,21 @@ final connectivityProvider = Provider<Connectivity>((ref) {
 /// HttpClient instance provider - can be overridden for testing
 final httpClientProvider = Provider<http.Client>((ref) {
   return http.Client();
+});
+
+/// Permission Service providers
+final permissionServiceProvider = Provider<PermissionService>((ref) {
+  return PermissionServiceImpl();
+});
+
+final permissionApplicationServiceProvider =
+    Provider<PermissionApplicationService>((ref) {
+      final permissionService = ref.watch(permissionServiceProvider);
+      return PermissionApplicationService(permissionService);
+    });
+
+final scannerServiceProvider = Provider<ScannerService>((ref) {
+  return MobileScannerServiceImpl();
 });
 
 // ================================================================

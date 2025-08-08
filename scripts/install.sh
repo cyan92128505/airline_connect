@@ -31,6 +31,7 @@ fvm flutter pub add \
   path_provider \
   path \
   permission_handler \
+  permission_handler_platform_interface \
   qr_flutter \
   riverpod_annotation \
   shared_preferences \

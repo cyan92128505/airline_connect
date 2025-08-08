@@ -1,12 +1,9 @@
 import 'dart:io';
-import 'package:app/core/failures/failure.dart';
 import 'package:app/di/dependency_injection.dart';
 import 'package:app/features/boarding_pass/presentation/screens/boarding_pass_screen.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
 import 'package:app/features/member/domain/entities/member.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
-import 'package:app/features/member/domain/repositories/secure_storage_repository.dart';
-import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:app/features/member/infrastructure/entities/member_entity.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/member/presentation/screens/member_auth_screen.dart';
@@ -17,7 +14,6 @@ import 'package:app/features/shared/presentation/routes/app_routes.dart';
 import 'package:app/features/shared/presentation/screens/splash_screen.dart';
 import 'package:app/objectbox.g.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
@@ -27,6 +23,7 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../helpers/test_helpers.dart';
 import '../helpers/test_timezone_helper.dart';
 
 import 'member_authentication_flow_test.mocks.dart';
@@ -192,93 +189,6 @@ void main() {
       );
     });
   });
-}
-
-/// Mock Secure Storage Repository for testing
-class MockSecureStorageRepository implements SecureStorageRepository {
-  Member? _mockMember;
-  Map<String, dynamic> _mockPreferences = {};
-
-  void setMockMember(Member? member) {
-    _mockMember = member;
-  }
-
-  @override
-  Future<Either<Failure, void>> saveMember(Member member) async {
-    _mockMember = member;
-    return const Right(null);
-  }
-
-  @override
-  Future<Either<Failure, Member?>> getMember() async {
-    return Right(_mockMember);
-  }
-
-  @override
-  Future<Either<Failure, bool>> hasValidMember() async {
-    return Right(_mockMember != null);
-  }
-
-  @override
-  Future<Either<Failure, void>> clearMember() async {
-    _mockMember = null;
-    return const Right(null);
-  }
-
-  @override
-  Future<Either<Failure, void>> clearAll() async {
-    _mockMember = null;
-    _mockPreferences.clear();
-    return const Right(null);
-  }
-
-  @override
-  Future<Either<Failure, void>> saveAppPreferences(
-    Map<String, dynamic> preferences,
-  ) async {
-    _mockPreferences = Map.from(preferences);
-    return const Right(null);
-  }
-
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> getAppPreferences() async {
-    return Right(Map.from(_mockPreferences));
-  }
-
-  // Implement other required methods with mock behavior
-  @override
-  Future<Either<Failure, void>> cleanupExpiredSessions() async =>
-      const Right(null);
-
-  @override
-  Future<Either<Failure, MemberNumber?>> getLastMemberNumber() async =>
-      const Right(null);
-
-  @override
-  Future<Either<Failure, StorageStatistics>> getStatistics() async {
-    return Right(
-      StorageStatistics(
-        hasCurrentMember: _mockMember != null,
-        hasLastMemberNumber: false,
-        hasAppPreferences: _mockPreferences.isNotEmpty,
-        currentMemberSize: _mockMember != null ? 100 : 0,
-        lastChecked: DateTime.now(),
-      ),
-    );
-  }
-
-  @override
-  Future<Either<Failure, void>> setAutoLoginEnabled(
-    memberNumber,
-    bool enabled,
-  ) async => const Right(null);
-
-  @override
-  Future<Either<Failure, void>> updateMemberActivity() async =>
-      const Right(null);
-
-  @override
-  Future<Either<Failure, bool>> validateIntegrity() async => const Right(true);
 }
 
 /// Test app that properly initializes authentication like the real app
