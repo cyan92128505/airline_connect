@@ -1,4 +1,5 @@
 import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
@@ -30,6 +31,7 @@ void main() {
     late Member testMember;
     late Flight testFlight;
     late SeatNumber testSeatNumber;
+    late QRCodeData testQrCode;
 
     setUp(() {
       mockRepository = MockBoardingPassRepository();
@@ -62,6 +64,12 @@ void main() {
       );
 
       testSeatNumber = SeatNumber.create('12A');
+
+      testQrCode = QRCodeData.create(
+        token: 'test-token',
+        signature: 'test-signature',
+        generatedAt: now,
+      );
     });
 
     test('should create boarding pass successfully', () async {
@@ -74,6 +82,7 @@ void main() {
         member: testMember,
         flight: testFlight,
         seatNumber: testSeatNumber,
+        qrCode: testQrCode,
       );
 
       expect(result.isRight(), isTrue);
@@ -100,6 +109,7 @@ void main() {
         member: suspendedMember,
         flight: testFlight,
         seatNumber: testSeatNumber,
+        qrCode: testQrCode,
       );
 
       expect(result.isLeft(), isTrue);
@@ -118,6 +128,7 @@ void main() {
           testFlight.schedule,
           snapshotTime: TZDateTime.now(local),
         ),
+        qrCode: testQrCode,
       );
 
       when(
@@ -128,6 +139,7 @@ void main() {
         member: testMember,
         flight: testFlight,
         seatNumber: testSeatNumber,
+        qrCode: testQrCode,
       );
 
       expect(result.isLeft(), isTrue);
@@ -156,6 +168,7 @@ void main() {
         flightNumber: testFlight.flightNumber,
         seatNumber: testSeatNumber,
         scheduleSnapshot: snapshot,
+        qrCode: testQrCode,
       );
 
       when(
@@ -180,6 +193,7 @@ void main() {
         member: testMember,
         flight: testFlight,
         seatNumber: testSeatNumber,
+        qrCode: testQrCode,
       );
 
       expect(result.isLeft(), isTrue);

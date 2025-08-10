@@ -4,6 +4,7 @@ import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/flight_schedule_snapshot.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
+import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/seat_number.dart';
 import 'package:app/features/flight/domain/entities/flight.dart';
 import 'package:app/features/member/domain/entities/member.dart';
@@ -20,6 +21,7 @@ class BoardingPassService {
     required Member member,
     required Flight flight,
     required SeatNumber seatNumber,
+    required QRCodeData qrCode,
   }) async {
     try {
       if (!member.isEligibleForBoardingPass()) {
@@ -68,6 +70,7 @@ class BoardingPassService {
           flightNumber: flight.flightNumber,
           seatNumber: seatNumber,
           scheduleSnapshot: scheduleSnapshot,
+          qrCode: qrCode,
         );
 
         final saveResult = await _boardingPassRepository.save(boardingPass);
@@ -112,108 +115,6 @@ class BoardingPassService {
       return Left(ValidationFailure(e.message));
     } catch (e) {
       return Left(UnknownFailure('Failed to activate boarding pass: $e'));
-    }
-  }
-
-  Future<Either<Failure, BoardingPass>> useBoardingPass(PassId passId) async {
-    try {
-      final boardingPassResult = await _boardingPassRepository.findByPassId(
-        passId,
-      );
-
-      return boardingPassResult.fold((failure) => Left(failure), (
-        boardingPass,
-      ) async {
-        if (boardingPass == null) {
-          return Left(NotFoundFailure('Boarding pass not found'));
-        }
-
-        final usedPass = boardingPass.use();
-
-        final saveResult = await _boardingPassRepository.save(usedPass);
-
-        return saveResult.fold(
-          (failure) => Left(failure),
-          (_) => Right(usedPass),
-        );
-      });
-    } on DomainException catch (e) {
-      return Left(ValidationFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure('Failed to use boarding pass: $e'));
-    }
-  }
-
-  Future<Either<Failure, BoardingPass>> updateSeatAssignment({
-    required PassId passId,
-    required SeatNumber newSeatNumber,
-  }) async {
-    try {
-      final boardingPassResult = await _boardingPassRepository.findByPassId(
-        passId,
-      );
-
-      return boardingPassResult.fold((failure) => Left(failure), (
-        boardingPass,
-      ) async {
-        if (boardingPass == null) {
-          return Left(NotFoundFailure('Boarding pass not found'));
-        }
-
-        final updatedPass = boardingPass.updateSeat(newSeatNumber);
-
-        final saveResult = await _boardingPassRepository.save(updatedPass);
-
-        return saveResult.fold(
-          (failure) => Left(failure),
-          (_) => Right(updatedPass),
-        );
-      });
-    } on DomainException catch (e) {
-      return Left(ValidationFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure('Failed to update seat assignment: $e'));
-    }
-  }
-
-  Future<Either<Failure, bool>> validateBoardingEligibility(
-    PassId passId,
-  ) async {
-    final boardingPassResult = await _boardingPassRepository.findByPassId(
-      passId,
-    );
-
-    return boardingPassResult.fold((failure) => Left(failure), (boardingPass) {
-      if (boardingPass == null) {
-        return Left(NotFoundFailure('Boarding pass not found'));
-      }
-
-      return Right(boardingPass.isValidForBoarding);
-    });
-  }
-
-  Future<Either<Failure, List<BoardingPass>>> autoExpireBoardingPasses() async {
-    try {
-      final passesResult = await _boardingPassRepository
-          .findPassesRequiringStatusUpdate();
-
-      return passesResult.fold((failure) => Left(failure), (passes) async {
-        final expiredPasses = <BoardingPass>[];
-        final now = TZDateTime.now(local);
-
-        for (final pass in passes) {
-          if (pass.isActive &&
-              now.isAfter(pass.scheduleSnapshot.departureTime)) {
-            final expiredPass = pass.expire();
-            await _boardingPassRepository.save(expiredPass);
-            expiredPasses.add(expiredPass);
-          }
-        }
-
-        return Right(expiredPasses);
-      });
-    } catch (e) {
-      return Left(UnknownFailure('Failed to auto-expire boarding passes: $e'));
     }
   }
 

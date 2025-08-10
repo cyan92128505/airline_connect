@@ -1,3 +1,6 @@
+import 'package:app/features/boarding_pass/domain/services/crypto_service.dart';
+import 'package:app/features/boarding_pass/infrastructure/services/Crypto_service_impl.dart';
+import 'package:app/features/boarding_pass/infrastructure/services/qr_code_service_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
@@ -8,17 +11,19 @@ import 'package:app/features/boarding_pass/application/use_cases/validate_qr_cod
 import 'package:app/features/boarding_pass/domain/services/qr_code_service.dart';
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_operation_dto.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
-import 'package:timezone/timezone.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../../../../../helpers/test_timezone_helper.dart';
 import 'validate_qr_code_use_case_test.mocks.dart';
 
 @GenerateNiceMocks([MockSpec<QRCodeService>()])
+@GenerateMocks([QRCodeConfig])
 void main() {
   group('ValidateQRCodeUseCase', () {
     late ValidateQRCodeUseCase useCase;
     late MockQRCodeService mockQRCodeService;
-    late QRPayload mockPayload;
+    late MockQRCodeConfig mockConfig;
+    late QRCodePayload mockPayload;
 
     setUpAll(() {
       TestTimezoneHelper.setupForTesting();
@@ -27,20 +32,33 @@ void main() {
     setUp(() {
       mockQRCodeService = MockQRCodeService();
       useCase = ValidateQRCodeUseCase(mockQRCodeService);
+      mockConfig = MockQRCodeConfig();
+      when(mockConfig.validityDuration).thenReturn(const Duration(hours: 2));
+      when(mockConfig.currentVersion).thenReturn(1);
+      when(mockConfig.issuer).thenReturn('airline-connect');
+      when(mockConfig.encryptionKey).thenReturn('test-key');
+      when(mockConfig.signingSecret).thenReturn('test-secret');
 
+      final cryptoService = CryptoServiceImpl();
       // Setup default mock payload
-      final departureTime = TZDateTime.now(local).add(const Duration(hours: 2));
-      final generatedAt = TZDateTime.now(
-        local,
+      final departureTime = tz.TZDateTime.now(
+        tz.local,
+      ).add(const Duration(hours: 2));
+      final generatedAt = tz.TZDateTime.now(
+        tz.local,
       ).subtract(const Duration(minutes: 30));
 
-      mockPayload = QRPayload(
+      final nonce = cryptoService.generateNonce();
+
+      mockPayload = QRCodePayload(
         passId: 'BP12345678',
         flightNumber: 'BR857',
         seatNumber: '12A',
         memberNumber: 'MB100001',
         departureTime: departureTime,
         generatedAt: generatedAt,
+        nonce: nonce,
+        issuer: mockConfig.issuer,
       );
     });
 
@@ -49,14 +67,14 @@ void main() {
       final validationRequest = QRCodeValidationDTO(
         encryptedPayload: 'encrypted_payload_data',
         checksum: 'checksum_value',
-        generatedAt: TZDateTime.now(
-          local,
+        generatedAt: tz.TZDateTime.now(
+          tz.local,
         ).subtract(const Duration(minutes: 30)).toIso8601String(),
         version: 1,
       );
 
       when(
-        mockQRCodeService.validateAndDecodeQRCode(any),
+        mockQRCodeService.validate(any),
       ).thenAnswer((_) async => Right(mockPayload));
 
       when(
@@ -79,7 +97,7 @@ void main() {
         expect(response.errorMessage, isNull);
       });
 
-      verify(mockQRCodeService.validateAndDecodeQRCode(any)).called(1);
+      verify(mockQRCodeService.validate(any)).called(1);
       verify(mockQRCodeService.generateScanSummary(any)).called(1);
     });
 

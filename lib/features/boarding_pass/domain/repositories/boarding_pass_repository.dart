@@ -43,4 +43,6 @@ abstract class BoardingPassRepository {
 
   /// Get boarding passes requiring status update (auto-expiry)
   Future<Either<Failure, List<BoardingPass>>> findPassesRequiringStatusUpdate();
+
+  Future verifyQRCodeWithRemote(String passId, String token) async {}
 }
