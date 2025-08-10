@@ -34,7 +34,7 @@ class QRScannerScreen extends HookConsumerWidget {
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (scannerState.scannedData != null) {
-          _handleQRScan(scannerState.scannedData!, boardingPassNotifier);
+          boardingPassNotifier.handleQRScan(scannerState.scannedData!);
         }
       });
       return null;
@@ -58,12 +58,8 @@ class QRScannerScreen extends HookConsumerWidget {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
-          // Service status indicator
-
-          // Clear/reset action
           IconButton(
-            onPressed: () =>
-                _handleClearAction(boardingPassNotifier, scannerNotifier),
+            onPressed: () => boardingPassNotifier.handleClearAction(),
             icon: const Icon(Icons.clear),
             tooltip: '清除結果',
           ),
@@ -140,42 +136,5 @@ class QRScannerScreen extends HookConsumerWidget {
     }
 
     return const StartScannerButton();
-  }
-
-  /// Handle QR scan result
-  void _handleQRScan(String qrData, BoardingPassNotifier boardingPassNotifier) {
-    /// TODO: need to remove log
-    debugPrint('🎯 _handleQRScan called with: $qrData');
-
-    final parts = qrData.split('|');
-    debugPrint('📊 QR parts: $parts (length: ${parts.length})');
-
-    if (parts.length >= 4) {
-      debugPrint('✅ Valid QR format, calling validateQRCode');
-      boardingPassNotifier.validateQRCode(
-        encryptedPayload: parts[0],
-        checksum: parts[1],
-        generatedAt: parts[2],
-        version: int.tryParse(parts[3]) ?? 1,
-      );
-    } else {
-      debugPrint('⚠️ Invalid QR format, using fallback');
-      boardingPassNotifier.validateQRCode(
-        encryptedPayload: qrData,
-        checksum: 'invalid',
-        generatedAt: DateTime.now().toIso8601String(),
-        version: 1,
-      );
-    }
-  }
-
-  /// Handle clear action
-  void _handleClearAction(
-    BoardingPassNotifier boardingPassNotifier,
-    QRScanner scannerNotifier,
-  ) {
-    boardingPassNotifier.clearScanResult();
-    boardingPassNotifier.clearError();
-    scannerNotifier.clearResult();
   }
 }

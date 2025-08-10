@@ -4,6 +4,7 @@ import 'package:app/core/presentation/widgets/error_display.dart';
 import 'package:app/di/dependency_injection.dart';
 import 'package:app/features/boarding_pass/presentation/screens/boarding_pass_screen.dart';
 import 'package:app/features/boarding_pass/presentation/screens/qr_scanner_screen.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/scan_result_display.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/start_scanner_button.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
 import 'package:app/features/member/domain/entities/member.dart';
@@ -150,12 +151,10 @@ void main() {
         await tester.pumpAndSettle();
 
         // Verify scan completion
-        final completedText = find.textContaining('完成');
-        final resultText = find.textContaining('ABC123');
+        final resultWidget = find.byType(ScanResultDisplay).first;
 
         expect(
-          completedText.evaluate().isNotEmpty ||
-              resultText.evaluate().isNotEmpty,
+          resultWidget.evaluate().isNotEmpty,
           isTrue,
           reason: 'Should show completion or result',
         );

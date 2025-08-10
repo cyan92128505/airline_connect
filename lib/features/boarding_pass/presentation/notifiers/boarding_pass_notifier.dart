@@ -1,3 +1,4 @@
+import 'package:app/features/shared/presentation/providers/qr_scanner_provider.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -303,6 +304,26 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
     }
   }
 
+  Future<void> handleQRScan(String qrData) async {
+    final parts = qrData.split('|');
+
+    if (parts.length >= 4) {
+      validateQRCode(
+        encryptedPayload: parts[0],
+        checksum: parts[1],
+        generatedAt: parts[2],
+        version: int.tryParse(parts[3]) ?? 1,
+      );
+    } else {
+      validateQRCode(
+        encryptedPayload: qrData,
+        checksum: 'invalid',
+        generatedAt: DateTime.now().toIso8601String(),
+        version: 1,
+      );
+    }
+  }
+
   /// Validate QR code with network awareness
   Future<void> validateQRCode({
     required String encryptedPayload,
@@ -359,6 +380,12 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
 
       state = state.copyWith(isScanning: false, errorMessage: errorMessage);
     }
+  }
+
+  Future<void> handleClearAction() async {
+    clearScanResult();
+    clearError();
+    ref.read(qRScannerProvider.notifier).clearResult();
   }
 
   /// Perform automatic sync when network is available
