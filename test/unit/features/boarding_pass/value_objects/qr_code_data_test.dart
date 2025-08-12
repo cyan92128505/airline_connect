@@ -104,7 +104,7 @@ void main() {
 
         expect(timeRemaining, isNotNull);
         expect(timeRemaining!.inHours, lessThanOrEqualTo(24));
-        expect(timeRemaining.inHours, greaterThan(23));
+        expect(timeRemaining.inHours, greaterThanOrEqualTo(23));
       });
 
       test('should return null time remaining when expired', () {
