@@ -32,7 +32,7 @@ abstract class MemberDTO with _$MemberDTO {
     }
     try {
       final tzDateTime = tz.TZDateTime.parse(
-        tz.getLocation(appDefaultLocation),
+        tz.getLocation(AppConstants.appDefaultLocation),
         createdAt!,
       );
 
@@ -48,7 +48,7 @@ abstract class MemberDTO with _$MemberDTO {
     }
     try {
       final tzDateTime = tz.TZDateTime.parse(
-        tz.getLocation(appDefaultLocation),
+        tz.getLocation(AppConstants.appDefaultLocation),
         lastLoginAt!,
       );
 

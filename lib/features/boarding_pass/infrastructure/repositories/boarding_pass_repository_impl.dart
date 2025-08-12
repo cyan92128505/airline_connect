@@ -1,59 +1,60 @@
 import 'package:app/core/failures/failure.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_local_data_source.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_dataSource.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
-import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
-import 'package:app/features/boarding_pass/infrastructure/entities/boarding_pass_entity.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
 import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
-import 'package:app/features/shared/infrastructure/database/objectbox.dart';
-import 'package:app/objectbox.g.dart';
-import 'package:dartz/dartz.dart' hide Order;
+import 'package:dartz/dartz.dart';
 import 'package:logger/logger.dart';
 
-/// Concrete implementation of BoardingPassRepository using ObjectBox
-/// Follows official ObjectBox repository patterns with offline-first strategy
+/// Updated repository implementation that coordinates local and remote data sources
+/// Implements offline-first strategy with background sync
 class BoardingPassRepositoryImpl implements BoardingPassRepository {
   static final Logger _logger = Logger();
 
-  final ObjectBox _objectBox;
-  late final Box<BoardingPassEntity> _boardingPassBox;
+  final BoardingPassLocalDataSource _localDataSource;
+  final BoardingPassRemoteDataSource _remoteDataSource;
 
-  BoardingPassRepositoryImpl(this._objectBox) {
-    _boardingPassBox = _objectBox.store.box<BoardingPassEntity>();
-  }
+  BoardingPassRepositoryImpl(this._localDataSource, this._remoteDataSource);
 
   @override
   Future<Either<Failure, BoardingPass?>> findByPassId(PassId passId) async {
     try {
       _logger.d('Finding boarding pass by ID: ${passId.value}');
 
-      final query = _boardingPassBox
-          .query(BoardingPassEntity_.passId.equals(passId.value))
-          .build();
+      // 1. Try local first (offline-first strategy)
+      final localResult = await _localDataSource.findByPassId(passId);
 
-      try {
-        final entity = query.findFirst();
+      return localResult.fold(
+        (localFailure) async {
+          _logger.w('Local lookup failed, trying remote: $localFailure');
 
-        if (entity == null) {
-          _logger.d('Boarding pass not found: ${passId.value}');
-          return const Right(null);
-        }
+          // 2. If local fails, try remote
+          final remoteResult = await _remoteDataSource.getBoardingPass(passId);
 
-        final boardingPass = entity.toDomain();
-        _logger.d('Boarding pass found: ${boardingPass.passId.value}');
-
-        return Right(boardingPass);
-      } finally {
-        query.close();
-      }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error finding boarding pass by ID',
-        error: e,
-        stackTrace: stackTrace,
+          return remoteResult.fold((remoteFailure) => Left(remoteFailure), (
+            remoteBoardingPass,
+          ) async {
+            // 3. Cache remote result locally
+            if (remoteBoardingPass != null) {
+              await _localDataSource.save(remoteBoardingPass);
+            }
+            return Right(remoteBoardingPass);
+          });
+        },
+        (localBoardingPass) async {
+          // 4. Background sync if local found
+          if (localBoardingPass != null) {
+            _syncBoardingPassInBackground(passId);
+          }
+          return Right(localBoardingPass);
+        },
       );
-      return Left(DatabaseFailure('Failed to find boarding pass: $e'));
+    } catch (e) {
+      _logger.e('Error finding boarding pass by ID', error: e);
+      return Left(UnknownFailure('Failed to find boarding pass: $e'));
     }
   }
 
@@ -64,29 +65,26 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
     try {
       _logger.d('Finding boarding passes for member: ${memberNumber.value}');
 
-      final query = _boardingPassBox
-          .query(BoardingPassEntity_.memberNumber.equals(memberNumber.value))
-          .order(BoardingPassEntity_.issueTime, flags: Order.descending)
-          .build();
-
-      try {
-        final entities = query.find();
-        final boardingPasses = entities
-            .map((entity) => entity.toDomain())
-            .toList();
-
-        _logger.d('Found ${boardingPasses.length} boarding passes for member');
-        return Right(boardingPasses);
-      } finally {
-        query.close();
-      }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error finding boarding passes by member',
-        error: e,
-        stackTrace: stackTrace,
+      // 1. Get local passes first
+      final localResult = await _localDataSource.findByMemberNumber(
+        memberNumber,
       );
-      return Left(DatabaseFailure('Failed to find boarding passes: $e'));
+
+      return localResult.fold(
+        (localFailure) async {
+          // 2. If local fails, try remote only
+          _logger.w('Local lookup failed, trying remote only');
+          return _remoteDataSource.getBoardingPassesForMember(memberNumber);
+        },
+        (localPasses) async {
+          // 3. Background sync with remote
+          _syncMemberPassesInBackground(memberNumber);
+          return Right(localPasses);
+        },
+      );
+    } catch (e) {
+      _logger.e('Error finding boarding passes by member', error: e);
+      return Left(UnknownFailure('Failed to find boarding passes: $e'));
     }
   }
 
@@ -94,32 +92,22 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
   Future<Either<Failure, List<BoardingPass>>> findByFlightNumber(
     FlightNumber flightNumber,
   ) async {
+    // Flight queries are typically admin/staff functions, so try remote first
     try {
       _logger.d('Finding boarding passes for flight: ${flightNumber.value}');
 
-      final query = _boardingPassBox
-          .query(BoardingPassEntity_.flightNumber.equals(flightNumber.value))
-          .order(BoardingPassEntity_.seatNumber)
-          .build();
-
-      try {
-        final entities = query.find();
-        final boardingPasses = entities
-            .map((entity) => entity.toDomain())
-            .toList();
-
-        _logger.d('Found ${boardingPasses.length} boarding passes for flight');
-        return Right(boardingPasses);
-      } finally {
-        query.close();
-      }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error finding boarding passes by flight',
-        error: e,
-        stackTrace: stackTrace,
+      final remoteResult = await _remoteDataSource.getBoardingPassesForMember(
+        // This would need a different remote method for flight-based queries
+        // For now, fallback to local
+        MemberNumber.create('temp'), // TODO: Implement proper flight query
       );
-      return Left(DatabaseFailure('Failed to find boarding passes: $e'));
+
+      return remoteResult.fold(
+        (failure) => _localDataSource.findByFlightNumber(flightNumber),
+        (remotePasses) => Right(remotePasses),
+      );
+    } catch (e) {
+      return _localDataSource.findByFlightNumber(flightNumber);
     }
   }
 
@@ -127,45 +115,22 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
   Future<Either<Failure, List<BoardingPass>>> findActiveBoardingPasses(
     MemberNumber memberNumber,
   ) async {
-    try {
-      _logger.d(
-        'Finding active boarding passes for member: ${memberNumber.value}',
-      );
+    // Active passes are frequently accessed, so prioritize local
+    final localResult = await _localDataSource.findActiveBoardingPasses(
+      memberNumber,
+    );
 
-      // Query for active statuses (issued, activated)
-      final activeStatuses = [
-        PassStatus.issued.value,
-        PassStatus.activated.value,
-      ];
-
-      final query = _boardingPassBox
-          .query(
-            BoardingPassEntity_.memberNumber.equals(memberNumber.value) &
-                BoardingPassEntity_.status.oneOf(activeStatuses),
-          )
-          .order(BoardingPassEntity_.departureTime)
-          .build();
-
-      try {
-        final entities = query.find();
-        final boardingPasses = entities
-            .map((entity) => entity.toDomain())
+    return localResult.fold(
+      (failure) => _remoteDataSource.getBoardingPassesForMember(memberNumber),
+      (localPasses) {
+        // Filter active passes and background sync
+        final activePasses = localPasses
             .where((pass) => pass.isActive)
             .toList();
-
-        _logger.d('Found ${boardingPasses.length} active boarding passes');
-        return Right(boardingPasses);
-      } finally {
-        query.close();
-      }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error finding active boarding passes',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      return Left(DatabaseFailure('Failed to find active boarding passes: $e'));
-    }
+        _syncMemberPassesInBackground(memberNumber);
+        return Right(activePasses);
+      },
+    );
   }
 
   @override
@@ -173,289 +138,210 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
     try {
       _logger.d('Saving boarding pass: ${boardingPass.passId.value}');
 
-      // Use ObjectBox replace strategy for updates
-      _objectBox.store.runInTransaction(TxMode.write, () {
-        final entity = BoardingPassEntity.fromDomain(boardingPass);
-        _boardingPassBox.put(entity);
-        _logger.d('Saved boarding pass: ${boardingPass.passId.value}');
-      });
+      // 1. Save locally first (immediate response)
+      final localResult = await _localDataSource.save(boardingPass);
 
-      return const Right(null);
-    } catch (e, stackTrace) {
-      _logger.e('Error saving boarding pass', error: e, stackTrace: stackTrace);
-      return Left(DatabaseFailure('Failed to save boarding pass: $e'));
+      return localResult.fold((localFailure) => Left(localFailure), (_) async {
+        // 2. Sync with remote in background
+        _syncBoardingPassToRemoteInBackground(boardingPass);
+        return const Right(null);
+      });
+    } catch (e) {
+      _logger.e('Error saving boarding pass', error: e);
+      return Left(UnknownFailure('Failed to save boarding pass: $e'));
     }
   }
 
   @override
   Future<Either<Failure, void>> saveLocally(BoardingPass boardingPass) async {
-    // For ObjectBox, local save is the same as regular save
-    return save(boardingPass);
+    return _localDataSource.save(boardingPass);
   }
 
   @override
   Future<Either<Failure, bool>> exists(PassId passId) async {
-    try {
-      _logger.d('Checking if boarding pass exists: ${passId.value}');
+    // Check local first, then remote if not found
+    final localExists = await _localDataSource.exists(passId);
 
-      final query = _boardingPassBox
-          .query(BoardingPassEntity_.passId.equals(passId.value))
-          .build();
+    return localExists.fold((failure) => Left(failure), (exists) async {
+      if (exists) return const Right(true);
 
-      try {
-        final count = query.count();
-        final exists = count > 0;
-
-        _logger.d('Boarding pass exists: $exists');
-        return Right(exists);
-      } finally {
-        query.close();
-      }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error checking boarding pass existence',
-        error: e,
-        stackTrace: stackTrace,
+      // Check remote
+      final remoteResult = await _remoteDataSource.getBoardingPass(passId);
+      return remoteResult.fold(
+        (failure) => const Right(false),
+        (remoteBoardingPass) => Right(remoteBoardingPass != null),
       );
-      return Left(
-        DatabaseFailure('Failed to check boarding pass existence: $e'),
-      );
-    }
+    });
   }
 
   @override
   Future<Either<Failure, void>> syncWithServer() async {
     try {
-      _logger.d('Syncing boarding passes with server');
+      _logger.d('Starting full sync with server');
 
-      // Placeholder for server sync implementation
-      await _objectBox.store.runInTransactionAsync(TxMode.write, (s, p) async {
-        // Example sync logic:
-        // 1. Get local changes since last sync
-        // 2. Push changes to server
-        // 3. Pull server updates
-        // 4. Resolve conflicts using business rules
-      }, {});
+      // 1. Get all local passes that need syncing
+      final localPasses = await _getAllLocalPasses();
 
-      _logger.d('Boarding pass sync completed');
-      return const Right(null);
-    } catch (e, stackTrace) {
-      _logger.e('Error syncing with server', error: e, stackTrace: stackTrace);
+      return localPasses.fold((failure) => Left(failure), (passes) async {
+        // 2. Sync with remote
+        final syncResult = await _remoteDataSource.syncBoardingPasses(passes);
+
+        return syncResult.fold((syncFailure) => Left(syncFailure), (
+          syncedPasses,
+        ) async {
+          // 3. Update local database with synced data
+          for (final pass in syncedPasses) {
+            await _localDataSource.save(pass);
+          }
+
+          _logger.d('Sync completed successfully');
+          return const Right(null);
+        });
+      });
+    } catch (e) {
+      _logger.e('Error syncing with server', error: e);
       return Left(NetworkFailure('Failed to sync with server: $e'));
     }
   }
 
   @override
   Future<Either<Failure, void>> delete(PassId passId) async {
-    try {
-      _logger.d('Soft deleting boarding pass: ${passId.value}');
+    // Cancel the pass instead of hard delete
+    final findResult = await findByPassId(passId);
 
-      final findResult = await findByPassId(passId);
+    return findResult.fold((failure) => Left(failure), (boardingPass) async {
+      if (boardingPass == null) {
+        return Left(NotFoundFailure('Boarding pass not found'));
+      }
 
-      return findResult.fold((failure) => Left(failure), (boardingPass) async {
-        if (boardingPass == null) {
-          return Left(NotFoundFailure('Boarding pass not found'));
-        }
-
-        // Soft delete by cancelling the pass
-        final cancelledPass = boardingPass.cancel();
-        return save(cancelledPass);
-      });
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error deleting boarding pass',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      return Left(DatabaseFailure('Failed to delete boarding pass: $e'));
-    }
+      final cancelledPass = boardingPass.cancel();
+      return save(cancelledPass);
+    });
   }
 
   @override
   Future<Either<Failure, List<BoardingPass>>>
   findPassesRequiringStatusUpdate() async {
-    try {
-      _logger.d('Finding boarding passes requiring status update');
-
-      final now = DateTime.now().toUtc();
-      final activeStatuses = [
-        PassStatus.issued.value,
-        PassStatus.activated.value,
-      ];
-
-      // Find active passes where departure time has passed
-      final query = _boardingPassBox
-          .query(
-            BoardingPassEntity_.status.oneOf(activeStatuses) &
-                BoardingPassEntity_.departureTime.lessThan(
-                  now.millisecondsSinceEpoch,
-                ),
-          )
-          .build();
-
-      try {
-        final entities = query.find();
-        final boardingPasses = entities
-            .map((entity) => entity.toDomain())
-            .toList();
-
-        _logger.d(
-          'Found ${boardingPasses.length} passes requiring status update',
-        );
-        return Right(boardingPasses);
-      } finally {
-        query.close();
-      }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error finding passes requiring update',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      return Left(
-        DatabaseFailure('Failed to find passes requiring update: $e'),
-      );
-    }
+    return _localDataSource.findPassesRequiringStatusUpdate();
   }
 
-  /// Get reactive stream of boarding passes for UI updates
-  Stream<List<BoardingPass>> watchBoardingPasses(MemberNumber memberNumber) {
-    return _boardingPassBox
-        .query(BoardingPassEntity_.memberNumber.equals(memberNumber.value))
-        .watch(triggerImmediately: true)
-        .map(
-          (query) => query.find().map((entity) => entity.toDomain()).toList(),
-        );
-  }
+  // =============================================================================
+  // QR Code Specific Methods
+  // =============================================================================
 
-  /// Get reactive stream of active boarding passes
-  Stream<List<BoardingPass>> watchActiveBoardingPasses(
-    MemberNumber memberNumber,
-  ) {
-    final activeStatuses = [
-      PassStatus.issued.value,
-      PassStatus.activated.value,
-    ];
-
-    return _boardingPassBox
-        .query(
-          BoardingPassEntity_.memberNumber.equals(memberNumber.value) &
-              BoardingPassEntity_.status.oneOf(activeStatuses),
-        )
-        .watch(triggerImmediately: true)
-        .map(
-          (query) => query
-              .find()
-              .map((entity) => entity.toDomain())
-              .where((pass) => pass.isActive)
-              .toList(),
-        );
-  }
-
-  /// Bulk save operation using transactions for performance
-  Future<Either<Failure, void>> saveMany(
-    List<BoardingPass> boardingPasses,
+  /// Verify QR code with remote service and get boarding pass
+  @override
+  Future<Either<Failure, BoardingPass?>> verifyQRCodeWithRemote(
+    String passId,
+    String qrToken,
   ) async {
     try {
-      _logger.d('Bulk saving ${boardingPasses.length} boarding passes');
+      _logger.d('Verifying QR code with remote service');
 
-      await _objectBox.store.runInTransactionAsync(TxMode.write, (s, p) async {
-        final entities = boardingPasses
-            .map(BoardingPassEntity.fromDomain)
-            .toList();
-        _boardingPassBox.putMany(entities);
-      }, {});
+      final remoteResult = await _remoteDataSource.verifyQRCodeAndGetPass(
+        passId,
+        qrToken,
+      );
 
-      _logger.d('Bulk save completed');
-      return const Right(null);
-    } catch (e, stackTrace) {
-      _logger.e('Error in bulk save', error: e, stackTrace: stackTrace);
-      return Left(DatabaseFailure('Failed to save boarding passes: $e'));
+      return remoteResult.fold((failure) => Left(failure), (
+        remoteBoardingPass,
+      ) async {
+        // Cache the verified pass locally
+        if (remoteBoardingPass != null) {
+          await _localDataSource.save(remoteBoardingPass);
+        }
+        return Right(remoteBoardingPass);
+      });
+    } catch (e) {
+      _logger.e('Error verifying QR code', error: e);
+      return Left(NetworkFailure('Failed to verify QR code: $e'));
     }
   }
 
-  /// Get boarding passes by status
-  Future<Either<Failure, List<BoardingPass>>> findByStatus(
-    PassStatus status,
+  /// Validate boarding pass for gate scanning
+  Future<Either<Failure, BoardingPassValidationResponse>> validateForBoarding(
+    String passId,
+    String gateCode,
   ) async {
     try {
-      _logger.d('Finding boarding passes by status: ${status.value}');
+      _logger.d('Validating boarding pass for gate: $passId at $gateCode');
 
-      final query = _boardingPassBox
-          .query(BoardingPassEntity_.status.equals(status.value))
-          .order(BoardingPassEntity_.issueTime, flags: Order.descending)
-          .build();
+      return _remoteDataSource.validateForBoarding(passId, gateCode);
+    } catch (e) {
+      _logger.e('Error validating for boarding', error: e);
+      return Left(NetworkFailure('Failed to validate for boarding: $e'));
+    }
+  }
 
+  // =============================================================================
+  // Private Helper Methods
+  // =============================================================================
+
+  Future<Either<Failure, List<BoardingPass>>> _getAllLocalPasses() async {
+    // This would need to be implemented in the local data source
+    // For now, return empty list
+    return const Right([]);
+  }
+
+  /// Background sync for a single boarding pass
+  void _syncBoardingPassInBackground(PassId passId) {
+    Future.microtask(() async {
       try {
-        final entities = query.find();
-        final boardingPasses = entities
-            .map((entity) => entity.toDomain())
-            .toList();
-
-        _logger.d(
-          'Found ${boardingPasses.length} passes with status: ${status.value}',
+        final remoteResult = await _remoteDataSource.getBoardingPass(passId);
+        remoteResult.fold(
+          (failure) =>
+              _logger.w('Background sync failed for $passId: $failure'),
+          (remoteBoardingPass) async {
+            if (remoteBoardingPass != null) {
+              await _localDataSource.save(remoteBoardingPass);
+              _logger.d('Background sync completed for $passId');
+            }
+          },
         );
-        return Right(boardingPasses);
-      } finally {
-        query.close();
+      } catch (e) {
+        _logger.w('Background sync error for $passId: $e');
       }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error finding passes by status',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      return Left(DatabaseFailure('Failed to find passes by status: $e'));
-    }
+    });
   }
 
-  /// Get boarding passes departing soon
-  Future<Either<Failure, List<BoardingPass>>> findDepartingSoon(
-    Duration timeWindow,
-  ) async {
-    try {
-      _logger.d(
-        'Finding boarding passes departing within ${timeWindow.inHours} hours',
-      );
-
-      final now = DateTime.now().toUtc();
-      final futureTime = now.add(timeWindow);
-
-      final activeStatuses = [
-        PassStatus.issued.value,
-        PassStatus.activated.value,
-      ];
-
-      final query = _boardingPassBox
-          .query(
-            BoardingPassEntity_.status.oneOf(activeStatuses) &
-                BoardingPassEntity_.departureTime.between(
-                  now.millisecondsSinceEpoch,
-                  futureTime.millisecondsSinceEpoch,
-                ),
-          )
-          .order(BoardingPassEntity_.departureTime)
-          .build();
-
+  /// Background sync for member boarding passes
+  void _syncMemberPassesInBackground(MemberNumber memberNumber) {
+    Future.microtask(() async {
       try {
-        final entities = query.find();
-        final boardingPasses = entities
-            .map((entity) => entity.toDomain())
-            .where((pass) => pass.isActive)
-            .toList();
-
-        _logger.d('Found ${boardingPasses.length} passes departing soon');
-        return Right(boardingPasses);
-      } finally {
-        query.close();
+        final remoteResult = await _remoteDataSource.getBoardingPassesForMember(
+          memberNumber,
+        );
+        remoteResult.fold(
+          (failure) => _logger.w('Background member sync failed: $failure'),
+          (remotePasses) async {
+            for (final pass in remotePasses) {
+              await _localDataSource.save(pass);
+            }
+            _logger.d(
+              'Background member sync completed: ${remotePasses.length} passes',
+            );
+          },
+        );
+      } catch (e) {
+        _logger.w('Background member sync error: $e');
       }
-    } catch (e, stackTrace) {
-      _logger.e(
-        'Error finding departing passes',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      return Left(DatabaseFailure('Failed to find departing passes: $e'));
-    }
+    });
+  }
+
+  /// Background sync to remote server
+  void _syncBoardingPassToRemoteInBackground(BoardingPass boardingPass) {
+    Future.microtask(() async {
+      try {
+        final remoteResult = await _remoteDataSource.updateBoardingPassStatus(
+          boardingPass,
+        );
+        remoteResult.fold(
+          (failure) => _logger.w('Background remote sync failed: $failure'),
+          (updatedPass) => _logger.d('Background remote sync completed'),
+        );
+      } catch (e) {
+        _logger.w('Background remote sync error: $e');
+      }
+    });
   }
 }

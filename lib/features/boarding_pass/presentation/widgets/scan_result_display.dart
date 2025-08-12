@@ -72,18 +72,6 @@ class ScanResultDisplay extends StatelessWidget {
                 ]),
               ],
 
-              if (result.payloadData != null &&
-                  result.payloadData!.isNotEmpty) ...[
-                const Gap(12),
-                _buildResultSection(
-                  context,
-                  '額外資訊',
-                  result.payloadData!.entries
-                      .map((e) => _ResultItem(e.key, e.value.toString()))
-                      .toList(),
-                ),
-              ],
-
               const Gap(16),
 
               // Success message

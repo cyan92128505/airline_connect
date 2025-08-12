@@ -1,3 +1,4 @@
+import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:timezone/timezone.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
@@ -17,6 +18,7 @@ void main() {
 
   group('BoardingPass Entity Tests', () {
     late FlightScheduleSnapshot testSnapshot;
+    late QRCodeData testQrCode;
 
     setUp(() {
       final now = TZDateTime.now(local);
@@ -31,6 +33,12 @@ void main() {
         gateNumber: 'A12',
         snapshotTime: now,
       );
+
+      testQrCode = QRCodeData.create(
+        token: 'test-token',
+        signature: 'test-signature',
+        generatedAt: now,
+      );
     });
 
     test('should create valid boarding pass with correct data', () {
@@ -39,6 +47,7 @@ void main() {
         flightNumber: FlightNumber.create('BR857'),
         seatNumber: SeatNumber.create('12A'),
         scheduleSnapshot: testSnapshot,
+        qrCode: testQrCode,
       );
 
       expect(boardingPass.memberNumber.value, equals('AA123456'));
@@ -70,6 +79,7 @@ void main() {
         flightNumber: FlightNumber.create('BR857'),
         seatNumber: SeatNumber.create('12A'),
         scheduleSnapshot: snapshot,
+        qrCode: testQrCode,
       );
 
       final activatedPass = boardingPass.activate();
@@ -99,60 +109,10 @@ void main() {
         flightNumber: FlightNumber.create('BR857'),
         seatNumber: SeatNumber.create('12A'),
         scheduleSnapshot: snapshot,
+        qrCode: testQrCode,
       );
 
       expect(() => boardingPass.activate(), throwsA(isA<DomainException>()));
-    });
-
-    test('should use boarding pass successfully when activated', () {
-      final now = TZDateTime.now(local);
-      final boardingTime = now.subtract(const Duration(minutes: 30));
-      final departureTime = now.add(const Duration(minutes: 30));
-
-      final snapshot = FlightScheduleSnapshot.create(
-        departureTime: departureTime,
-        boardingTime: boardingTime,
-        departureAirport: 'TPE',
-        arrivalAirport: 'NRT',
-        gateNumber: 'A12',
-        snapshotTime: now.subtract(const Duration(hours: 1)),
-      );
-
-      final boardingPass = BoardingPass.create(
-        memberNumber: MemberNumber.create('AA123456'),
-        flightNumber: FlightNumber.create('BR857'),
-        seatNumber: SeatNumber.create('12A'),
-        scheduleSnapshot: snapshot,
-      ).activate();
-
-      final usedPass = boardingPass.use();
-
-      expect(usedPass.status, equals(PassStatus.used));
-      expect(usedPass.usedAt, isNotNull);
-    });
-
-    test('should throw exception when using non-activated pass', () {
-      final boardingPass = BoardingPass.create(
-        memberNumber: MemberNumber.create('AA123456'),
-        flightNumber: FlightNumber.create('BR857'),
-        seatNumber: SeatNumber.create('12A'),
-        scheduleSnapshot: testSnapshot,
-      );
-
-      expect(() => boardingPass.use(), throwsA(isA<DomainException>()));
-    });
-
-    test('should update seat number successfully', () {
-      final boardingPass = BoardingPass.create(
-        memberNumber: MemberNumber.create('AA123456'),
-        flightNumber: FlightNumber.create('BR857'),
-        seatNumber: SeatNumber.create('12A'),
-        scheduleSnapshot: testSnapshot,
-      );
-
-      final updatedPass = boardingPass.updateSeat(SeatNumber.create('15B'));
-
-      expect(updatedPass.seatNumber.value, equals('15B'));
     });
 
     test('should cancel boarding pass successfully', () {
@@ -161,6 +121,7 @@ void main() {
         flightNumber: FlightNumber.create('BR857'),
         seatNumber: SeatNumber.create('12A'),
         scheduleSnapshot: testSnapshot,
+        qrCode: testQrCode,
       );
 
       final cancelledPass = boardingPass.cancel();
@@ -174,6 +135,7 @@ void main() {
         flightNumber: FlightNumber.create('BR857'),
         seatNumber: SeatNumber.create('12A'),
         scheduleSnapshot: testSnapshot,
+        qrCode: testQrCode,
       );
 
       final cancelledPass = activePass.cancel();

@@ -205,21 +205,72 @@ FlightSchedule.create(
 
 系統實作多層安全驗證：
 
-1. **資料加密**: Caesar cipher + Base64 編碼
-2. **完整性檢查**: MD5 校驗碼
-3. **時效性驗證**: 2 小時有效期
-4. **唯一性保證**: UUID-based PassId
+1. **資料加密**: AES-256-GCM 對稱加密
+2. **數位簽章**: HMAC-SHA256 完整性驗證
+3. **時效性控制**: 2 小時有效期限
+4. **防重放攻擊**: 隨機 nonce 機制
+5. **跨時區相容**: UTC 時間戳標準化
+
+#### QR Code 資料結構
+
+**序列化格式**：
+```
+version.timestamp.encryptedToken.signature
+```
+
+**加密前的 Payload**：
+```json
+{
+  "iss": "airline-connect",           // 發行者
+  "sub": "BP1A2B3C4D",               // 登機證ID
+  "iat": 1722307800000,              // 發行時間
+  "exp": 1722315000000,              // 過期時間
+  "flt": "BR857",                    // 航班號碼
+  "seat": "12A",                     // 座位號碼
+  "mbr": "AA123456",                 // 會員號碼
+  "dep": 1722322200000,              // 起飛時間
+  "nonce": "randomNonce123",         // 防重放隨機值
+  "ver": 1                           // Payload 版本
+}
+```
+
+#### 安全特性
+
+- **時區無關性**: 所有時間戳使用 UTC milliseconds，確保跨時區掃描一致性
+- **版本控制**: 支援向後相容的格式升級
+- **常數時間比較**: 防止 timing attack 的簽章驗證
+- **AAD 驗證**: 版本和時間戳作為 Additional Authenticated Data
+
+#### 驗證流程
+
+1. **格式驗證**: 檢查 QR 字串格式 (4 部分以 `.` 分隔)
+2. **簽章驗證**: HMAC-SHA256 驗證資料完整性
+3. **版本檢查**: 確保支援的 QR Code 版本
+4. **時效驗證**: 檢查是否在有效期限內
+5. **解密驗證**: AES-GCM 解密並驗證 AAD
+6. **業務規則**: 發行者、nonce 格式等業務驗證
 
 ```dart
-// QR Code 資料結構
-{
-  "passId": "BP1A2B3C4D",
-  "flightNumber": "BR857", 
-  "seatNumber": "12A",
-  "memberNumber": "AA123456",
-  "departureTime": "2025-07-29T14:30:00+08:00",
-  "generatedAt": "2025-07-29T12:30:00+08:00"
-}
+// QR Code 生成與驗證範例
+final qrService = QRCodeServiceImpl(cryptoService, config);
+
+// 生成 QR Code
+final result = qrService.generate(
+  passId: passId,
+  flightNumber: 'BR857',
+  seatNumber: '12A',
+  memberNumber: 'AA123456',
+  departureTime: departureTime,
+);
+
+// 驗證 QR Code
+final validation = qrService.validate(qrCodeData);
+validation.fold(
+  (failure) => print('驗證失敗: ${failure.message}'),
+  (result) => result.isValid 
+    ? print('驗證成功: ${result.payload?.passId}')
+    : print('無效 QR Code: ${result.reason}'),
+);
 ```
 
 ### 會員認證模組 (Member Authentication)
@@ -240,9 +291,10 @@ FlightSchedule.create(
 - **測試**: `test/unit/features/boarding_pass/`
 
 核心用例：
-- `CreateBoardingPassUseCase`: 建立登機證
 - `ActivateBoardingPassUseCase`: 啟動登機證
 - `ValidateBoardingEligibilityUseCase`: 驗證登機資格
+- `GetBoardingPassesForMemberUseCase`: 取得所有登機證
+
 
 ### QR Code 掃描模組
 
@@ -271,33 +323,3 @@ FlightSchedule.create(
 - **航班號碼**: 2-3 字母 + 3-4 數字 (如: BR857, CI101)
 - **機場代碼**: 3 字母 IATA 格式 (如: TPE, NRT, LAX)
 - **座位格式**: 1-999 + A-L (如: 1A, 12B, 45F)
-
-```dart
-// Boarding Pass 狀態轉換範例
-@Entity()
-class BoardingPassEntity {
-  @Id() int id = 0;
-  String passId;           // BP1A2B3C4D
-  String memberNumber;     // AA123456
-  String flightNumber;     // BR857
-  String status;           // ISSUED/ACTIVATED/USED
-  String qrEncryptedData;  // 加密的 QR 資料
-  DateTime issueTime;
-  DateTime? activatedAt;
-}
-```
-
-### 狀態管理
-
-採用 Riverpod 進行狀態管理：
-
-```dart
-// Provider example
-final memberAuthNotifierProvider = 
-    StateNotifierProvider<MemberAuthNotifier, MemberAuthState>((ref) {
-  return MemberAuthNotifier(
-    ref.watch(memberApplicationServiceProvider),
-    ref.watch(initialAuthStateProvider),
-  );
-});
-```

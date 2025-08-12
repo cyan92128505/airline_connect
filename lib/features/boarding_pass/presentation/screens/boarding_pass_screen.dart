@@ -6,12 +6,11 @@ import 'package:app/features/boarding_pass/presentation/widgets/network_status_s
 import 'package:app/features/boarding_pass/presentation/widgets/not_authenticated_view.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/offline_warning.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/section_header.dart';
-import 'package:app/features/boarding_pass/presentation/widgets/simple_boarding_pass_card.dart';
+import 'package:app/features/boarding_pass/presentation/widgets/boarding_pass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:app/features/boarding_pass/presentation/notifiers/boarding_pass_notifier.dart';
-import 'package:app/features/boarding_pass/presentation/widgets/boarding_pass_card.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/member/presentation/widgets/member_info_card.dart';
 import 'package:app/core/presentation/widgets/loading_indicator.dart';
@@ -196,8 +195,6 @@ class BoardingPassScreen extends HookConsumerWidget {
           child: ErrorDisplay(
             message: state.errorMessage!,
             onRetry: () => notifier.refresh(),
-            // Show different retry text based on network status
-            retryText: networkState.isOnline ? '重試' : '重新載入',
           ),
         ),
       );
@@ -219,7 +216,7 @@ class BoardingPassScreen extends HookConsumerWidget {
           const Gap(12),
           BoardingPassCard(
             boardingPass: state.nextDeparture!,
-            isHighlighted: true,
+            isUrgent: true,
             onTap: () => notifier.selectBoardingPass(state.nextDeparture!),
             onActivate: _canActivatePass(state, networkState)
                 ? () =>
@@ -241,7 +238,7 @@ class BoardingPassScreen extends HookConsumerWidget {
           ...state.todayPasses.map(
             (pass) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: SimpleBoardingPassCard(
+              child: BoardingPassCard(
                 boardingPass: pass,
                 onTap: () => notifier.selectBoardingPass(pass),
                 onActivate: _canActivatePass(state, networkState)
@@ -263,7 +260,7 @@ class BoardingPassScreen extends HookConsumerWidget {
         ...state.boardingPasses.map(
           (pass) => Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: SimpleBoardingPassCard(
+            child: BoardingPassCard(
               boardingPass: pass,
               onTap: () => notifier.selectBoardingPass(pass),
               onActivate: _canActivatePass(state, networkState)
@@ -284,7 +281,6 @@ class BoardingPassScreen extends HookConsumerWidget {
             child: ErrorDisplay(
               message: state.errorMessage!,
               onRetry: () => notifier.clearError(),
-              isCompact: true,
             ),
           ),
 

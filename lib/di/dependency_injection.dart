@@ -3,10 +3,17 @@ import 'package:app/features/boarding_pass/application/services/boarding_pass_ap
 import 'package:app/features/boarding_pass/application/use_cases/activate_boarding_pass_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/get_boarding_passes_for_member_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/validate_qr_code_use_case.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_local_data_source.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_dataSource.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
+import 'package:app/features/boarding_pass/domain/services/crypto_service.dart';
 import 'package:app/features/boarding_pass/domain/services/qr_code_service.dart';
+import 'package:app/features/boarding_pass/infrastructure/datasources/boarding_pass_local_datasource.dart';
+import 'package:app/features/boarding_pass/infrastructure/datasources/boarding_pass_remote_datasource.dart';
 import 'package:app/features/boarding_pass/infrastructure/repositories/boarding_pass_repository_impl.dart';
+import 'package:app/features/boarding_pass/infrastructure/services/crypto_service_impl.dart';
+import 'package:app/features/boarding_pass/infrastructure/services/qr_code_service_impl.dart';
 import 'package:app/features/flight/domain/repositories/flight_repository.dart';
 import 'package:app/features/flight/domain/services/flight_status_service.dart';
 import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
@@ -18,8 +25,14 @@ import 'package:app/features/member/domain/repositories/secure_storage_repositor
 import 'package:app/features/member/domain/services/member_auth_service.dart';
 import 'package:app/features/member/infrastructure/repositories/member_repository_impl.dart';
 import 'package:app/features/member/infrastructure/repositories/secure_storage_repository_impl.dart';
+import 'package:app/features/shared/application/services/permission_application_service.dart';
+import 'package:app/features/shared/domain/services/scanner_service.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
+import 'package:app/features/shared/infrastructure/services/mobile_scanner_service_impl.dart';
+import 'package:app/features/shared/domain/services/permission_service.dart';
+import 'package:app/features/shared/infrastructure/services/permission_service_impl.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:http/http.dart' as http;
@@ -38,7 +51,7 @@ final authInitializerProvider = Provider<AuthInitializer>((ref) {
 });
 
 // ================================================================
-// NETWORK CONNECTIVITY PROVIDERS
+// SHARED MODULE PROVIDERS
 // ================================================================
 
 /// Connectivity instance provider - can be overridden for testing
@@ -49,6 +62,21 @@ final connectivityProvider = Provider<Connectivity>((ref) {
 /// HttpClient instance provider - can be overridden for testing
 final httpClientProvider = Provider<http.Client>((ref) {
   return http.Client();
+});
+
+/// Permission Service providers
+final permissionServiceProvider = Provider<PermissionService>((ref) {
+  return PermissionServiceImpl();
+});
+
+final permissionApplicationServiceProvider =
+    Provider<PermissionApplicationService>((ref) {
+      final permissionService = ref.watch(permissionServiceProvider);
+      return PermissionApplicationService(permissionService);
+    });
+
+final scannerServiceProvider = Provider<ScannerService>((ref) {
+  return MobileScannerServiceImpl();
 });
 
 // ================================================================
@@ -101,10 +129,41 @@ final memberApplicationServiceProvider = Provider<MemberApplicationService>((
 // BOARDING PASS MODULE PROVIDERS
 // ================================================================
 
+final boardingPassLocalDataSourceProvider =
+    Provider<BoardingPassLocalDataSource>((ref) {
+      final objectBox = ref.watch(objectBoxProvider);
+
+      return ObjectBoxBoardingPassLocalDataSource(objectBox);
+    });
+
+final mockBoardingPassRemoteDataSourceProvider =
+    Provider<MockBoardingPassRemoteDataSource>((ref) {
+      ref.keepAlive();
+
+      return MockBoardingPassRemoteDataSource(
+        simulateNetworkDelay: kDebugMode,
+        simulateErrors: false, // Disable errors for stable demo
+      );
+    });
+
+final boardingPassRemoteDataSourceProvider =
+    Provider<BoardingPassRemoteDataSource>((ref) {
+      return ref.watch(mockBoardingPassRemoteDataSourceProvider);
+    });
+
 /// Repository providers
 final boardingPassRepositoryProvider = Provider<BoardingPassRepository>((ref) {
-  final objectBox = ref.watch(objectBoxProvider);
-  return BoardingPassRepositoryImpl(objectBox);
+  final boardingPassLocalDataSource = ref.watch(
+    boardingPassLocalDataSourceProvider,
+  );
+  final boardingPassRemoteDataSource = ref.watch(
+    boardingPassRemoteDataSourceProvider,
+  );
+
+  return BoardingPassRepositoryImpl(
+    boardingPassLocalDataSource,
+    boardingPassRemoteDataSource,
+  );
 });
 
 /// Service providers
@@ -113,9 +172,16 @@ final boardingPassServiceProvider = Provider<BoardingPassService>((ref) {
   return BoardingPassService(boardingPassRepository);
 });
 
+final cryptoServiceProvider = Provider<CryptoService>((ref) {
+  return CryptoServiceImpl();
+});
+
 final qrCodeServiceProvider = Provider<QRCodeService>((ref) {
-  final boardingPassRepository = ref.watch(boardingPassRepositoryProvider);
-  return QRCodeService(boardingPassRepository);
+  final cryptoService = ref.watch(cryptoServiceProvider);
+
+  final config = kDebugMode ? MockQRCodeConfig() : ProductionQRCodeConfig();
+
+  return QRCodeServiceImpl(cryptoService, config);
 });
 
 /// Use Case providers
@@ -162,3 +228,36 @@ final flightStatusServiceProvider = Provider<FlightStatusService>((ref) {
   final flightRepository = ref.watch(flightRepositoryProvider);
   return FlightStatusService(flightRepository);
 });
+
+// ================================================================
+// DEMO HELPER PROVIDERS
+// ================================================================
+
+/// Provider for accessing services during demo initialization
+/// This allows the initialization step to access the mock remote datasource
+final demoServicesProvider = Provider<DemoServices>((ref) {
+  final objectBox = ref.watch(objectBoxProvider);
+  final qrCodeService = ref.watch(qrCodeServiceProvider);
+  final mockRemoteDataSource = ref.watch(
+    mockBoardingPassRemoteDataSourceProvider,
+  );
+
+  return DemoServices(
+    objectBox: objectBox,
+    qrCodeService: qrCodeService,
+    mockRemoteDataSource: mockRemoteDataSource,
+  );
+});
+
+/// Helper class to group demo-related services
+class DemoServices {
+  final ObjectBox objectBox;
+  final QRCodeService qrCodeService;
+  final MockBoardingPassRemoteDataSource mockRemoteDataSource;
+
+  const DemoServices({
+    required this.objectBox,
+    required this.qrCodeService,
+    required this.mockRemoteDataSource,
+  });
+}

@@ -24,12 +24,13 @@ void main() {
       ),
       status: PassStatus.activated,
       qrCode: QRCodeDataDTO(
-        encryptedPayload: 'encrypted_data_123',
-        checksum: 'checksum_abc',
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
         generatedAt: '2025-07-17T09:00:00Z',
         version: 1,
         isValid: true,
         timeRemainingMinutes: 30,
+        qrString: '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
       ),
       issueTime: '2025-07-17T08:30:00Z',
       activatedAt: '2025-07-17T09:00:00Z',
@@ -101,16 +102,16 @@ void main() {
     test('should create QRCodeDataDTO with valid data', () {
       // Arrange & Act
       final qrCode = QRCodeDataDTO(
-        encryptedPayload: 'encrypted_data_123',
-        checksum: 'checksum_abc',
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
         generatedAt: '2025-07-17T09:00:00Z',
         version: 1,
         isValid: true,
       );
 
       // Assert
-      expect(qrCode.encryptedPayload, equals('encrypted_data_123'));
-      expect(qrCode.checksum, equals('checksum_abc'));
+      expect(qrCode.token, equals('encrypted_token_123'));
+      expect(qrCode.signature, equals('signature_abc'));
       expect(qrCode.version, equals(1));
       expect(qrCode.isValid, isTrue);
     });
@@ -118,8 +119,8 @@ void main() {
     test('should handle time remaining minutes correctly', () {
       // Arrange & Act
       final qrCode = QRCodeDataDTO(
-        encryptedPayload: 'encrypted_data_123',
-        checksum: 'checksum_abc',
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
         generatedAt: '2025-07-17T09:00:00Z',
         version: 1,
         isValid: true,
@@ -128,6 +129,22 @@ void main() {
 
       // Assert
       expect(qrCode.timeRemainingMinutes, equals(45));
+    });
+
+    test('should handle QR string correctly', () {
+      // Arrange & Act
+      final qrCode = QRCodeDataDTO(
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
+        generatedAt: '2025-07-17T09:00:00Z',
+        version: 1,
+        isValid: true,
+        qrString: '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
+      );
+
+      // Assert
+      expect(qrCode.qrString, contains('encrypted_token_123'));
+      expect(qrCode.qrString, contains('signature_abc'));
     });
   });
 
@@ -149,8 +166,8 @@ void main() {
         ),
         status: PassStatus.activated,
         qrCode: QRCodeDataDTO(
-          encryptedPayload: 'encrypted_data_123',
-          checksum: 'checksum_abc',
+          token: 'encrypted_token_123',
+          signature: 'signature_abc',
           generatedAt: '2025-07-17T09:00:00Z',
           version: 1,
           isValid: true,
@@ -165,15 +182,15 @@ void main() {
       expect(isValid, isTrue);
     });
 
-    test('should return false for invalid DTO data', () {
-      // Arrange - Invalid date format
+    test('should return false for empty passId', () {
+      // Arrange
       final invalidDTO = BoardingPassDTO(
-        passId: '',
+        passId: '', // Empty passId
         memberNumber: 'M1001',
         flightNumber: 'BR857',
         seatNumber: '12A',
         scheduleSnapshot: FlightScheduleSnapshotDTO(
-          departureTime: 'invalid-date',
+          departureTime: '2025-07-17T10:30:00Z',
           boardingTime: '2025-07-17T10:00:00Z',
           departure: 'TPE',
           arrival: 'NRT',
@@ -182,8 +199,8 @@ void main() {
         ),
         status: PassStatus.activated,
         qrCode: QRCodeDataDTO(
-          encryptedPayload: 'encrypted_data_123',
-          checksum: 'checksum_abc',
+          token: 'encrypted_token_123',
+          signature: 'signature_abc',
           generatedAt: '2025-07-17T09:00:00Z',
           version: 1,
           isValid: true,
@@ -196,6 +213,107 @@ void main() {
 
       // Assert
       expect(isValid, isFalse);
+    });
+
+    test('should return false for invalid date format', () {
+      // Arrange
+      final invalidDTO = BoardingPassDTO(
+        passId: 'BP123456789',
+        memberNumber: 'M1001',
+        flightNumber: 'BR857',
+        seatNumber: '12A',
+        scheduleSnapshot: FlightScheduleSnapshotDTO(
+          departureTime: 'invalid-date', // Invalid date format
+          boardingTime: '2025-07-17T10:00:00Z',
+          departure: 'TPE',
+          arrival: 'NRT',
+          gate: 'A12',
+          snapshotTime: '2025-07-17T08:00:00Z',
+        ),
+        status: PassStatus.activated,
+        qrCode: QRCodeDataDTO(
+          token: 'encrypted_token_123',
+          signature: 'signature_abc',
+          generatedAt: '2025-07-17T09:00:00Z',
+          version: 1,
+          isValid: true,
+        ),
+        issueTime: '2025-07-17T08:30:00Z',
+      );
+
+      // Act
+      final isValid = invalidDTO.isValid();
+
+      // Assert
+      expect(isValid, isFalse);
+    });
+
+    test('should return false for empty QR code token', () {
+      // Arrange
+      final invalidDTO = BoardingPassDTO(
+        passId: 'BP123456789',
+        memberNumber: 'M1001',
+        flightNumber: 'BR857',
+        seatNumber: '12A',
+        scheduleSnapshot: FlightScheduleSnapshotDTO(
+          departureTime: '2025-07-17T10:30:00Z',
+          boardingTime: '2025-07-17T10:00:00Z',
+          departure: 'TPE',
+          arrival: 'NRT',
+          gate: 'A12',
+          snapshotTime: '2025-07-17T08:00:00Z',
+        ),
+        status: PassStatus.activated,
+        qrCode: QRCodeDataDTO(
+          token: '', // Empty token
+          signature: 'signature_abc',
+          generatedAt: '2025-07-17T09:00:00Z',
+          version: 1,
+          isValid: true,
+        ),
+        issueTime: '2025-07-17T08:30:00Z',
+      );
+
+      // Act
+      final isValid = invalidDTO.isValid();
+
+      // Assert
+      expect(isValid, isFalse);
+    });
+
+    test('should handle optional timestamp fields correctly', () {
+      // Arrange
+      final dtoWithTimestamps = BoardingPassDTO(
+        passId: 'BP123456789',
+        memberNumber: 'M1001',
+        flightNumber: 'BR857',
+        seatNumber: '12A',
+        scheduleSnapshot: FlightScheduleSnapshotDTO(
+          departureTime: '2025-07-17T10:30:00Z',
+          boardingTime: '2025-07-17T10:00:00Z',
+          departure: 'TPE',
+          arrival: 'NRT',
+          gate: 'A12',
+          snapshotTime: '2025-07-17T08:00:00Z',
+        ),
+        status: PassStatus.used,
+        qrCode: QRCodeDataDTO(
+          token: 'encrypted_token_123',
+          signature: 'signature_abc',
+          generatedAt: '2025-07-17T09:00:00Z',
+          version: 1,
+          isValid: true,
+        ),
+        issueTime: '2025-07-17T08:30:00Z',
+        activatedAt: '2025-07-17T09:00:00Z',
+        usedAt: '2025-07-17T10:15:00Z',
+      );
+
+      // Act
+      final isValid = dtoWithTimestamps.isValid();
+
+      // Assert
+      expect(isValid, isTrue);
     });
   });
 }

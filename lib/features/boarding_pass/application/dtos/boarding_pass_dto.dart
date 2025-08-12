@@ -53,12 +53,13 @@ abstract class FlightScheduleSnapshotDTO with _$FlightScheduleSnapshotDTO {
 @freezed
 abstract class QRCodeDataDTO with _$QRCodeDataDTO {
   const factory QRCodeDataDTO({
-    required String encryptedPayload,
-    required String checksum,
+    required String token,
+    required String signature,
     required String generatedAt,
     required int version,
     required bool isValid,
     int? timeRemainingMinutes,
+    String? qrString,
   }) = _QRCodeDataDTO;
 
   factory QRCodeDataDTO.fromJson(Map<String, Object?> json) =>
@@ -66,8 +67,11 @@ abstract class QRCodeDataDTO with _$QRCodeDataDTO {
 }
 
 extension BoardingPassDTOExtensions on BoardingPassDTO {
-  /// Convert from Domain Entity to DTO
-  static BoardingPassDTO fromDomain(BoardingPass boardingPass) {
+  static BoardingPassDTO fromDomain(
+    BoardingPass boardingPass, {
+    bool? qrCodeIsValid,
+    int? qrCodeTimeRemainingMinutes,
+  }) {
     return BoardingPassDTO(
       passId: boardingPass.passId.value,
       memberNumber: boardingPass.memberNumber.value,
@@ -93,12 +97,13 @@ extension BoardingPassDTOExtensions on BoardingPassDTO {
       ),
       status: boardingPass.status,
       qrCode: QRCodeDataDTO(
-        encryptedPayload: boardingPass.qrCode.encryptedPayload,
-        checksum: boardingPass.qrCode.checksum,
+        token: boardingPass.qrCode.token,
+        signature: boardingPass.qrCode.signature,
         generatedAt: boardingPass.qrCode.generatedAt.toIso8601String(),
         version: boardingPass.qrCode.version,
-        isValid: boardingPass.qrCode.isValid,
-        timeRemainingMinutes: boardingPass.qrCode.timeRemaining?.inMinutes,
+        isValid: qrCodeIsValid ?? false,
+        timeRemainingMinutes: qrCodeTimeRemainingMinutes,
+        qrString: boardingPass.qrCode.toQRString(),
       ),
       issueTime: boardingPass.issueTime.toIso8601String(),
       activatedAt: boardingPass.activatedAt?.toIso8601String(),
@@ -129,6 +134,11 @@ extension BoardingPassDTOExtensions on BoardingPassDTO {
       if (usedAt != null) {
         DateTime.parse(usedAt!);
       }
+
+      // Validate QR code data
+      if (qrCode.token.trim().isEmpty) return false;
+      if (qrCode.signature.trim().isEmpty) return false;
+      DateTime.parse(qrCode.generatedAt);
 
       return true;
     } catch (e) {

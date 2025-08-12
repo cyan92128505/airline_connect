@@ -56,12 +56,13 @@ void main() {
       ),
       status: PassStatus.activated,
       qrCode: QRCodeDataDTO(
-        encryptedPayload: 'encrypted_data_123',
-        checksum: 'checksum_abc',
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
         generatedAt: '2025-07-17T09:00:00Z',
         version: 1,
         isValid: true,
         timeRemainingMinutes: 30,
+        qrString: '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
       ),
       issueTime: '2025-07-17T08:30:00Z',
       activatedAt: '2025-07-17T09:00:00Z',
@@ -149,10 +150,7 @@ void main() {
 
       // Act
       final result = await service.validateQRCode(
-        encryptedPayload: 'encrypted_data_123',
-        checksum: 'checksum_abc',
-        generatedAt: '2025-07-17T09:00:00Z',
-        version: 1,
+        qrCodeString: '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
       );
 
       // Assert
@@ -175,10 +173,7 @@ void main() {
 
       // Act
       final result = await service.validateQRCode(
-        encryptedPayload: 'expired_data',
-        checksum: 'invalid_checksum',
-        generatedAt: '2025-07-16T09:00:00Z',
-        version: 1,
+        qrCodeString: '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
       );
 
       // Assert

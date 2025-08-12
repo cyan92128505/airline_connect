@@ -6,7 +6,7 @@ import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dar
 import 'package:app/features/boarding_pass/domain/value_objects/seat_number.dart';
 import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
-import 'package:timezone/timezone.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 class BoardingPass {
   final PassId passId;
@@ -16,9 +16,9 @@ class BoardingPass {
   final FlightScheduleSnapshot scheduleSnapshot;
   final PassStatus status;
   final QRCodeData qrCode;
-  final TZDateTime issueTime;
-  final TZDateTime? activatedAt;
-  final TZDateTime? usedAt;
+  final tz.TZDateTime issueTime;
+  final tz.TZDateTime? activatedAt;
+  final tz.TZDateTime? usedAt;
 
   const BoardingPass._({
     required this.passId,
@@ -38,17 +38,10 @@ class BoardingPass {
     required FlightNumber flightNumber,
     required SeatNumber seatNumber,
     required FlightScheduleSnapshot scheduleSnapshot,
+    required QRCodeData qrCode,
   }) {
     final passId = PassId.generate();
-    final issueTime = TZDateTime.now(local);
-
-    final qrCode = QRCodeData.generate(
-      passId: passId,
-      flightNumber: flightNumber,
-      seatNumber: seatNumber,
-      memberNumber: memberNumber,
-      departureTime: scheduleSnapshot.departureTime,
-    );
+    final issueTime = tz.TZDateTime.now(tz.local);
 
     return BoardingPass._(
       passId: passId,
@@ -70,9 +63,9 @@ class BoardingPass {
     required FlightScheduleSnapshot scheduleSnapshot,
     required PassStatus status,
     required QRCodeData qrCode,
-    required TZDateTime issueTime,
-    TZDateTime? activatedAt,
-    TZDateTime? usedAt,
+    required tz.TZDateTime issueTime,
+    tz.TZDateTime? activatedAt,
+    tz.TZDateTime? usedAt,
   }) {
     return BoardingPass._(
       passId: PassId.fromString(passId),
@@ -95,15 +88,7 @@ class BoardingPass {
       );
     }
 
-    final activationTime = TZDateTime.now(local);
-
-    final newQrCode = QRCodeData.generate(
-      passId: passId,
-      flightNumber: flightNumber,
-      seatNumber: seatNumber,
-      memberNumber: memberNumber,
-      departureTime: scheduleSnapshot.departureTime,
-    );
+    final activationTime = tz.TZDateTime.now(tz.local);
 
     return BoardingPass._(
       passId: passId,
@@ -112,31 +97,10 @@ class BoardingPass {
       seatNumber: seatNumber,
       scheduleSnapshot: scheduleSnapshot,
       status: PassStatus.activated,
-      qrCode: newQrCode,
+      qrCode: qrCode,
       issueTime: issueTime,
       activatedAt: activationTime,
       usedAt: usedAt,
-    );
-  }
-
-  BoardingPass use() {
-    if (!_canUse()) {
-      throw DomainException(
-        'Cannot use boarding pass: ${_getUsageBlockingReason()}',
-      );
-    }
-
-    return BoardingPass._(
-      passId: passId,
-      memberNumber: memberNumber,
-      flightNumber: flightNumber,
-      seatNumber: seatNumber,
-      scheduleSnapshot: scheduleSnapshot,
-      status: PassStatus.used,
-      qrCode: qrCode,
-      issueTime: issueTime,
-      activatedAt: activatedAt,
-      usedAt: TZDateTime.now(local),
     );
   }
 
@@ -161,58 +125,8 @@ class BoardingPass {
     );
   }
 
-  BoardingPass expire() {
-    if (status == PassStatus.used) {
-      throw DomainException('Cannot expire boarding pass that has been used');
-    }
-
-    return BoardingPass._(
-      passId: passId,
-      memberNumber: memberNumber,
-      flightNumber: flightNumber,
-      seatNumber: seatNumber,
-      scheduleSnapshot: scheduleSnapshot,
-      status: PassStatus.expired,
-      qrCode: qrCode,
-      issueTime: issueTime,
-      activatedAt: activatedAt,
-      usedAt: usedAt,
-    );
-  }
-
-  BoardingPass updateSeat(SeatNumber newSeatNumber) {
-    if (!_canUpdateSeat()) {
-      throw DomainException(
-        'Cannot update seat: boarding pass is ${status.name}',
-      );
-    }
-
-    final newQrCode = QRCodeData.generate(
-      passId: passId,
-      flightNumber: flightNumber,
-      seatNumber: newSeatNumber,
-      memberNumber: memberNumber,
-      departureTime: scheduleSnapshot.departureTime,
-    );
-
-    return BoardingPass._(
-      passId: passId,
-      memberNumber: memberNumber,
-      flightNumber: flightNumber,
-      seatNumber: newSeatNumber,
-      scheduleSnapshot: scheduleSnapshot,
-      status: status,
-      qrCode: newQrCode,
-      issueTime: issueTime,
-      activatedAt: activatedAt,
-      usedAt: usedAt,
-    );
-  }
-
   bool get isValidForBoarding {
-    return status == PassStatus.activated &&
-        _isWithinBoardingWindow() &&
-        qrCode.isValid;
+    return status == PassStatus.activated && _isWithinBoardingWindow();
   }
 
   bool get isActive {
@@ -222,7 +136,7 @@ class BoardingPass {
   }
 
   Duration? get timeUntilDeparture {
-    final now = TZDateTime.now(local);
+    final now = tz.TZDateTime.now(tz.local);
     if (now.isAfter(scheduleSnapshot.departureTime)) {
       return null; // Flight has departed
     }
@@ -230,7 +144,7 @@ class BoardingPass {
   }
 
   bool _isWithinBoardingWindow() {
-    final now = TZDateTime.now(local);
+    final now = tz.TZDateTime.now(tz.local);
     return now.isAfter(scheduleSnapshot.boardingTime) &&
         now.isBefore(scheduleSnapshot.departureTime);
   }
@@ -238,7 +152,7 @@ class BoardingPass {
   bool _canActivate() {
     if (status != PassStatus.issued) return false;
 
-    final now = TZDateTime.now(local);
+    final now = tz.TZDateTime.now(tz.local);
     final twentyFourHoursBefore = scheduleSnapshot.departureTime.subtract(
       const Duration(hours: 24),
     );
@@ -252,7 +166,7 @@ class BoardingPass {
       return 'boarding pass status is ${status.name}';
     }
 
-    final now = TZDateTime.now(local);
+    final now = tz.TZDateTime.now(tz.local);
     final twentyFourHoursBefore = scheduleSnapshot.departureTime.subtract(
       const Duration(hours: 24),
     );
@@ -266,32 +180,6 @@ class BoardingPass {
     }
 
     return 'unknown reason';
-  }
-
-  bool _canUse() {
-    return status == PassStatus.activated &&
-        _isWithinBoardingWindow() &&
-        qrCode.isValid;
-  }
-
-  String _getUsageBlockingReason() {
-    if (status != PassStatus.activated) {
-      return 'boarding pass is not activated (status: ${status.name})';
-    }
-
-    if (!_isWithinBoardingWindow()) {
-      return 'not within boarding window';
-    }
-
-    if (!qrCode.isValid) {
-      return 'QR code is invalid or expired';
-    }
-
-    return 'unknown reason';
-  }
-
-  bool _canUpdateSeat() {
-    return status == PassStatus.issued || status == PassStatus.activated;
   }
 
   @override

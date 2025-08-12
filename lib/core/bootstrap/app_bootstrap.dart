@@ -71,6 +71,8 @@ class AppBootstrap {
         await _executeAuthInitialization(context);
       }
 
+      _executeContainerDependentSteps(config, context, container);
+
       await _validateInitializations(context, config);
 
       _logger.i('Application bootstrap completed successfully');
@@ -231,5 +233,30 @@ class AppBootstrap {
       _logger.e('Error during cleanup: $e');
       // Don't rethrow cleanup errors
     }
+  }
+
+  static Future<void> _executeContainerDependentSteps(
+    BootstrapConfig config,
+    InitializationContext context,
+    ProviderContainer container,
+  ) async {
+    try {
+      if (config.enableDemoData && context.getData('demo_data_ready') == true) {
+        await DemoDataInitializationStep.syncRemoteDataSource(context);
+      }
+    } catch (e, stackTrace) {
+      _logger.e(
+        'Container-dependent initialization failed',
+        error: e,
+        stackTrace: stackTrace,
+      );
+
+      // Log but don't rethrow - these are typically non-critical
+      _logger.w(
+        'Continuing bootstrap despite container-dependent step failures',
+      );
+    }
+
+    _logger.i('Container-dependent initialization steps completed');
   }
 }

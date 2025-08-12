@@ -1,215 +1,199 @@
 import 'dart:convert';
-import 'package:app/features/flight/domain/value_objects/flight_number.dart';
-import 'package:app/features/member/domain/value_objects/member_number.dart';
-import 'package:crypto/crypto.dart';
+import 'package:app/core/exceptions/domain_exception.dart';
 import 'package:timezone/timezone.dart';
-import 'pass_id.dart';
-import 'seat_number.dart';
 
 class QRCodeData {
-  final String encryptedPayload;
-  final String checksum;
+  final String token;
+  final String signature;
   final TZDateTime generatedAt;
   final int version;
 
-  const QRCodeData({
-    required this.encryptedPayload,
-    required this.checksum,
+  const QRCodeData._({
+    required this.token,
+    required this.signature,
     required this.generatedAt,
     required this.version,
   });
 
-  /// Generate QR code for boarding pass
-  factory QRCodeData.generate({
-    required PassId passId,
-    required FlightNumber flightNumber,
-    required SeatNumber seatNumber,
-    required MemberNumber memberNumber,
-    required TZDateTime departureTime,
+  factory QRCodeData.create({
+    required String token,
+    required String signature,
+    required TZDateTime generatedAt,
     int version = 1,
   }) {
-    final generatedAt = TZDateTime.now(local);
+    if (token.isEmpty) {
+      throw DomainException('QR code token cannot be empty');
+    }
+    if (signature.isEmpty) {
+      throw DomainException('QR code signature cannot be empty');
+    }
 
-    final payload = QRPayload(
-      passId: passId.value,
-      flightNumber: flightNumber.value,
-      seatNumber: seatNumber.value,
-      memberNumber: memberNumber.value,
-      departureTime: departureTime,
-      generatedAt: generatedAt,
-    );
-
-    final jsonPayload = payload.toJsonString();
-    final encryptedPayload = _encryptPayload(jsonPayload);
-
-    // Generate checksum
-    final checksum = _generateChecksum(encryptedPayload, generatedAt);
-
-    return QRCodeData(
-      encryptedPayload: encryptedPayload,
-      checksum: checksum,
+    return QRCodeData._(
+      token: token,
+      signature: signature,
       generatedAt: generatedAt,
       version: version,
     );
   }
 
-  QRPayload? decryptPayload() {
+  /// Parse QR code from scanned string
+  factory QRCodeData.fromQRString(String qrString) {
     try {
-      if (!_verifyChecksum()) {
-        return null;
+      final parts = qrString.split('.');
+      if (parts.length != 4) {
+        throw const FormatException('Invalid QR code format');
       }
 
-      final decryptedJson = _decryptPayload(encryptedPayload);
+      final versionData = _decodeBase64Url(parts[0]);
+      final version = int.parse(utf8.decode(versionData));
 
-      return QRPayload.fromJsonString(decryptedJson);
+      final timestampData = _decodeBase64Url(parts[1]);
+      final timestamp = int.parse(utf8.decode(timestampData));
+      final generatedAt = TZDateTime.fromMillisecondsSinceEpoch(
+        local,
+        timestamp,
+      );
+
+      return QRCodeData._(
+        version: version,
+        generatedAt: generatedAt,
+        token: parts[2],
+        signature: parts[3],
+      );
     } catch (e) {
-      return null; // Invalid QR code
+      throw DomainException('Invalid QR code format: ${e.toString()}');
     }
   }
 
-  bool get isValid {
-    final now = TZDateTime.now(local);
-    const validityDuration = Duration(hours: 2);
+  /// Convert to QR code string for display/scanning
+  String toQRString() {
+    final versionEncoded = _encodeBase64Url(utf8.encode(version.toString()));
+    final timestampEncoded = _encodeBase64Url(
+      utf8.encode(generatedAt.millisecondsSinceEpoch.toString()),
+    );
 
-    if (now.difference(generatedAt) > validityDuration) {
-      return false;
+    final result = '$versionEncoded.$timestampEncoded.$token.$signature';
+
+    return result;
+  }
+
+  static String _encodeBase64Url(List<int> bytes) {
+    return base64Url.encode(bytes).replaceAll('=', '');
+  }
+
+  static List<int> _decodeBase64Url(String str) {
+    String normalized = str;
+    switch (str.length % 4) {
+      case 1:
+        throw const FormatException('Invalid base64url string');
+      case 2:
+        normalized += '==';
+        break;
+      case 3:
+        normalized += '=';
+        break;
     }
-
-    return _verifyChecksum();
-  }
-
-  Duration? get timeRemaining {
-    const validityDuration = Duration(hours: 2);
-    final expiryTime = generatedAt.add(validityDuration);
-    final now = TZDateTime.now(local);
-
-    if (now.isAfter(expiryTime)) {
-      return null;
-    }
-
-    return expiryTime.difference(now);
-  }
-
-  static String _encryptPayload(String payload) {
-    final bytes = utf8.encode(payload);
-    final encoded = base64Encode(bytes);
-    return encoded
-        .split('')
-        .map((char) {
-          if (char.codeUnitAt(0) >= 65 && char.codeUnitAt(0) <= 90) {
-            return String.fromCharCode(
-              ((char.codeUnitAt(0) - 65 + 3) % 26) + 65,
-            );
-          } else if (char.codeUnitAt(0) >= 97 && char.codeUnitAt(0) <= 122) {
-            return String.fromCharCode(
-              ((char.codeUnitAt(0) - 97 + 3) % 26) + 97,
-            );
-          }
-          return char;
-        })
-        .join('');
-  }
-
-  static String _decryptPayload(String encryptedPayload) {
-    final decrypted = encryptedPayload
-        .split('')
-        .map((char) {
-          if (char.codeUnitAt(0) >= 65 && char.codeUnitAt(0) <= 90) {
-            return String.fromCharCode(
-              ((char.codeUnitAt(0) - 65 - 3 + 26) % 26) + 65,
-            );
-          } else if (char.codeUnitAt(0) >= 97 && char.codeUnitAt(0) <= 122) {
-            return String.fromCharCode(
-              ((char.codeUnitAt(0) - 97 - 3 + 26) % 26) + 97,
-            );
-          }
-          return char;
-        })
-        .join('');
-
-    final bytes = base64Decode(decrypted);
-    return utf8.decode(bytes);
-  }
-
-  static String _generateChecksum(String payload, TZDateTime timestamp) {
-    final combined = '$payload${timestamp.millisecondsSinceEpoch}';
-    final bytes = utf8.encode(combined);
-    final digest = md5.convert(bytes);
-    return digest.toString().substring(0, 12); // First 12 characters
-  }
-
-  bool _verifyChecksum() {
-    final expectedChecksum = _generateChecksum(encryptedPayload, generatedAt);
-    return checksum == expectedChecksum;
+    return base64Url.decode(normalized);
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is QRCodeData &&
-        other.encryptedPayload == encryptedPayload &&
-        other.checksum == checksum &&
+        other.token == token &&
+        other.signature == signature &&
         other.generatedAt == generatedAt &&
         other.version == version;
   }
 
   @override
-  int get hashCode =>
-      Object.hash(encryptedPayload, checksum, generatedAt, version);
+  int get hashCode => Object.hash(token, signature, generatedAt, version);
 
   @override
-  String toString() => 'QRCodeData(version: $version, checksum: $checksum)';
+  String toString() => 'QRCodeData(version: $version, generated: $generatedAt)';
 }
 
-class QRPayload {
+/// QR Code payload for internal processing
+class QRCodePayload {
   final String passId;
   final String flightNumber;
   final String seatNumber;
   final String memberNumber;
   final TZDateTime departureTime;
   final TZDateTime generatedAt;
+  final String nonce;
+  final String issuer;
 
-  const QRPayload({
+  const QRCodePayload({
     required this.passId,
     required this.flightNumber,
     required this.seatNumber,
     required this.memberNumber,
     required this.departureTime,
     required this.generatedAt,
+    required this.nonce,
+    required this.issuer,
   });
 
+  /// JWT-like claims structure
   Map<String, dynamic> toJson() {
     return {
-      'passId': passId,
-      'flightNumber': flightNumber,
-      'seatNumber': seatNumber,
-      'memberNumber': memberNumber,
-      'departureTime': departureTime.toIso8601String(),
-      'generatedAt': generatedAt.toIso8601String(),
+      'iss': issuer, // Issuer
+      'sub': passId, // Subject (Pass ID)
+      'iat': generatedAt.millisecondsSinceEpoch, // Issued At
+      'exp': generatedAt
+          .add(const Duration(hours: 24))
+          .millisecondsSinceEpoch, // Expires
+      'flt': flightNumber,
+      'seat': seatNumber,
+      'mbr': memberNumber,
+      'dep': departureTime.millisecondsSinceEpoch,
+      'nonce': nonce,
+      'ver': 1,
     };
   }
 
-  factory QRPayload.fromJson(Map<String, dynamic> json) {
-    return QRPayload(
-      passId: json['passId'] as String,
-      flightNumber: json['flightNumber'] as String,
-      seatNumber: json['seatNumber'] as String,
-      memberNumber: json['memberNumber'] as String,
-      departureTime: TZDateTime.parse(local, json['departureTime'] as String),
-      generatedAt: TZDateTime.parse(local, json['generatedAt'] as String),
+  factory QRCodePayload.fromJson(Map<String, dynamic> json) {
+    return QRCodePayload(
+      issuer: json['iss'] as String,
+      passId: json['sub'] as String,
+      flightNumber: json['flt'] as String,
+      seatNumber: json['seat'] as String,
+      memberNumber: json['mbr'] as String,
+      departureTime: TZDateTime.fromMillisecondsSinceEpoch(
+        local,
+        json['dep'] as int,
+      ),
+      generatedAt: TZDateTime.fromMillisecondsSinceEpoch(
+        local,
+        json['iat'] as int,
+      ),
+      nonce: json['nonce'] as String,
     );
-  }
-
-  factory QRPayload.fromJsonString(String jsonString) {
-    final json = jsonDecode(jsonString) as Map<String, dynamic>;
-    return QRPayload.fromJson(json);
   }
 
   String toJsonString() => jsonEncode(toJson());
 
-  @override
-  String toString() {
-    return 'QRPayload(passId: $passId, flightNumber: $flightNumber, '
-        'seatNumber: $seatNumber, memberNumber: $memberNumber)';
+  factory QRCodePayload.fromJsonString(String jsonString) {
+    final json = jsonDecode(jsonString) as Map<String, dynamic>;
+    return QRCodePayload.fromJson(json);
+  }
+
+  /// Check if payload is expired
+  bool get isExpired {
+    final now = TZDateTime.now(local);
+    final expiryTime = generatedAt.add(const Duration(hours: 24));
+    return now.isAfter(expiryTime);
+  }
+
+  Duration? get timeRemaining {
+    final now = TZDateTime.now(local);
+    final expiryTime = generatedAt.add(const Duration(hours: 24));
+
+    if (now.isAfter(expiryTime)) {
+      return null;
+    }
+
+    return expiryTime.difference(now);
   }
 }

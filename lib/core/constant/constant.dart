@@ -1,1 +1,3 @@
-const appDefaultLocation = 'Asia/Taipei';
+class AppConstants {
+  static const appDefaultLocation = 'Asia/Taipei';
+}

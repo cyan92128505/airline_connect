@@ -1,8 +1,9 @@
+import 'dart:math';
+
+import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
 import 'package:flutter/material.dart';
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_dto.dart';
 import 'package:app/features/boarding_pass/presentation/widgets/qr_code_display.dart';
-import 'package:app/features/boarding_pass/presentation/widgets/flight_info_section.dart';
-import 'package:app/features/boarding_pass/presentation/widgets/passenger_info_section.dart';
 import 'package:app/features/shared/presentation/utils/date_formatter.dart';
 import 'package:app/core/presentation/theme/app_colors.dart';
 import 'package:gap/gap.dart';
@@ -10,95 +11,99 @@ import 'package:gap/gap.dart';
 /// Widget for displaying boarding pass information
 class BoardingPassCard extends StatelessWidget {
   final BoardingPassDTO boardingPass;
-  final bool isHighlighted;
+  final bool isUrgent;
   final VoidCallback? onTap;
   final VoidCallback? onActivate;
+  final VoidCallback? onViewDetails;
   final bool showQRCode;
-  final bool isCompact;
 
   const BoardingPassCard({
     super.key,
     required this.boardingPass,
-    this.isHighlighted = false,
+    this.isUrgent = false,
     this.onTap,
     this.onActivate,
+    this.onViewDetails,
     this.showQRCode = true,
-    this.isCompact = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final status = boardingPass.status;
+    final isActivated = status.allowsBoarding;
+    final timeToFlight = _getTimeToFlight();
+
     return Card(
-      elevation: isHighlighted ? 8 : 2,
+      elevation: isUrgent ? 6 : 2,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: isHighlighted
+        borderRadius: BorderRadius.circular(12),
+        side: isUrgent
             ? BorderSide(color: AppColors.warning, width: 2)
             : BorderSide.none,
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            gradient: isHighlighted
+            borderRadius: BorderRadius.circular(12),
+            gradient: isUrgent
                 ? LinearGradient(
+                    colors: [
+                      AppColors.warning.withAlpha(15),
+                      Colors.transparent,
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.warning.withAlpha(25),
-                      AppColors.warning.withAlpha(12),
-                    ],
                   )
                 : null,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with status and actions
-                _buildHeader(context),
+                // Flight header with status
+                _buildFlightHeader(context, status),
 
-                if (!isCompact) ...[
-                  const Gap(20),
+                const Gap(16),
 
-                  // Flight information
-                  FlightInfoSection(
-                    flightNumber: boardingPass.flightNumber,
-                    scheduleSnapshot: boardingPass.scheduleSnapshot,
-                    seatNumber: boardingPass.seatNumber,
+                // Flight route and timing
+                _buildFlightRoute(context),
+
+                const Gap(12),
+
+                // Critical flight information
+                _buildFlightDetails(context),
+
+                // Time alerts for urgent flights
+                if (timeToFlight != null && timeToFlight.inHours < 3)
+                  _buildTimeAlert(context, timeToFlight),
+
+                // Flight status alerts
+                if (_hasFlightAlerts()) _buildFlightAlerts(context),
+
+                const Gap(16),
+
+                // Passenger and seat information
+                _buildPassengerInfo(context),
+
+                // QR Code for activated passes
+                if (showQRCode &&
+                    isActivated &&
+                    boardingPass.qrCode.isValid) ...[
+                  const Gap(16),
+                  QRCodeDisplay(
+                    qrCodeData: boardingPass.qrCode,
+                    passId: boardingPass.passId,
                   ),
-
-                  const Gap(16),
-
-                  // Passenger information
-                  PassengerInfoSection(boardingPass: boardingPass),
-
-                  if (showQRCode && boardingPass.isActive == true) ...[
-                    const Gap(20),
-
-                    // QR Code section
-                    QRCodeDisplay(
-                      qrCodeData: boardingPass.qrCode,
-                      passId: boardingPass.passId,
-                    ),
-                  ],
-
-                  if (boardingPass.isActive != true && onActivate != null) ...[
-                    const Gap(20),
-
-                    // Activation button
-                    _buildActivationButton(context),
-                  ],
-
-                  const Gap(16),
-
-                  // DDD Architecture info
-                  _buildArchitectureInfo(context),
                 ],
+
+                const Gap(16),
+
+                // Action buttons
+                _buildActionButtons(context, isActivated),
               ],
             ),
           ),
@@ -107,51 +112,39 @@ class BoardingPassCard extends StatelessWidget {
     );
   }
 
-  /// Build card header with status and flight info
-  Widget _buildHeader(BuildContext context) {
-    final status = boardingPass.status;
-    final statusColor = status.displayColor;
-    final statusText = status.displayName;
-
+  /// Build flight header with airline and status
+  Widget _buildFlightHeader(BuildContext context, PassStatus status) {
     return Row(
       children: [
-        // Flight number and route
+        // Airline logo placeholder and flight number
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withAlpha(25),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(Icons.flight, color: AppColors.primary, size: 24),
+        ),
+
+        const Gap(12),
+
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Text(
-                    boardingPass.flightNumber,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  if (isHighlighted) ...[
-                    const Gap(8),
-                    Icon(Icons.star, color: AppColors.warning, size: 20),
-                  ],
-                ],
-              ),
-
-              const Gap(4),
-
               Text(
-                '${boardingPass.scheduleSnapshot.departure} → ${boardingPass.scheduleSnapshot.arrival}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
+                boardingPass.flightNumber,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
 
-              const Gap(4),
+              const Gap(2),
 
               Text(
-                DateFormatter.formatFlightTime(
-                  boardingPass.scheduleSnapshot.departureTime,
-                ),
+                _getAirlineName(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -161,66 +154,299 @@ class BoardingPassCard extends StatelessWidget {
         ),
 
         // Status badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: statusColor.withAlpha(25),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: statusColor.withAlpha(77)),
+        _buildStatusBadge(context, status),
+      ],
+    );
+  }
+
+  /// Build flight route with departure and arrival
+  Widget _buildFlightRoute(BuildContext context) {
+    return Row(
+      children: [
+        // Departure
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                boardingPass.scheduleSnapshot.departure,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+
+              const Gap(4),
+
+              Text(
+                DateFormatter.formatTime(
+                  boardingPass.scheduleSnapshot.departureTime,
+                ),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+
+              Text(
+                DateFormatter.formatDate(
+                  boardingPass.scheduleSnapshot.departureTime,
+                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
           ),
-          child: Text(
-            statusText,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: statusColor,
-              fontWeight: FontWeight.bold,
-            ),
+        ),
+
+        // Flight path with duration
+        Expanded(
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary.withAlpha(100),
+                            AppColors.primary,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Transform.rotate(
+                      angle: 90 * pi / 180,
+                      child: Icon(Icons.flight, color: Colors.white, size: 16),
+                    ),
+                  ),
+
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withAlpha(100),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const Gap(8),
+
+              Text(
+                _getFlightDuration(),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+
+        // Arrival
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                boardingPass.scheduleSnapshot.arrival,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+
+              const Gap(4),
+
+              Text(
+                _getArrivalTime(),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+
+              Text(
+                '預計抵達',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
           ),
         ),
       ],
     );
   }
 
-  /// Build activation button for inactive passes
-  Widget _buildActivationButton(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: onActivate,
-        icon: const Icon(Icons.play_arrow),
-        label: const Text('啟用登機證'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.success,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+  /// Build critical flight details
+  Widget _buildFlightDetails(BuildContext context) {
+    return Row(
+      children: [
+        _buildDetailItem(
+          context,
+          '登機門',
+          boardingPass.scheduleSnapshot.gate,
+          Icons.door_front_door,
+          AppColors.primary,
+        ),
+
+        const Gap(24),
+
+        _buildDetailItem(
+          context,
+          '座位',
+          boardingPass.seatNumber,
+          Icons.airline_seat_recline_normal,
+          AppColors.secondary,
+        ),
+
+        const Gap(24),
+
+        _buildDetailItem(
+          context,
+          '登機時間',
+          DateFormatter.formatTime(boardingPass.scheduleSnapshot.boardingTime),
+          Icons.schedule,
+          AppColors.textSecondary,
+        ),
+      ],
+    );
+  }
+
+  /// Build detail item
+  Widget _buildDetailItem(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 20),
+
+        const Gap(4),
+
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+        ),
+
+        const Gap(2),
+
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
           ),
         ),
+      ],
+    );
+  }
+
+  /// Build time alert for urgent flights
+  Widget _buildTimeAlert(BuildContext context, Duration timeToFlight) {
+    final hours = timeToFlight.inHours;
+    final minutes = timeToFlight.inMinutes.remainder(60);
+
+    Color alertColor;
+    IconData alertIcon;
+    String alertText;
+
+    if (timeToFlight.inMinutes < 30) {
+      alertColor = AppColors.error;
+      alertIcon = Icons.warning;
+      alertText = '登機即將結束！';
+    } else if (timeToFlight.inMinutes < 90) {
+      alertColor = AppColors.warning;
+      alertIcon = Icons.schedule;
+      alertText = '準備登機';
+    } else {
+      alertColor = AppColors.info;
+      alertIcon = Icons.info_outline;
+      alertText = '即將起飛';
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: alertColor.withAlpha(25),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: alertColor.withAlpha(77)),
+      ),
+      child: Row(
+        children: [
+          Icon(alertIcon, color: alertColor, size: 18),
+
+          const Gap(8),
+
+          Expanded(
+            child: Text(
+              '$alertText（$hours小時$minutes分鐘後起飛）',
+              style: TextStyle(
+                color: alertColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  /// Build DDD architecture information section
-  Widget _buildArchitectureInfo(BuildContext context) {
+  /// Build flight status alerts
+  Widget _buildFlightAlerts(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.only(top: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.info.withAlpha(25),
+        color: AppColors.warning.withAlpha(25),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.info.withAlpha(77)),
+        border: Border.all(color: AppColors.warning.withAlpha(77)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.architecture, size: 16, color: AppColors.info),
-              const Gap(6),
+              Icon(
+                Icons.notifications_active,
+                color: AppColors.warning,
+                size: 18,
+              ),
+
+              const Gap(8),
+
               Text(
-                'DDD 架構展示',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.info,
+                '航班狀態更新',
+                style: TextStyle(
+                  color: AppColors.warning,
                   fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
             ],
@@ -228,60 +454,262 @@ class BoardingPassCard extends StatelessWidget {
 
           const Gap(8),
 
-          _buildArchitecturePoint(context, '聚合邊界：', 'BoardingPass 獨立聚合'),
-
-          const Gap(4),
-
-          _buildArchitecturePoint(
-            context,
-            '弱參考策略：',
-            '透過 MemberNumber/FlightNumber 參考',
+          // Mock flight alerts - in real app, these would come from live data
+          Text(
+            '• 登機門由 A12 變更至 ${boardingPass.scheduleSnapshot.gate}',
+            style: TextStyle(color: AppColors.warning, fontSize: 13),
           ),
 
-          const Gap(4),
-
-          _buildArchitecturePoint(context, '快照模式：', '航班時刻表快照確保資料獨立性'),
-
-          if (boardingPass.scheduleSnapshot.snapshotTime.isNotEmpty) ...[
-            const Gap(4),
-            _buildArchitecturePoint(
-              context,
-              '快照時間：',
-              DateFormatter.formatDateTime(
-                boardingPass.scheduleSnapshot.snapshotTime,
-              ),
-            ),
-          ],
+          Text(
+            '• 預計延誤 15 分鐘起飛',
+            style: TextStyle(color: AppColors.warning, fontSize: 13),
+          ),
         ],
       ),
     );
   }
 
-  /// Build single architecture point
-  Widget _buildArchitecturePoint(
-    BuildContext context,
-    String label,
-    String value,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.info,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.info.withAlpha(204),
+  /// Build passenger information
+  Widget _buildPassengerInfo(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.person, color: AppColors.textSecondary, size: 20),
+
+          const Gap(12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '登機證：${boardingPass.passId}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+
+                const Gap(2),
+
+                Text(
+                  '會員：${boardingPass.memberNumber}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
+
+          // Seat type indicator
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _getSeatTypeColor().withAlpha(25),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _getSeatTypeColor().withAlpha(77)),
+            ),
+            child: Text(
+              _getSeatTypeText(),
+              style: TextStyle(
+                color: _getSeatTypeColor(),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build action buttons
+  Widget _buildActionButtons(BuildContext context, bool isActivated) {
+    if (isActivated) {
+      return Row(
+        children: [
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: onViewDetails,
+              icon: const Icon(Icons.info_outline, size: 18),
+              label: const Text('查看詳情'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+
+          const Gap(12),
+
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () => _showQRFullScreen(context),
+              icon: const Icon(Icons.qr_code_scanner, size: 18),
+              label: const Text('顯示 QR'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: onActivate,
+          icon: const Icon(Icons.play_arrow),
+          label: const Text('啟用登機證'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
         ),
-      ],
+      );
+    }
+  }
+
+  /// Build status badge
+  Widget _buildStatusBadge(BuildContext context, PassStatus status) {
+    final statusColor = status.displayColor;
+    final statusText = status.displayName;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: statusColor.withAlpha(25),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: statusColor.withAlpha(77)),
+      ),
+      child: Text(
+        statusText,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: statusColor,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  // Helper methods for business logic
+
+  String _getAirlineName() {
+    final airlineCode = boardingPass.flightNumber.substring(0, 2);
+    switch (airlineCode) {
+      case 'CI':
+        return '中華航空';
+      case 'BR':
+        return '長榮航空';
+      case 'JX':
+        return '星宇航空';
+      case 'IT':
+        return '台灣虎航';
+      default:
+        return '航空公司';
+    }
+  }
+
+  Duration? _getTimeToFlight() {
+    try {
+      final now = DateTime.now();
+      final departureTime = DateTime.parse(
+        boardingPass.scheduleSnapshot.departureTime,
+      );
+      final difference = departureTime.difference(now);
+      return difference.isNegative ? null : difference;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  String _getFlightDuration() {
+    // Mock flight duration - in real app, calculate from departure/arrival times
+    return '2小時15分';
+  }
+
+  String _getArrivalTime() {
+    try {
+      final departureTime = DateTime.parse(
+        boardingPass.scheduleSnapshot.departureTime,
+      );
+      final arrivalTime = departureTime.add(
+        const Duration(hours: 2, minutes: 15),
+      );
+      return DateFormatter.formatTime(arrivalTime.toIso8601String());
+    } catch (e) {
+      return '預計時間';
+    }
+  }
+
+  bool _hasFlightAlerts() {
+    // Mock alerts - in real app, check against live flight data
+    return isUrgent || boardingPass.scheduleSnapshot.gate != 'A12';
+  }
+
+  Color _getSeatTypeColor() {
+    final seatLetter = boardingPass.seatNumber.substring(
+      boardingPass.seatNumber.length - 1,
+    );
+    if (['A', 'F'].contains(seatLetter)) {
+      return AppColors.info; // Window seat
+    } else if (['C', 'D'].contains(seatLetter)) {
+      return AppColors.warning; // Aisle seat
+    } else {
+      return AppColors.textSecondary; // Middle seat
+    }
+  }
+
+  String _getSeatTypeText() {
+    final seatLetter = boardingPass.seatNumber.substring(
+      boardingPass.seatNumber.length - 1,
+    );
+    if (['A', 'F'].contains(seatLetter)) {
+      return '靠窗';
+    } else if (['C', 'D'].contains(seatLetter)) {
+      return '靠走道';
+    } else {
+      return '中間';
+    }
+  }
+
+  void _showQRFullScreen(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            QRCodeDisplay(
+              qrCodeData: boardingPass.qrCode,
+              passId: boardingPass.passId,
+            ),
+
+            const Gap(16),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.rectangle,
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+              ),
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [const Text('關閉')],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

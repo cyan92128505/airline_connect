@@ -107,7 +107,7 @@ class QRCodeDisplay extends StatelessWidget {
               border: Border.all(color: AppColors.border),
             ),
             child: QrImageView(
-              data: _generateQRData(),
+              data: qrCodeData.qrString ?? '',
               version: QrVersions.auto,
               size: 200.0,
               backgroundColor: Colors.white,
@@ -117,47 +117,6 @@ class QRCodeDisplay extends StatelessWidget {
           ),
 
           const Gap(16),
-
-          // QR Code info
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.info.withAlpha(25),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.info.withAlpha(77)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, color: AppColors.info, size: 16),
-                    const Gap(8),
-                    Text(
-                      'QR Code 資訊',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.info,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const Gap(8),
-
-                _buildInfoRow('版本', 'v${qrCodeData.version}'),
-                _buildInfoRow('生成時間', qrCodeData.generatedAt),
-                _buildInfoRow(
-                  '檢查碼',
-                  '${qrCodeData.checksum.substring(0, 8)}...',
-                ),
-
-                if (qrCodeData.timeRemainingMinutes != null)
-                  _buildInfoRow('剩餘時間', '${qrCodeData.timeRemainingMinutes}分鐘'),
-              ],
-            ),
-          ),
-
-          const Gap(12),
 
           // Warning for offline mode
           Container(
@@ -177,43 +136,6 @@ class QRCodeDisplay extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Generate QR code data string
-  String _generateQRData() {
-    // In real implementation, this would be the encrypted payload
-    // For demo purposes, we'll create a structured string
-    return '${qrCodeData.encryptedPayload}|${qrCodeData.checksum}|${qrCodeData.generatedAt}|${qrCodeData.version}';
-  }
-
-  /// Build info row
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            '$label：',
-            style: TextStyle(
-              color: AppColors.info.withAlpha(204),
-              fontSize: 11,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                color: AppColors.info,
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.right,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
