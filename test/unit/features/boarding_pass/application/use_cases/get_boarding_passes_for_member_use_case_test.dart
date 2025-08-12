@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/flight_schedule_snapshot.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
@@ -5,6 +7,9 @@ import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dar
 import 'package:app/features/boarding_pass/domain/value_objects/seat_number.dart';
 import 'package:app/features/flight/domain/value_objects/flight_number.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
+import 'package:app/features/shared/infrastructure/database/objectbox.dart';
+import 'package:app/objectbox.g.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
@@ -16,6 +21,7 @@ import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_operation_dto.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../../../../helpers/test_qrcode_helper.dart';
 import '../../../../../helpers/test_timezone_helper.dart';
 import 'get_boarding_passes_for_member_use_case_test.mocks.dart';
 
@@ -47,6 +53,9 @@ void main() {
     late GetBoardingPassesForMemberUseCase useCase;
     late MockBoardingPassService mockBoardingPassService;
     late List<MockBoardingPass> mockBoardingPasses;
+    late Directory tempDir;
+    late ObjectBox objectBox;
+    late List<String> realQRCodes;
 
     void setupMockBoardingPass(
       MockBoardingPass mockPass,
@@ -63,13 +72,7 @@ void main() {
       final seatNumber = SeatNumber.create(seatNumberStr);
       final departureTime = tz.TZDateTime.from(departureDateTime, tz.local);
       final boardingTime = departureTime.subtract(const Duration(minutes: 30));
-      final qrCode = QRCodeData.generate(
-        passId: passId,
-        flightNumber: flightNumber,
-        seatNumber: seatNumber,
-        memberNumber: memberNumber,
-        departureTime: departureTime,
-      );
+      final qrCode = QRCodeData.fromQRString(realQRCodes.first);
 
       when(mockPass.passId).thenReturn(passId);
       when(mockPass.memberNumber).thenReturn(memberNumber);
@@ -92,8 +95,39 @@ void main() {
       ).thenReturn(departureTime.subtract(const Duration(hours: 3)));
     }
 
-    setUpAll(() {
+    setUpAll(() async {
       TestTimezoneHelper.setupForTesting();
+
+      // Create test database in temporary directory
+      tempDir = await Directory.systemTemp.createTemp(
+        'objectbox_qr_scanner_test_',
+      );
+
+      try {
+        // Initialize ObjectBox with test database
+        final store = await openStore(directory: tempDir.path);
+        objectBox = ObjectBox.createFromStore(store);
+
+        // Seed test data with real QR codes
+        await TestQrcodeHelper.seedTestDataWithRealQRCodes(objectBox);
+
+        // Get real QR codes for testing
+        realQRCodes = await TestQrcodeHelper.generateRealQRCodes(objectBox);
+
+        debugPrint('Test ObjectBox initialized at: ${tempDir.path}');
+        debugPrint('Generated ${realQRCodes.length} real QR codes for testing');
+      } catch (e) {
+        debugPrint('Failed to initialize test ObjectBox: $e');
+        rethrow;
+      }
+    });
+
+    tearDownAll(() async {
+      // Cleanup test database
+      objectBox.close();
+      if (await tempDir.exists()) {
+        await tempDir.delete(recursive: true);
+      }
     });
 
     setUp(() {

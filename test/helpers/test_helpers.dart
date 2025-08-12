@@ -41,29 +41,6 @@ class TestProviderScope {
   }
 }
 
-/// Base class for widget tests with DI mocking
-abstract class BaseWidgetTest {
-  late MockMemberApplicationService mockMemberService;
-  late MockBoardingPassApplicationService mockBoardingPassService;
-
-  @mustCallSuper
-  void setUp() {
-    mockMemberService = MockMemberApplicationService();
-    mockBoardingPassService = MockBoardingPassApplicationService();
-  }
-
-  /// Helper to pump widget with mocked dependencies
-  Future<void> pumpWidgetWithMocks(WidgetTester tester, Widget widget) async {
-    await tester.pumpWidget(
-      TestProviderScope.create(
-        memberService: mockMemberService,
-        boardingPassService: mockBoardingPassService,
-        child: MaterialApp(home: widget),
-      ),
-    );
-  }
-}
-
 /// Mock Secure Storage Repository for testing
 class MockSecureStorageRepository implements SecureStorageRepository {
   Member? _mockMember;

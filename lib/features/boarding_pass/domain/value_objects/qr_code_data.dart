@@ -72,7 +72,9 @@ class QRCodeData {
       utf8.encode(generatedAt.millisecondsSinceEpoch.toString()),
     );
 
-    return '$versionEncoded.$timestampEncoded.$token.$signature';
+    final result = '$versionEncoded.$timestampEncoded.$token.$signature';
+
+    return result;
   }
 
   static String _encodeBase64Url(List<int> bytes) {

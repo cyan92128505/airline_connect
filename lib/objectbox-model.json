@@ -141,7 +141,7 @@
     },
     {
       "id": "3:5423840136445481324",
-      "lastPropertyId": "19:5541838562246388199",
+      "lastPropertyId": "21:4918543029353250632",
       "name": "BoardingPassEntity",
       "properties": [
         {
@@ -216,16 +216,6 @@
           "indexId": "14:5984464665526667695"
         },
         {
-          "id": "13:2415893377164786097",
-          "name": "qrCodeEncryptedPayload",
-          "type": 9
-        },
-        {
-          "id": "14:7719062591484609979",
-          "name": "qrCodeChecksum",
-          "type": 9
-        },
-        {
           "id": "15:7439333756046955191",
           "name": "qrCodeGeneratedAt",
           "type": 10
@@ -251,6 +241,16 @@
           "id": "19:5541838562246388199",
           "name": "usedAt",
           "type": 10
+        },
+        {
+          "id": "20:6861363238938218631",
+          "name": "qrCodeToken",
+          "type": 9
+        },
+        {
+          "id": "21:4918543029353250632",
+          "name": "qrCodeSignature",
+          "type": 9
         }
       ],
       "relations": []
@@ -264,7 +264,10 @@
   "modelVersionParserMinimum": 5,
   "retiredEntityUids": [],
   "retiredIndexUids": [],
-  "retiredPropertyUids": [],
+  "retiredPropertyUids": [
+    2415893377164786097,
+    7719062591484609979
+  ],
   "retiredRelationUids": [],
   "version": 1
 }

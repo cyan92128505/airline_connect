@@ -47,9 +47,9 @@ class BoardingPassEntity {
   @Index()
   String status;
 
-  /// QR Code data
-  String qrCodeEncryptedPayload;
-  String qrCodeChecksum;
+  /// QR Code data - updated to match new structure
+  String qrCodeToken; // Encrypted token
+  String qrCodeSignature; // HMAC signature
 
   @Property(type: PropertyType.date)
   DateTime qrCodeGeneratedAt;
@@ -80,8 +80,8 @@ class BoardingPassEntity {
       gateNumber = '',
       scheduleSnapshotTime = DateTime.now(),
       status = '',
-      qrCodeEncryptedPayload = '',
-      qrCodeChecksum = '',
+      qrCodeToken = '',
+      qrCodeSignature = '',
       qrCodeGeneratedAt = DateTime.now(),
       qrCodeVersion = 1,
       issueTime = DateTime.now();
@@ -99,8 +99,8 @@ class BoardingPassEntity {
     required this.gateNumber,
     required this.scheduleSnapshotTime,
     required this.status,
-    required this.qrCodeEncryptedPayload,
-    required this.qrCodeChecksum,
+    required this.qrCodeToken,
+    required this.qrCodeSignature,
     required this.qrCodeGeneratedAt,
     required this.qrCodeVersion,
     required this.issueTime,
@@ -121,9 +121,9 @@ class BoardingPassEntity {
       arrivalAirport: boardingPass.scheduleSnapshot.arrival.value,
       gateNumber: boardingPass.scheduleSnapshot.gate.value,
       scheduleSnapshotTime: boardingPass.scheduleSnapshot.snapshotTime.toUtc(),
-      status: boardingPass.status.value,
-      qrCodeEncryptedPayload: boardingPass.qrCode.encryptedPayload,
-      qrCodeChecksum: boardingPass.qrCode.checksum,
+      status: boardingPass.status.name,
+      qrCodeToken: boardingPass.qrCode.token,
+      qrCodeSignature: boardingPass.qrCode.signature,
       qrCodeGeneratedAt: boardingPass.qrCode.generatedAt.toUtc(),
       qrCodeVersion: boardingPass.qrCode.version,
       issueTime: boardingPass.issueTime.toUtc(),
@@ -145,9 +145,9 @@ class BoardingPassEntity {
     );
 
     // Reconstruct QRCodeData
-    final qrCode = QRCodeData(
-      encryptedPayload: qrCodeEncryptedPayload,
-      checksum: qrCodeChecksum,
+    final qrCode = QRCodeData.create(
+      token: qrCodeToken,
+      signature: qrCodeSignature,
       generatedAt: tz.TZDateTime.from(qrCodeGeneratedAt, tz.local),
       version: qrCodeVersion,
     );
@@ -158,7 +158,10 @@ class BoardingPassEntity {
       flightNumber: flightNumber,
       seatNumber: seatNumber,
       scheduleSnapshot: scheduleSnapshot,
-      status: PassStatus.fromString(status),
+      status: PassStatus.values.firstWhere(
+        (s) => s.name == status,
+        orElse: () => PassStatus.issued,
+      ),
       qrCode: qrCode,
       issueTime: tz.TZDateTime.from(issueTime, tz.local),
       activatedAt: activatedAt != null
@@ -180,9 +183,9 @@ class BoardingPassEntity {
     arrivalAirport = boardingPass.scheduleSnapshot.arrival.value;
     gateNumber = boardingPass.scheduleSnapshot.gate.value;
     scheduleSnapshotTime = boardingPass.scheduleSnapshot.snapshotTime.toUtc();
-    status = boardingPass.status.value;
-    qrCodeEncryptedPayload = boardingPass.qrCode.encryptedPayload;
-    qrCodeChecksum = boardingPass.qrCode.checksum;
+    status = boardingPass.status.name;
+    qrCodeToken = boardingPass.qrCode.token;
+    qrCodeSignature = boardingPass.qrCode.signature;
     qrCodeGeneratedAt = boardingPass.qrCode.generatedAt.toUtc();
     qrCodeVersion = boardingPass.qrCode.version;
     issueTime = boardingPass.issueTime.toUtc();

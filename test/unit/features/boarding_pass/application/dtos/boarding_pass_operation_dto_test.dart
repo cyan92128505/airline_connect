@@ -53,8 +53,8 @@ void main() {
       ),
       status: PassStatus.activated,
       qrCode: QRCodeDataDTO(
-        encryptedPayload: 'encrypted_data_123',
-        checksum: 'checksum_abc',
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
         generatedAt: '2025-07-17T09:00:00Z',
         version: 1,
         isValid: true,
@@ -120,34 +120,31 @@ void main() {
     test('should create QRCodeValidationDTO with valid data', () {
       // Arrange & Act
       final dto = QRCodeValidationDTO(
-        encryptedPayload: 'encrypted_data_123',
-        checksum: 'checksum_abc',
-        generatedAt: '2025-07-17T09:00:00Z',
-        version: 1,
+        qrCodeString: '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
       );
 
       // Assert
-      expect(dto.encryptedPayload, equals('encrypted_data_123'));
-      expect(dto.checksum, equals('checksum_abc'));
-      expect(dto.version, equals(1));
+      expect(
+        dto.qrCodeString,
+        equals('1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc'),
+      );
     });
 
     test('should deserialize from JSON correctly', () {
       // Arrange
       final json = {
-        'encryptedPayload': 'encrypted_data_123',
-        'checksum': 'checksum_abc',
-        'generatedAt': '2025-07-17T09:00:00Z',
-        'version': 1,
+        'qrCodeString':
+            '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
       };
 
       // Act
       final dto = QRCodeValidationDTO.fromJson(json);
 
       // Assert
-      expect(dto.encryptedPayload, equals('encrypted_data_123'));
-      expect(dto.checksum, equals('checksum_abc'));
-      expect(dto.version, equals(1));
+      expect(
+        dto.qrCodeString,
+        equals('1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc'),
+      );
     });
   });
 
@@ -160,7 +157,7 @@ void main() {
         seatNumber: '12A',
         memberNumber: 'M1001',
         departureTime: '2025-07-17T10:30:00Z',
-        payloadData: {'gate': 'A12'},
+        metadata: {'gate': 'A12'},
       );
 
       // Assert
@@ -169,13 +166,14 @@ void main() {
       expect(response.flightNumber, equals('BR857'));
       expect(response.seatNumber, equals('12A'));
       expect(response.errorMessage, isNull);
-      expect(response.payloadData?['gate'], equals('A12'));
+      expect(response.metadata?['gate'], equals('A12'));
     });
 
     test('should create invalid QR code response correctly', () {
       // Act
       final response = QRCodeValidationResponseDTO.invalid(
         errorMessage: 'QR code expired',
+        errorCode: 'QR_EXPIRED',
       );
 
       // Assert
@@ -184,6 +182,58 @@ void main() {
       expect(response.flightNumber, isNull);
       expect(response.seatNumber, isNull);
       expect(response.errorMessage, equals('QR code expired'));
+      expect(response.errorCode, equals('QR_EXPIRED'));
+    });
+  });
+
+  group('QRCodePayloadDTO', () {
+    test('should create QRCodePayloadDTO with valid data', () {
+      // Arrange & Act
+      final dto = QRCodePayloadDTO(
+        passId: 'BP123456789',
+        flightNumber: 'BR857',
+        seatNumber: '12A',
+        memberNumber: 'M1001',
+        departureTime: '2025-07-17T10:30:00Z',
+        generatedAt: '2025-07-17T09:00:00Z',
+        nonce: 'random_nonce_123',
+        issuer: 'airline-connect',
+        isExpired: false,
+        timeRemainingMinutes: 90,
+      );
+
+      // Assert
+      expect(dto.passId, equals('BP123456789'));
+      expect(dto.flightNumber, equals('BR857'));
+      expect(dto.seatNumber, equals('12A'));
+      expect(dto.memberNumber, equals('M1001'));
+      expect(dto.issuer, equals('airline-connect'));
+      expect(dto.isExpired, isFalse);
+      expect(dto.timeRemainingMinutes, equals(90));
+    });
+
+    test('should serialize to JSON correctly', () {
+      // Arrange
+      final dto = QRCodePayloadDTO(
+        passId: 'BP123456789',
+        flightNumber: 'BR857',
+        seatNumber: '12A',
+        memberNumber: 'M1001',
+        departureTime: '2025-07-17T10:30:00Z',
+        generatedAt: '2025-07-17T09:00:00Z',
+        nonce: 'random_nonce_123',
+        issuer: 'airline-connect',
+      );
+
+      // Act
+      final json = dto.toJson();
+
+      // Assert
+      expect(json['passId'], equals('BP123456789'));
+      expect(json['flightNumber'], equals('BR857'));
+      expect(json['seatNumber'], equals('12A'));
+      expect(json['memberNumber'], equals('M1001'));
+      expect(json['issuer'], equals('airline-connect'));
     });
   });
 
@@ -275,6 +325,156 @@ void main() {
       expect(response.reason, equals('Not in boarding window'));
       expect(response.currentStatus, equals(PassStatus.expired));
       expect(response.isQRCodeValid, isFalse);
+    });
+  });
+
+  group('QRCodeScanResultDTO', () {
+    final sampleBoardingPass = BoardingPassDTO(
+      passId: 'BP123456789',
+      memberNumber: 'M1001',
+      flightNumber: 'BR857',
+      seatNumber: '12A',
+      scheduleSnapshot: FlightScheduleSnapshotDTO(
+        departureTime: '2025-07-17T10:30:00Z',
+        boardingTime: '2025-07-17T10:00:00Z',
+        departure: 'TPE',
+        arrival: 'NRT',
+        gate: 'A12',
+        snapshotTime: '2025-07-17T08:00:00Z',
+      ),
+      status: PassStatus.activated,
+      qrCode: QRCodeDataDTO(
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
+        generatedAt: '2025-07-17T09:00:00Z',
+        version: 1,
+        isValid: true,
+      ),
+      issueTime: '2025-07-17T08:30:00Z',
+    );
+
+    final samplePayload = QRCodePayloadDTO(
+      passId: 'BP123456789',
+      flightNumber: 'BR857',
+      seatNumber: '12A',
+      memberNumber: 'M1001',
+      departureTime: '2025-07-17T10:30:00Z',
+      generatedAt: '2025-07-17T09:00:00Z',
+      nonce: 'random_nonce_123',
+      issuer: 'airline-connect',
+    );
+
+    test('should create valid scan result correctly', () {
+      // Act
+      final result = QRCodeScanResultDTO.valid(
+        boardingPass: sampleBoardingPass,
+        payload: samplePayload,
+        timeRemainingMinutes: 90,
+        summary: {'status': 'valid'},
+      );
+
+      // Assert
+      expect(result.isValid, isTrue);
+      expect(result.boardingPass, equals(sampleBoardingPass));
+      expect(result.payload, equals(samplePayload));
+      expect(result.timeRemainingMinutes, equals(90));
+      expect(result.reason, isNull);
+    });
+
+    test('should create invalid scan result correctly', () {
+      // Act
+      final result = QRCodeScanResultDTO.invalid('QR code expired');
+
+      // Assert
+      expect(result.isValid, isFalse);
+      expect(result.reason, equals('QR code expired'));
+      expect(result.boardingPass, isNull);
+      expect(result.payload, isNull);
+    });
+  });
+
+  group('GateBoardingRequestDTO', () {
+    test('should create GateBoardingRequestDTO with valid data', () {
+      // Arrange & Act
+      final dto = GateBoardingRequestDTO(
+        qrCodeString: '1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc',
+        gateCode: 'A12',
+        operatorId: 'OP001',
+        metadata: {'terminal': 'T1'},
+      );
+
+      // Assert
+      expect(
+        dto.qrCodeString,
+        equals('1.MTY4OTU4ODAwMDAwMA.encrypted_token_123.signature_abc'),
+      );
+      expect(dto.gateCode, equals('A12'));
+      expect(dto.operatorId, equals('OP001'));
+      expect(dto.metadata?['terminal'], equals('T1'));
+    });
+  });
+
+  group('GateBoardingResponseDTO', () {
+    final sampleBoardingPass = BoardingPassDTO(
+      passId: 'BP123456789',
+      memberNumber: 'M1001',
+      flightNumber: 'BR857',
+      seatNumber: '12A',
+      scheduleSnapshot: FlightScheduleSnapshotDTO(
+        departureTime: '2025-07-17T10:30:00Z',
+        boardingTime: '2025-07-17T10:00:00Z',
+        departure: 'TPE',
+        arrival: 'NRT',
+        gate: 'A12',
+        snapshotTime: '2025-07-17T08:00:00Z',
+      ),
+      status: PassStatus.activated,
+      qrCode: QRCodeDataDTO(
+        token: 'encrypted_token_123',
+        signature: 'signature_abc',
+        generatedAt: '2025-07-17T09:00:00Z',
+        version: 1,
+        isValid: true,
+      ),
+      issueTime: '2025-07-17T08:30:00Z',
+    );
+
+    test('should create approved response correctly', () {
+      // Act
+      final response = GateBoardingResponseDTO.approved(
+        boardingPass: sampleBoardingPass,
+        gateCode: 'A12',
+        operatorId: 'OP001',
+        metadata: {'terminal': 'T1'},
+      );
+
+      // Assert
+      expect(response.isApproved, isTrue);
+      expect(response.reason, equals('Boarding approved'));
+      expect(response.boardingPass, equals(sampleBoardingPass));
+      expect(response.gateCode, equals('A12'));
+      expect(response.operatorId, equals('OP001'));
+      expect(response.validatedAt, isNotNull);
+      expect(response.metadata?['terminal'], equals('T1'));
+    });
+
+    test('should create rejected response correctly', () {
+      // Act
+      final response = GateBoardingResponseDTO.rejected(
+        reason: 'QR code expired',
+        gateCode: 'A12',
+        operatorId: 'OP001',
+        metadata: {'errorCode': 'QR_EXPIRED'},
+      );
+
+      // Assert
+      expect(response.isApproved, isFalse);
+      expect(response.reason, equals('QR code expired'));
+      expect(response.boardingPass, isNull);
+      expect(response.gateCode, equals('A12'));
+      expect(response.operatorId, equals('OP001'));
+      expect(response.validatedAt, isNotNull);
+      expect(response.metadata?['errorCode'], equals('QR_EXPIRED'));
     });
   });
 }

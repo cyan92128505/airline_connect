@@ -166,7 +166,7 @@ class CryptoServiceImpl implements CryptoService {
 }
 
 /// QR code configuration implementation
-class QRCodeConfigImpl implements QRCodeConfig {
+class ProductionQRCodeConfig implements QRCodeConfig {
   @override
   Duration get validityDuration => const Duration(hours: 2);
 
@@ -182,4 +182,25 @@ class QRCodeConfigImpl implements QRCodeConfig {
 
   @override
   String get issuer => 'airline-connect';
+}
+
+class MockQRCodeConfig implements QRCodeConfig {
+  @override
+  Duration get validityDuration => const Duration(hours: 24);
+
+  @override
+  String get encryptionKey {
+    const key32Bytes = 'demo-encryption-key-123456789012';
+    final keyBytes = utf8.encode(key32Bytes);
+    return base64Url.encode(keyBytes).replaceAll('=', '');
+  }
+
+  @override
+  String get signingSecret => 'test-signing-secret-for-demo-app';
+
+  @override
+  String get issuer => 'airline-connect-demo';
+
+  @override
+  int get currentVersion => 1;
 }

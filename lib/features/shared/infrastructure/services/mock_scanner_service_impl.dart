@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:app/features/shared/domain/services/scanner_service.dart';
 import 'package:logger/logger.dart';
 
-/// Mock scanner service for testing and development
+/// mock scanner service for testing with real QR codes
 class MockScannerServiceImpl implements ScannerService {
   static final Logger _logger = Logger();
 
@@ -23,20 +23,26 @@ class MockScannerServiceImpl implements ScannerService {
   final double _errorProbability;
   final bool _shouldFailStart;
 
+  // configuration for integration tests
+  final bool _sequentialScanning;
+  int _currentQRIndex = 0;
+
   MockScannerServiceImpl({
     Duration scanDelay = const Duration(seconds: 2),
     List<String>? mockQRCodes,
     double errorProbability = 0.0,
     bool shouldFailStart = false,
+    bool sequentialScanning = false, // Scan QR codes in sequence
   }) : _scanDelay = scanDelay,
        _mockQRCodes = mockQRCodes ?? _defaultMockQRCodes,
        _errorProbability = errorProbability,
-       _shouldFailStart = shouldFailStart;
+       _shouldFailStart = shouldFailStart,
+       _sequentialScanning = sequentialScanning;
 
   static const List<String> _defaultMockQRCodes = [
-    'https://example.com/boarding-pass/ABC123|checksum123|2024-01-15T10:30:00Z|1',
-    'https://example.com/boarding-pass/DEF456|checksum456|2024-01-15T11:45:00Z|1',
-    'https://example.com/boarding-pass/GHI789|checksum789|2024-01-15T14:20:00Z|1',
+    'FALLBACK_QR_CODE_1_FOR_TESTING',
+    'FALLBACK_QR_CODE_2_FOR_TESTING',
+    'FALLBACK_QR_CODE_3_FOR_TESTING',
   ];
 
   @override
@@ -56,7 +62,7 @@ class MockScannerServiceImpl implements ScannerService {
 
   @override
   Future<void> config([ScannerConfig? config]) async {
-    _logger.d('Configurate mock scanner service');
+    _logger.d('Configuring enhanced mock scanner service');
   }
 
   @override
@@ -72,7 +78,9 @@ class MockScannerServiceImpl implements ScannerService {
     }
 
     try {
-      _logger.d('Starting mock scanner service');
+      _logger.d(
+        'Starting enhanced mock scanner service with ${_mockQRCodes.length} QR codes',
+      );
 
       // Simulate initialization delay
       await Future.delayed(const Duration(milliseconds: 500));
@@ -104,7 +112,7 @@ class MockScannerServiceImpl implements ScannerService {
   Future<void> stop() async {
     if (!_isScanning || _isDisposed) return;
 
-    _logger.d('Stopping mock scanner service');
+    _logger.d('Stopping enhanced mock scanner service');
 
     _isScanning = false;
     _stopMockScanning();
@@ -116,7 +124,7 @@ class MockScannerServiceImpl implements ScannerService {
   Future<void> dispose() async {
     if (_isDisposed) return;
 
-    _logger.d('Disposing mock scanner service');
+    _logger.d('Disposing enhanced mock scanner service');
 
     _isDisposed = true;
     _isScanning = false;
@@ -129,7 +137,7 @@ class MockScannerServiceImpl implements ScannerService {
     _logger.i('Mock scanner service disposed');
   }
 
-  /// Start mock scanning behavior
+  /// Start enhanced mock scanning behavior
   void _startMockScanning() {
     _scanTimer = Timer.periodic(_scanDelay, (_) {
       if (_isDisposed || !_isScanning) return;
@@ -153,16 +161,23 @@ class MockScannerServiceImpl implements ScannerService {
     _errorTimer = null;
   }
 
-  /// Emit mock scan result
+  /// Emit mock scan result with enhanced logic
   void _emitMockScan() {
-    if (_isDisposed || !_isScanning) return;
+    if (_isDisposed || !_isScanning || _mockQRCodes.isEmpty) return;
 
-    final random = Random();
-    final mockData = _mockQRCodes[random.nextInt(_mockQRCodes.length)];
+    String mockData;
 
-    _logger.i(
-      'Mock scanner detected QR: ${mockData.substring(0, mockData.length.clamp(0, 50))}...',
-    );
+    if (_sequentialScanning) {
+      // Scan QR codes in sequence for predictable testing
+      mockData = _mockQRCodes[_currentQRIndex % _mockQRCodes.length];
+      _currentQRIndex++;
+    } else {
+      // Random QR code selection
+      final random = Random();
+      mockData = _mockQRCodes[random.nextInt(_mockQRCodes.length)];
+    }
+
+    _logger.i('Mock scanner detected QR: ${_truncateQRCode(mockData)}');
     _scanResultsController.add(mockData);
   }
 
@@ -183,13 +198,15 @@ class MockScannerServiceImpl implements ScannerService {
     _errorsController.add(error);
   }
 
-  // Public methods for test control
+  // 🔥 ENHANCED: Public methods for test control
 
-  /// Manually trigger a scan result (for testing)
+  /// Manually trigger a scan result (for testing) - ENHANCED
   void simulateScan(String qrData) {
     if (_isDisposed) return;
 
-    _logger.d('Manually triggering mock scan: $qrData');
+    _logger.d(
+      'Manually triggering enhanced mock scan: ${_truncateQRCode(qrData)}',
+    );
     _scanResultsController.add(qrData);
   }
 
@@ -201,9 +218,80 @@ class MockScannerServiceImpl implements ScannerService {
     _errorsController.add(error);
   }
 
-  /// Set custom mock QR codes for testing
+  /// Set custom mock QR codes for testing - ENHANCED
   void setMockQRCodes(List<String> qrCodes) {
     _mockQRCodes.clear();
     _mockQRCodes.addAll(qrCodes);
+    _currentQRIndex = 0; // Reset sequence
+    _logger.d('Updated mock QR codes: ${qrCodes.length} codes available');
+  }
+
+  /// Add a single QR code to the mock list
+  void addMockQRCode(String qrCode) {
+    _mockQRCodes.add(qrCode);
+    _logger.d('Added mock QR code: ${_truncateQRCode(qrCode)}');
+  }
+
+  /// Get current QR codes for debugging
+  List<String> get currentQRCodes => List.unmodifiable(_mockQRCodes);
+
+  /// Reset sequence to start from beginning
+  void resetSequence() {
+    _currentQRIndex = 0;
+    _logger.d('Reset QR code sequence');
+  }
+
+  /// Get next QR code in sequence without emitting
+  String? getNextQRCode() {
+    if (_mockQRCodes.isEmpty) return null;
+
+    final qrCode = _mockQRCodes[_currentQRIndex % _mockQRCodes.length];
+    _currentQRIndex++;
+    return qrCode;
+  }
+
+  /// Simulate immediate scan (no delay)
+  void scanImmediately([String? specificQRCode]) {
+    if (_isDisposed) return;
+
+    final qrCode = specificQRCode ?? getNextQRCode();
+    if (qrCode != null) {
+      _logger.d('Immediate scan: ${_truncateQRCode(qrCode)}');
+      _scanResultsController.add(qrCode);
+    }
+  }
+
+  /// Helper to truncate long QR codes for logging
+  String _truncateQRCode(String qrCode, [int maxLength = 50]) {
+    if (qrCode.length <= maxLength) return qrCode;
+    return '${qrCode.substring(0, maxLength)}...';
+  }
+
+  /// Get scan statistics for debugging
+  Map<String, dynamic> getScanStatistics() {
+    return {
+      'totalQRCodes': _mockQRCodes.length,
+      'currentIndex': _currentQRIndex,
+      'isScanning': _isScanning,
+      'isDisposed': _isDisposed,
+      'sequentialMode': _sequentialScanning,
+      'errorProbability': _errorProbability,
+      'scanDelay': _scanDelay.inMilliseconds,
+    };
+  }
+
+  /// Create a test-specific scanner with predefined QR codes
+  static MockScannerServiceImpl forIntegrationTest({
+    required List<String> realQRCodes,
+    Duration scanDelay = const Duration(milliseconds: 800),
+    bool enableSequentialScanning = true,
+  }) {
+    return MockScannerServiceImpl(
+      scanDelay: scanDelay,
+      mockQRCodes: realQRCodes,
+      errorProbability: 0.0, // No errors for integration tests
+      shouldFailStart: false,
+      sequentialScanning: enableSequentialScanning,
+    );
   }
 }

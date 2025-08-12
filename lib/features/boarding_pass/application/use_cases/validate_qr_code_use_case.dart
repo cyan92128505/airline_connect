@@ -1,7 +1,6 @@
 import 'package:app/features/boarding_pass/application/dtos/boarding_pass_operation_dto.dart';
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:app/core/failures/failure.dart';
 import 'package:app/core/use_cases/use_case.dart';
 import 'package:app/core/exceptions/domain_exception.dart';
@@ -21,18 +20,10 @@ class ValidateQRCodeUseCase
     QRCodeValidationDTO params,
   ) async {
     try {
-      // Reconstruct QR code data from DTO
-      final qrCodeData = QRCodeData(
-        encryptedPayload: params.encryptedPayload,
-        checksum: params.checksum,
-        generatedAt: tz.TZDateTime.parse(tz.local, params.generatedAt),
-        version: params.version,
-      );
+      final qrCodeData = QRCodeData.fromQRString(params.qrCodeString);
 
       // Validate and decode QR code using domain service
-      final validationResult = await _qrCodeService.validateAndDecodeQRCode(
-        qrCodeData,
-      );
+      final validationResult = _qrCodeService.validate(qrCodeData);
 
       return validationResult.fold(
         (failure) {
@@ -40,30 +31,62 @@ class ValidateQRCodeUseCase
             QRCodeValidationResponseDTO.invalid(errorMessage: failure.message),
           );
         },
-        (payload) {
+        (success) {
+          if (success.payload == null) {
+            return Left(ValidationFailure('Failed to validate QR code'));
+          }
+
           // Generate scan summary for additional metadata
-          final summaryResult = _qrCodeService.generateScanSummary(payload);
+          final summaryResult = _qrCodeService.generateScanSummary(
+            success.payload!,
+          );
 
           return summaryResult.fold(
+            // When scan summary fails, return valid response without payload
             (failure) => Right(
               QRCodeValidationResponseDTO.valid(
-                passId: payload.passId,
-                flightNumber: payload.flightNumber,
-                seatNumber: payload.seatNumber,
-                memberNumber: payload.memberNumber,
-                departureTime: payload.departureTime.toIso8601String(),
+                passId: success.payload!.passId,
+                flightNumber: success.payload!.flightNumber,
+                seatNumber: success.payload!.seatNumber,
+                memberNumber: success.payload!.memberNumber,
+                departureTime: success.payload!.departureTime.toIso8601String(),
               ),
             ),
-            (summary) => Right(
-              QRCodeValidationResponseDTO.valid(
-                passId: payload.passId,
-                flightNumber: payload.flightNumber,
-                seatNumber: payload.seatNumber,
-                memberNumber: payload.memberNumber,
-                departureTime: payload.departureTime.toIso8601String(),
-                payloadData: summary,
-              ),
-            ),
+            // When scan summary succeeds, include payload if summary has data
+            (summary) {
+              QRCodePayloadDTO? payloadDTO;
+
+              // Only create payload DTO if summary contains required data
+              if (summary.isNotEmpty &&
+                  summary.containsKey('passId') &&
+                  summary.containsKey('flightNumber') &&
+                  summary.containsKey('seatNumber') &&
+                  summary.containsKey('memberNumber') &&
+                  summary.containsKey('departureTime') &&
+                  summary.containsKey('generatedAt') &&
+                  summary.containsKey('nonce') &&
+                  summary.containsKey('issuer')) {
+                try {
+                  payloadDTO = QRCodePayloadDTO.fromJson(summary);
+                } catch (e) {
+                  // If JSON parsing fails, continue without payload
+                  payloadDTO = null;
+                }
+              }
+
+              return Right(
+                QRCodeValidationResponseDTO.valid(
+                  passId: success.payload!.passId,
+                  flightNumber: success.payload!.flightNumber,
+                  seatNumber: success.payload!.seatNumber,
+                  memberNumber: success.payload!.memberNumber,
+                  departureTime: success.payload!.departureTime
+                      .toIso8601String(),
+                  payload: payloadDTO,
+                  metadata: summary.isNotEmpty ? summary : null,
+                ),
+              );
+            },
           );
         },
       );

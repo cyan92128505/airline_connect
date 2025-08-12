@@ -3,6 +3,9 @@ import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+part 'boarding_pass_operation_dto.freezed.dart';
+part 'boarding_pass_operation_dto.g.dart';
+
 /// DTO for creating boarding pass request
 @freezed
 abstract class CreateBoardingPassDTO with _$CreateBoardingPassDTO {
@@ -175,7 +178,7 @@ abstract class QRCodePayloadDTO with _$QRCodePayloadDTO {
   }
 }
 
-/// DTO for boarding pass search criteria - 保持不變
+/// DTO for boarding pass search criteria
 @freezed
 abstract class BoardingPassSearchDTO with _$BoardingPassSearchDTO {
   const factory BoardingPassSearchDTO({
@@ -213,7 +216,7 @@ abstract class BoardingPassSearchDTO with _$BoardingPassSearchDTO {
   }
 }
 
-/// DTO for boarding eligibility validation response - 保持不變
+/// DTO for boarding eligibility validation response
 @freezed
 abstract class BoardingEligibilityResponseDTO
     with _$BoardingEligibilityResponseDTO {

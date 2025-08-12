@@ -1,11 +1,12 @@
 import 'package:app/core/bootstrap/contracts/initialization_context.dart';
+import 'package:app/features/boarding_pass/infrastructure/services/qr_code_service_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
 
 import 'initialization_context_test.mocks.dart';
 
-@GenerateMocks([ObjectBox])
+@GenerateMocks([ObjectBox, QRCodeServiceImpl])
 void main() {
   group('InitializationContext', () {
     late InitializationContext context;

@@ -304,33 +304,12 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
     }
   }
 
-  Future<void> handleQRScan(String qrData) async {
-    final parts = qrData.split('|');
-
-    if (parts.length >= 4) {
-      validateQRCode(
-        encryptedPayload: parts[0],
-        checksum: parts[1],
-        generatedAt: parts[2],
-        version: int.tryParse(parts[3]) ?? 1,
-      );
-    } else {
-      validateQRCode(
-        encryptedPayload: qrData,
-        checksum: 'invalid',
-        generatedAt: DateTime.now().toIso8601String(),
-        version: 1,
-      );
-    }
+  Future<void> handleQRScan(String qrCodeString) async {
+    return validateQRCode(qrCodeString: qrCodeString);
   }
 
   /// Validate QR code with network awareness
-  Future<void> validateQRCode({
-    required String encryptedPayload,
-    required String checksum,
-    required String generatedAt,
-    required int version,
-  }) async {
+  Future<void> validateQRCode({required String qrCodeString}) async {
     final networkState = ref.read(networkConnectivityProvider);
 
     state = state.copyWith(
@@ -346,10 +325,7 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
 
       // QR code validation can work offline with local validation
       final result = await boardingPassService.validateQRCode(
-        encryptedPayload: encryptedPayload,
-        checksum: checksum,
-        generatedAt: generatedAt,
-        version: version,
+        qrCodeString: qrCodeString,
       );
 
       result.fold(

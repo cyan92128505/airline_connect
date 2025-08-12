@@ -3,7 +3,6 @@ import 'package:app/core/failures/failure.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
 import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_dataSource.dart';
-import 'package:app/features/boarding_pass/domain/value_objects/flight_schedule_snapshot.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
@@ -11,15 +10,14 @@ import 'package:dartz/dartz.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:logger/logger.dart';
 
-/// Mock implementation simulating a real backend service
-/// Includes business logic, authentication, and realistic delays
+/// Mock implementation that works with MockDataSeeder
+/// Uses standardized test data and real QR code validation
 class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
   static final Logger _logger = Logger();
 
-  // Simulated database
+  // Simulated database - populated by external seeder
   final Map<String, BoardingPass> _boardingPassDatabase = {};
   final Map<String, List<String>> _memberPassIndex = {};
-  final Map<String, String> _qrTokenIndex = {}; // QR token to pass ID mapping
   final Set<String> _usedTokens = {}; // Prevent replay attacks
 
   final Random _random = Random();
@@ -30,8 +28,31 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     bool simulateNetworkDelay = true,
     bool simulateErrors = false,
   }) : _simulateNetworkDelay = simulateNetworkDelay,
-       _simulateErrors = simulateErrors {
-    _seedTestData();
+       _simulateErrors = simulateErrors;
+
+  /// Initialize with standardized test data that matches MockDataSeeder
+  void initializeWithTestData(List<BoardingPass> boardingPasses) {
+    _logger.d(
+      'Initializing remote datasource with ${boardingPasses.length} boarding passes',
+    );
+
+    _boardingPassDatabase.clear();
+    _memberPassIndex.clear();
+    _usedTokens.clear();
+
+    for (final pass in boardingPasses) {
+      _addBoardingPassToDatabase(pass);
+    }
+
+    _logger.i('Remote datasource initialized with standardized test data');
+  }
+
+  /// Add single boarding pass to the simulated database
+  void addBoardingPass(BoardingPass boardingPass) {
+    _addBoardingPassToDatabase(boardingPass);
+    _logger.d(
+      'Added boarding pass to remote database: ${boardingPass.passId.value}',
+    );
   }
 
   @override
@@ -44,9 +65,9 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     try {
       _logger.d('Verifying QR code for pass: $passId');
 
-      // Simulate authentication check
+      // Basic token validation
       if (!_isValidToken(qrToken)) {
-        return Left(AuthenticationFailure('Invalid QR token'));
+        return Left(AuthenticationFailure('Invalid QR token format'));
       }
 
       // Check if token was already used (replay attack prevention)
@@ -54,15 +75,15 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
         return Left(ValidationFailure('QR token already used'));
       }
 
-      // Verify token maps to the claimed pass ID
-      final tokenPassId = _qrTokenIndex[qrToken];
-      if (tokenPassId != passId) {
-        return Left(ValidationFailure('QR token does not match pass ID'));
-      }
-
       final boardingPass = _boardingPassDatabase[passId];
       if (boardingPass == null) {
+        _logger.w('Boarding pass not found in remote database: $passId');
         return const Right(null);
+      }
+
+      // Verify QR token matches the boarding pass QR code
+      if (!_verifyQRTokenMatchesPass(qrToken, boardingPass)) {
+        return Left(ValidationFailure('QR token does not match boarding pass'));
       }
 
       // Additional server-side validations
@@ -271,8 +292,26 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
   }
 
   bool _isValidToken(String token) {
-    // Simulate token validation logic
-    return token.length > 10 && !token.contains('invalid');
+    // Basic token validation - check format and length
+    return token.isNotEmpty &&
+        token.length >= 10 &&
+        !token.contains('invalid') &&
+        !token.contains(' ');
+  }
+
+  /// Verify that the QR token actually comes from the boarding pass
+  bool _verifyQRTokenMatchesPass(String qrToken, BoardingPass boardingPass) {
+    try {
+      // Extract token from boarding pass QR code
+      final passQRString = boardingPass.qrCode.toQRString();
+      final passQRData = QRCodeData.fromQRString(passQRString);
+
+      // Compare tokens
+      return passQRData.token == qrToken;
+    } catch (e) {
+      _logger.w('Failed to verify QR token match: $e');
+      return false;
+    }
   }
 
   bool _isValidForRemoteAccess(BoardingPass boardingPass) {
@@ -295,22 +334,17 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
   }
 
   bool _isValidAtGate(BoardingPass boardingPass, String gateCode) {
-    // Simulate gate validation logic
-    final expectedGate = _getExpectedGate(boardingPass);
+    // Use the gate from flight schedule snapshot
+    final expectedGate = boardingPass.scheduleSnapshot.gate.value;
     return expectedGate == gateCode;
   }
 
   String _getExpectedGate(BoardingPass boardingPass) {
-    // Simulate gate assignment logic based on flight number
-    final flightNumber = boardingPass.flightNumber.value;
-    final hashCode = flightNumber.hashCode.abs();
-    final gateNumber = (hashCode % 20) + 1;
-    return 'A$gateNumber';
+    return boardingPass.scheduleSnapshot.gate.value;
   }
 
   BoardingPass _resolveConflict(BoardingPass local, BoardingPass server) {
     // Simple conflict resolution: use the one with latest modification
-    // In real implementation, this would be more sophisticated
     if (local.activatedAt != null && server.activatedAt != null) {
       return local.activatedAt!.isAfter(server.activatedAt!) ? local : server;
     }
@@ -327,86 +361,29 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     ];
   }
 
-  /// Seed test data for development and demo
-  void _seedTestData() {
-    _logger.d('Seeding test data for mock remote datasource');
+  // =============================================================================
+  // Debug and Testing Methods
+  // =============================================================================
 
-    final now = tz.TZDateTime.now(tz.local);
-
-    // Create test boarding passes
-    final testPasses = [
-      _createTestBoardingPass(
-        passId: 'test-pass-001',
-        memberNumber: 'M123456',
-        flightNumber: 'AC101',
-        seatNumber: '12A',
-        departureTime: now.add(const Duration(hours: 4)),
-        status: PassStatus.issued,
-      ),
-      _createTestBoardingPass(
-        passId: 'test-pass-002',
-        memberNumber: 'M123456',
-        flightNumber: 'AC201',
-        seatNumber: '15B',
-        departureTime: now.add(const Duration(days: 1, hours: 2)),
-        status: PassStatus.activated,
-      ),
-      _createTestBoardingPass(
-        passId: 'test-pass-003',
-        memberNumber: 'M789012',
-        flightNumber: 'WS501',
-        seatNumber: '8C',
-        departureTime: now.subtract(const Duration(hours: 2)),
-        status: PassStatus.expired,
-      ),
-    ];
-
-    for (final pass in testPasses) {
-      _addBoardingPassToDatabase(pass);
-      // Create mock QR tokens
-      _qrTokenIndex['mock-token-${pass.passId.value}'] = pass.passId.value;
-    }
-
-    _logger.d('Seeded ${testPasses.length} test boarding passes');
+  /// Get current database state for debugging
+  Map<String, dynamic> getDebugInfo() {
+    return {
+      'totalBoardingPasses': _boardingPassDatabase.length,
+      'totalMembers': _memberPassIndex.length,
+      'usedTokensCount': _usedTokens.length,
+      'passIds': _boardingPassDatabase.keys.toList(),
+      'memberNumbers': _memberPassIndex.keys.toList(),
+    };
   }
 
-  BoardingPass _createTestBoardingPass({
-    required String passId,
-    required String memberNumber,
-    required String flightNumber,
-    required String seatNumber,
-    required tz.TZDateTime departureTime,
-    required PassStatus status,
-  }) {
-    final issueTime = tz.TZDateTime.now(
-      tz.local,
-    ).subtract(const Duration(hours: 12));
+  /// Clear used tokens for testing
+  void clearUsedTokens() {
+    _usedTokens.clear();
+    _logger.d('Cleared used tokens for testing');
+  }
 
-    final scheduleSnapshot = FlightScheduleSnapshot.create(
-      departureTime: departureTime,
-      boardingTime: departureTime.subtract(const Duration(minutes: 30)),
-      departureAirport: 'YVR', // Vancouver
-      arrivalAirport: 'YYZ', // Toronto
-      gateNumber: 'A15',
-      snapshotTime: issueTime,
-    );
-
-    return BoardingPass.fromPersistence(
-      passId: passId,
-      memberNumber: memberNumber,
-      flightNumber: flightNumber,
-      seatNumber: seatNumber,
-      scheduleSnapshot: scheduleSnapshot,
-      status: status,
-      qrCode: QRCodeData.create(
-        token: 'mock-token',
-        signature: 'mock-signature',
-        generatedAt: issueTime,
-      ),
-      issueTime: issueTime,
-      activatedAt: status == PassStatus.activated
-          ? issueTime.add(const Duration(hours: 1))
-          : null,
-    );
+  /// Check if a boarding pass exists in remote database
+  bool hasBoardingPass(String passId) {
+    return _boardingPassDatabase.containsKey(passId);
   }
 }

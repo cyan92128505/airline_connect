@@ -29,17 +29,9 @@ class BoardingPassApplicationService {
 
   /// Validate QR code at boarding gate
   Future<Either<Failure, QRCodeValidationResponseDTO>> validateQRCode({
-    required String encryptedPayload,
-    required String checksum,
-    required String generatedAt,
-    required int version,
+    required String qrCodeString,
   }) async {
-    final request = QRCodeValidationDTO(
-      encryptedPayload: encryptedPayload,
-      checksum: checksum,
-      generatedAt: generatedAt,
-      version: version,
-    );
+    final request = QRCodeValidationDTO(qrCodeString: qrCodeString);
 
     return _validateQRCodeUseCase(request);
   }

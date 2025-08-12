@@ -67,8 +67,11 @@ abstract class QRCodeDataDTO with _$QRCodeDataDTO {
 }
 
 extension BoardingPassDTOExtensions on BoardingPassDTO {
-  /// Convert from Domain Entity to DTO
-  static BoardingPassDTO fromDomain(BoardingPass boardingPass) {
+  static BoardingPassDTO fromDomain(
+    BoardingPass boardingPass, {
+    bool? qrCodeIsValid,
+    int? qrCodeTimeRemainingMinutes,
+  }) {
     return BoardingPassDTO(
       passId: boardingPass.passId.value,
       memberNumber: boardingPass.memberNumber.value,
@@ -98,8 +101,8 @@ extension BoardingPassDTOExtensions on BoardingPassDTO {
         signature: boardingPass.qrCode.signature,
         generatedAt: boardingPass.qrCode.generatedAt.toIso8601String(),
         version: boardingPass.qrCode.version,
-        isValid: boardingPass.qrCode.isValid,
-        timeRemainingMinutes: boardingPass.qrCode.timeRemaining?.inMinutes,
+        isValid: qrCodeIsValid ?? false,
+        timeRemainingMinutes: qrCodeTimeRemainingMinutes,
         qrString: boardingPass.qrCode.toQRString(),
       ),
       issueTime: boardingPass.issueTime.toIso8601String(),
