@@ -8,6 +8,7 @@ on:
       - "package-lock.json"
       - ".releaserc.yml"
       - "scripts/**"
+      - ".github/workflows/**"
   pull_request:
     branches: [main]
     paths-ignore:
@@ -15,6 +16,7 @@ on:
       - "package-lock.json"
       - ".releaserc.yml"
       - "scripts/**"
+      - ".github/workflows/**"
 
 jobs:
   test:
