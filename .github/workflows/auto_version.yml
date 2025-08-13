@@ -1,0 +1,63 @@
+name: Auto Version
+on:
+  push:
+    branches: [main]
+
+jobs:
+  auto_version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      new_release: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run semantic-release
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Running semantic-release..."
+          npx semantic-release > release_output.txt 2>&1
+          EXIT_CODE=$?
+
+          echo "Semantic Release Output:"
+          cat release_output.txt
+
+          if [ $EXIT_CODE -eq 0 ]; then
+            if grep -q "Published release" release_output.txt; then
+              VERSION=$(grep "Published release" release_output.txt | sed -n 's/.*Published release \([0-9.]*\) on.*/\1/p')
+              echo "new_release_published=true" >> $GITHUB_OUTPUT
+              echo "new_release_version=$VERSION" >> $GITHUB_OUTPUT
+              echo "Released version: $VERSION"
+              echo "Updated pubspec.yaml:"
+              grep "version:" pubspec.yaml || echo "Version not found"
+            else
+              echo "new_release_published=false" >> $GITHUB_OUTPUT
+              echo "No new release created (no significant changes)"
+            fi
+          else
+            echo "Semantic release failed with exit code $EXIT_CODE"
+            exit 1
+          fi
