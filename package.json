@@ -1,0 +1,15 @@
+{
+  "name": "flutter-auto-version",
+  "version": "0.0.0-development",
+  "private": true,
+  "scripts": {
+    "semantic-release": "semantic-release",
+    "semantic-release:dry-run": "semantic-release --dry-run"
+  },
+  "devDependencies": {
+    "semantic-release": "^22.0.12",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/exec": "^6.0.3"
+  }
+}
