@@ -7,9 +7,6 @@ jobs:
   auto_version:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    outputs:
-      new_release: ${{ steps.semantic.outputs.new_release_published }}
-      version: ${{ steps.semantic.outputs.new_release_version }}
 
     steps:
       - name: Checkout repository
@@ -46,16 +43,18 @@ jobs:
           cat release_output.txt
 
           if [ $EXIT_CODE -eq 0 ]; then
-            if grep -q "Published release" release_output.txt; then
-              VERSION=$(grep "Published release" release_output.txt | sed -n 's/.*Published release \([0-9.]*\) on.*/\1/p')
-              echo "new_release_published=true" >> $GITHUB_OUTPUT
-              echo "new_release_version=$VERSION" >> $GITHUB_OUTPUT
-              echo "Released version: $VERSION"
-              echo "Updated pubspec.yaml:"
-              grep "version:" pubspec.yaml || echo "Version not found"
+            if grep -q "Created tag" release_output.txt || grep -q "Commit version" release_output.txt; then
+              VERSION=$(grep -E "The next release version is|Created tag" release_output.txt | sed -n 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' | head -1)
+              
+              if [ -n "$VERSION" ]; then
+                echo "Version updated: $VERSION"
+                echo "Updated pubspec.yaml:"
+                grep "version:" pubspec.yaml || echo "Version not found"
+              else
+                echo "Version updated but could not extract version number"
+              fi
             else
-              echo "new_release_published=false" >> $GITHUB_OUTPUT
-              echo "No new release created (no significant changes)"
+              echo "No new version created (no significant changes)"
             fi
           else
             echo "Semantic release failed with exit code $EXIT_CODE"

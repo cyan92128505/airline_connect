@@ -1,9 +1,22 @@
 name: Test on Push
 on:
+  workflow_dispatch:
   push:
-    branches: [main, develop, "feature/*", "hotfix/*", "TK-*"]
+    branches: [main]
+    paths-ignore:
+      - "CHANGELOG.md"
+      - "package-lock.json"
+      - ".releaserc.yml"
+      - "scripts/**"
+      - ".github/workflows/**"
   pull_request:
-    branches: [main, develop, "TK-*"]
+    branches: [main]
+    paths-ignore:
+      - "CHANGELOG.md"
+      - "package-lock.json"
+      - ".releaserc.yml"
+      - "scripts/**"
+      - ".github/workflows/**"
 
 jobs:
   test:
@@ -87,7 +100,7 @@ jobs:
           echo "=== Static Analysis Report ==="
           # Use --no-fatal-infos to allow warnings but fail on errors
           flutter analyze --no-fatal-infos || {
-            echo "❌ Static analysis failed - code quality issues detected"
+            echo "Static analysis failed - code quality issues detected"
             echo "Please fix all analysis errors before proceeding"
             exit 1
           }
@@ -95,26 +108,26 @@ jobs:
           # Check for analysis warnings (non-blocking but reported)
           WARNINGS=$(flutter analyze --no-fatal-infos 2>&1 | grep -c "warning •" || echo "0")
           if [ "$WARNINGS" -gt "0" ]; then
-            echo "⚠️  Found $WARNINGS analysis warnings - consider fixing these"
+            echo "Found $WARNINGS analysis warnings - consider fixing these"
           else
-            echo "✅ No analysis warnings found"
+            echo "No analysis warnings found"
           fi
 
       - name: Check code formatting
         run: |
           echo "=== Code Formatting Verification ==="
           if ! dart format --set-exit-if-changed lib/ test/; then
-            echo "❌ Code formatting issues detected"
+            echo "Code formatting issues detected"
             echo "Run 'dart format lib/ test/' to fix formatting"
             exit 1
           fi
-          echo "✅ Code formatting is consistent"
+          echo "Code formatting is consistent"
 
       - name: Execute unit tests
         run: |
           echo "=== Unit Test Execution ==="
           flutter test --coverage --reporter=expanded || {
-            echo "❌ Unit tests failed"
+            echo "Unit tests failed"
             exit 1
           }
 
@@ -123,11 +136,11 @@ jobs:
           echo "=== Integration Test Execution ==="
           if [ -d "test/integration" ] && [ "$(ls -A test/integration/*.dart 2>/dev/null)" ]; then
             flutter test test/integration/ || {
-              echo "❌ Integration tests failed"
+              echo "Integration tests failed"
               exit 1
             }
           else
-            echo "ℹ️  No integration tests found, skipping"
+            echo "No integration tests found, skipping"
           fi
 
       - name: Generate test coverage report
@@ -142,40 +155,40 @@ jobs:
             
             if [ "$LINES_FOUND" -gt "0" ]; then
               COVERAGE_PERCENT=$(echo "scale=2; $LINES_HIT * 100 / $LINES_FOUND" | bc -l)
-              echo "📊 Test Coverage: ${COVERAGE_PERCENT}% ($LINES_HIT/$LINES_FOUND lines)"
+              echo "Test Coverage: ${COVERAGE_PERCENT}% ($LINES_HIT/$LINES_FOUND lines)"
               
               # Set coverage threshold
               THRESHOLD=70
               if (( $(echo "$COVERAGE_PERCENT < $THRESHOLD" | bc -l) )); then
-                echo "⚠️  Coverage below threshold (${THRESHOLD}%) - consider adding more tests"
+                echo "Coverage below threshold (${THRESHOLD}%) - consider adding more tests"
               else
-                echo "✅ Coverage meets threshold (${THRESHOLD}%)"
+                echo "Coverage meets threshold (${THRESHOLD}%)"
               fi
             else
-              echo "ℹ️  Unable to calculate coverage percentage"
+              echo "Unable to calculate coverage percentage"
             fi
             
             # Generate HTML report if genhtml is available
             if command -v genhtml >/dev/null 2>&1; then
               genhtml coverage/lcov.info --output-directory coverage/html --quiet
-              echo "📄 HTML coverage report generated in coverage/html/"
+              echo "HTML coverage report generated in coverage/html/"
             fi
           else
-            echo "ℹ️  No coverage data generated"
+            echo "No coverage data generated"
           fi
 
       - name: Validate Android configuration
         run: |
           echo "=== Android Configuration Validation ==="
           # Verify Android SDK components are properly installed
-          echo "✅ Installed Android SDK components:"
+          echo "Installed Android SDK components:"
           sdkmanager --list_installed | grep -E "build-tools|platforms|ndk"
 
           # Verify Flutter can detect Android toolchain
           flutter doctor --android-licenses
           flutter doctor -v | grep -A 10 "Android toolchain"
 
-          echo "✅ Android configuration validated successfully"
+          echo "Android configuration validated successfully"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

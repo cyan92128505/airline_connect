@@ -19,9 +19,8 @@ jobs:
         run: |
           export APP_VERSION
           APP_VERSION=$(sed -n -e '/^version/ s/.*\: *//p' pubspec.yaml)
-          APP_VERSION=v$APP_VERSION.${{ github.run_number }}
-          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_OUTPUT
-          echo "📦 Building version: $APP_VERSION"
+          echo "APP_VERSION=v$APP_VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $APP_VERSION"
 
       - name: Setup Java environment
         uses: actions/setup-java@v4
@@ -63,31 +62,31 @@ jobs:
 
           # Static analysis with strict rules
           flutter analyze --no-fatal-infos || {
-            echo "❌ Static analysis failed - code quality issues detected"
+            echo "Static analysis failed - code quality issues detected"
             exit 1
           }
 
           # Code formatting verification
           if ! dart format --set-exit-if-changed lib/ test/; then
-            echo "❌ Code formatting issues detected"
+            echo "Code formatting issues detected"
             exit 1
           fi
 
           # Unit tests with coverage
           flutter test --coverage || {
-            echo "❌ Unit tests failed"
+            echo "Unit tests failed"
             exit 1
           }
 
           # Integration tests if available
           if [ -d "test/integration" ] && [ "$(ls -A test/integration/*.dart 2>/dev/null)" ]; then
             flutter test test/integration/ || {
-              echo "❌ Integration tests failed"
+              echo "Integration tests failed"
               exit 1
             }
           fi
 
-          echo "✅ All quality checks passed - ready for production build"
+          echo "All quality checks passed - ready for production build"
 
       - name: Set test status
         id: test_status
@@ -103,10 +102,10 @@ jobs:
       - name: Verify quality gate
         run: |
           if [ "${{ needs.quality_gate.outputs.test_passed }}" != "true" ]; then
-            echo "❌ Quality gate failed - release blocked"
+            echo "Quality gate failed - release blocked"
             exit 1
           fi
-          echo "✅ Quality gate passed - proceeding with release build"
+          echo "Quality gate passed - proceeding with release build"
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -200,18 +199,18 @@ jobs:
           # Create key.properties from secrets
           echo "${{ secrets.RELEASE_KEY_PROPERTIES }}" | base64 --decode > android/key.properties
           if [ -f "android/key.properties" ]; then
-            echo "✅ Release key properties configured"
+            echo "Release key properties configured"
           else
-            echo "❌ Failed to create key.properties"
+            echo "Failed to create key.properties"
             exit 1
           fi
 
           # Create KeyStore from secrets
           echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > android/key.jks
           if [ -f "android/key.jks" ]; then
-            echo "✅ Release keystore configured"
+            echo "Release keystore configured"
           else
-            echo "❌ Failed to create keystore"
+            echo "Failed to create keystore"
             exit 1
           fi
 
@@ -219,19 +218,19 @@ jobs:
         run: |
           echo "=== Building Release APK ==="
           flutter build apk --release --shrink || {
-            echo "❌ APK build failed"
+            echo "APK build failed"
             exit 1
           }
-          echo "✅ APK build completed"
+          echo "APK build completed"
 
       - name: Build release AAB
         run: |
           echo "=== Building Release AAB ==="
           flutter build appbundle --release --shrink || {
-            echo "❌ AAB build failed"
+            echo "AAB build failed"
             exit 1
           }
-          echo "✅ AAB build completed"
+          echo "AAB build completed"
 
       - name: Install compression utilities
         run: sudo apt-get update && sudo apt-get install -y zip bc
@@ -255,13 +254,13 @@ jobs:
           for path in "${POSSIBLE_PATHS[@]}"; do
             if [ -d "$path" ]; then
               SRC_DIR="$path"
-              echo "✅ Found native libs at: $SRC_DIR"
+              echo "Found native libs at: $SRC_DIR"
               break
             fi
           done
 
           if [ -z "$SRC_DIR" ]; then
-            echo "⚠️  Native libs directory not found"
+            echo "Native libs directory not found"
             echo "Searched paths:"
             for path in "${POSSIBLE_PATHS[@]}"; do
               echo "   - $path"
@@ -290,12 +289,12 @@ jobs:
           for abi in "${VALID_ABIS[@]}"; do
             if [ -d "$SRC_DIR/$abi" ]; then
               FOUND_ABIS+=("$abi")
-              echo "📦 Found ABI: $abi ($(du -sh "$SRC_DIR/$abi" | cut -f1))"
+              echo "Found ABI: $abi ($(du -sh "$SRC_DIR/$abi" | cut -f1))"
             fi
           done
 
           if [ ${#FOUND_ABIS[@]} -eq 0 ]; then
-            echo "⚠️  No valid ABI directories found"
+            echo "No valid ABI directories found"
             echo "No native libraries" > "${DEST_ZIP%.zip}.txt"
             exit 0
           fi
@@ -303,11 +302,11 @@ jobs:
           # Create ZIP package
           cd "$SRC_DIR"
           zip -r "$DEST_ZIP" "${FOUND_ABIS[@]}" || {
-            echo "❌ ZIP creation failed"
+            echo "ZIP creation failed"
             exit 1
           }
 
-          echo "✅ Native libraries packaged: $(du -h "$DEST_ZIP" | cut -f1)"
+          echo "Native libraries packaged: $(du -h "$DEST_ZIP" | cut -f1)"
 
       - name: Verify build artifacts
         run: |
@@ -317,9 +316,9 @@ jobs:
           APK_FILE="build/app/outputs/flutter-apk/app-release.apk"
           if [ -f "$APK_FILE" ]; then
             APK_SIZE=$(du -h "$APK_FILE" | cut -f1)
-            echo "✅ APK: $APK_SIZE - $APK_FILE"
+            echo "APK: $APK_SIZE - $APK_FILE"
           else
-            echo "❌ APK not found: $APK_FILE"
+            echo "APK not found: $APK_FILE"
             exit 1
           fi
 
@@ -327,9 +326,9 @@ jobs:
           AAB_FILE="build/app/outputs/bundle/release/app-release.aab"
           if [ -f "$AAB_FILE" ]; then
             AAB_SIZE=$(du -h "$AAB_FILE" | cut -f1)
-            echo "✅ AAB: $AAB_SIZE - $AAB_FILE"
+            echo "AAB: $AAB_SIZE - $AAB_FILE"
           else
-            echo "❌ AAB not found: $AAB_FILE"
+            echo "AAB not found: $AAB_FILE"
             exit 1
           fi
 
@@ -337,14 +336,55 @@ jobs:
           ZIP_FILE="build/app/outputs/bundle/release/compressed_libs.zip"
           if [ -f "$ZIP_FILE" ]; then
             ZIP_SIZE=$(du -h "$ZIP_FILE" | cut -f1)
-            echo "✅ Native Libs: $ZIP_SIZE - $ZIP_FILE"
+            echo "Native Libs: $ZIP_SIZE - $ZIP_FILE"
           elif [ -f "${ZIP_FILE%.zip}.txt" ]; then
-            echo "ℹ️  No native libraries marker found"
+            echo "No native libraries marker found"
           else
-            echo "⚠️  Compressed libs not found (non-critical)"
+            echo "Compressed libs not found (non-critical)"
           fi
 
-          echo "📊 All build artifacts verified successfully"
+          echo "All build artifacts verified successfully"
+
+      - name: Prepare release body with changelog
+        id: release_body
+        run: |
+          # 提取 CHANGELOG 內容
+          if [ -f "CHANGELOG.md" ]; then
+            CHANGELOG_CONTENT=$(awk '/^## \[/{if(found) exit; found=1; next} found && /^## \[/{exit} found' CHANGELOG.md | sed '/^$/d')
+          else
+            CHANGELOG_CONTENT="- Version updated via semantic-release"
+          fi
+
+          # 組合完整的 release body
+          cat > release_body.md << EOF
+          ## Android Release ${{ needs.quality_gate.outputs.app_version }}
+
+          ### What's Changed
+          $CHANGELOG_CONTENT
+
+          ### Release Artifacts
+          - **APK**: Direct installation package
+          - **AAB**: Google Play Store deployment bundle
+          - **Native Libs**: Compressed native libraries
+
+          ### Build Environment
+          - **Flutter**: 3.32.6 (stable)
+          - **Java**: 17 (Temurin)
+          - **Build Number**: ${{ github.run_number }}
+          - **Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+
+          ### Quality Assurance
+          - Static analysis passed
+          - Code formatting verified
+          - Unit tests executed successfully
+          - Integration tests validated
+          - Build verification completed
+
+          ### Deployment Notes
+          - All quality gates passed before build
+          - Release signed with production certificates
+          - Optimized build with code shrinking enabled
+          EOF
 
       - name: Create GitHub release
         uses: ncipollo/release-action@v1
@@ -357,31 +397,7 @@ jobs:
           commit: main
           tag: release-android-${{ needs.quality_gate.outputs.app_version }}
           name: "Android Release ${{ needs.quality_gate.outputs.app_version }}"
-          body: |
-            ## 📱 Android Release ${{ needs.quality_gate.outputs.app_version }}
-
-            ### ✅ Quality Assurance
-            - Static analysis passed
-            - Code formatting verified  
-            - Unit tests executed successfully
-            - Integration tests validated
-            - Build verification completed
-
-            ### 📦 Release Artifacts
-            - **APK**: Direct installation package
-            - **AAB**: Google Play Store deployment bundle
-            - **Native Libs**: Compressed native libraries
-
-            ### 🔧 Build Environment
-            - **Flutter**: 3.32.6 (stable)
-            - **Java**: 17 (Temurin)
-            - **Build Number**: ${{ github.run_number }}
-            - **Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-
-            ### 📋 Deployment Notes
-            - All quality gates passed before build
-            - Release signed with production certificates
-            - Optimized build with code shrinking enabled
+          bodyFile: release_body.md
           draft: false
           prerelease: false
           allowUpdates: true
