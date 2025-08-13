@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/cyan92128505/airline_connect/compare/v1.0.0...v1.1.0) (2025-08-13)
+
+
+### Features
+
+* update semantic release automation with changelog integration ([#3](https://github.com/cyan92128505/airline_connect/issues/3)) ([351662f](https://github.com/cyan92128505/airline_connect/commit/351662f16c5772048e2b23ec74421f1690122f51))
+
 # 1.0.0 (2025-08-13)
 
 
