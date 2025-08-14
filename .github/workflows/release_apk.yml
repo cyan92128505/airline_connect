@@ -348,43 +348,57 @@ jobs:
       - name: Prepare release body with changelog
         id: release_body
         run: |
-          # 提取 CHANGELOG 內容
+          # Extract CHANGELOG content for the latest version
           if [ -f "CHANGELOG.md" ]; then
-            CHANGELOG_CONTENT=$(awk '/^## \[/{if(found) exit; found=1; next} found && /^## \[/{exit} found' CHANGELOG.md | sed '/^$/d')
+            echo "=== Extracting CHANGELOG content ==="
+            
+            # Debug: Show first few lines of CHANGELOG
+            echo "First 10 lines of CHANGELOG.md:"
+            head -10 CHANGELOG.md
+            
+            # Extract content between first version header and next version header
+            CHANGELOG_CONTENT=$(awk '
+              /^# \[.*\]/ { 
+                if (found) exit; 
+                found=1; 
+                next 
+              } 
+              /^# [0-9]/ { 
+                if (found) exit; 
+                found=1; 
+                next 
+              }
+              found && /^# / { exit } 
+              found { 
+                if ($0 !~ /^$/) print $0 
+              }
+            ' CHANGELOG.md)
+            
+            # Fallback if no content extracted
+            if [ -z "$CHANGELOG_CONTENT" ]; then
+              echo "No changelog content extracted, using fallback"
+              CHANGELOG_CONTENT="- Version updated via semantic-release"
+            else
+              echo "Extracted changelog content:"
+              echo "$CHANGELOG_CONTENT"
+            fi
           else
+            echo "CHANGELOG.md not found, using default content"
             CHANGELOG_CONTENT="- Version updated via semantic-release"
           fi
 
-          # 組合完整的 release body
+          # Generate complete release body
           cat > release_body.md << EOF
           ## Android Release ${{ needs.quality_gate.outputs.app_version }}
 
+          **Build Number**: ${{ github.run_number }}
+
           ### What's Changed
           $CHANGELOG_CONTENT
-
-          ### Release Artifacts
-          - **APK**: Direct installation package
-          - **AAB**: Google Play Store deployment bundle
-          - **Native Libs**: Compressed native libraries
-
-          ### Build Environment
-          - **Flutter**: 3.32.6 (stable)
-          - **Java**: 17 (Temurin)
-          - **Build Number**: ${{ github.run_number }}
-          - **Generated**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
-
-          ### Quality Assurance
-          - Static analysis passed
-          - Code formatting verified
-          - Unit tests executed successfully
-          - Integration tests validated
-          - Build verification completed
-
-          ### Deployment Notes
-          - All quality gates passed before build
-          - Release signed with production certificates
-          - Optimized build with code shrinking enabled
           EOF
+
+          echo "=== Generated release body ==="
+          cat release_body.md
 
       - name: Create GitHub release
         uses: ncipollo/release-action@v1
