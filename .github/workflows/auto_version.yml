@@ -13,13 +13,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT instead of GITHUB_TOKEN
+          token: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
           persist-credentials: true
 
-      - name: Configure Git
+      - name: Configure Git with PAT
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Configure git to use the PAT for authentication
+          git config url."https://x-access-token:${{ secrets.SEMANTIC_RELEASE_TOKEN }}@github.com/".insteadOf "https://github.com/"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -30,33 +33,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify setup
+        run: |
+          echo "Checking git configuration..."
+          git config --list | grep user
+
+          echo "Checking branch protection status..."
+          echo "Current branch: $(git branch --show-current)"
+
+          echo "Checking script permissions..."
+          ls -la scripts/
+
+          echo "Testing script..."
+          node scripts/update_pubspec_version.js 0.0.1-test
+          git checkout pubspec.yaml  # Reset test change
+
       - name: Run semantic-release
-        id: semantic
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
+          GH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_TOKEN }}
         run: |
           echo "Running semantic-release..."
-          npx semantic-release > release_output.txt 2>&1
-          EXIT_CODE=$?
-
-          echo "Semantic Release Output:"
-          cat release_output.txt
-
-          if [ $EXIT_CODE -eq 0 ]; then
-            if grep -q "Created tag" release_output.txt || grep -q "Commit version" release_output.txt; then
-              VERSION=$(grep -E "The next release version is|Created tag" release_output.txt | sed -n 's/.*\([0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p' | head -1)
-              
-              if [ -n "$VERSION" ]; then
-                echo "Version updated: $VERSION"
-                echo "Updated pubspec.yaml:"
-                grep "version:" pubspec.yaml || echo "Version not found"
-              else
-                echo "Version updated but could not extract version number"
-              fi
-            else
-              echo "No new version created (no significant changes)"
-            fi
-          else
-            echo "Semantic release failed with exit code $EXIT_CODE"
-            exit 1
-          fi
+          npx semantic-release
