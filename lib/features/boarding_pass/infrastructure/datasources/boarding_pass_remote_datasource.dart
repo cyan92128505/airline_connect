@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:app/core/failures/failure.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/domain/enums/pass_status.dart';
-import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_dataSource.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_data_source.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/qr_code_data.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';

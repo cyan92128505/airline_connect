@@ -187,32 +187,6 @@ void main() {
       // Act & Assert - should not throw
       expect(() => step.execute(context), returnsNormally);
     });
-
-    test('should skip seeding when essential data already exists', () async {
-      // Arrange
-      const step = DemoDataInitializationStep();
-      final context = InitializationContext();
-      context.objectBox = mockObjectBox;
-
-      when(mockSeeder.verifyEssentialData()).thenAnswer((_) async => true);
-
-      // This test would require dependency injection to properly test
-      // Act & Assert
-      expect(context.objectBox, equals(mockObjectBox));
-    });
-
-    test('should seed data when essential data is missing', () async {
-      // Arrange
-      final context = InitializationContext();
-      context.objectBox = mockObjectBox;
-
-      when(mockSeeder.verifyEssentialData()).thenAnswer((_) async => false);
-      when(mockSeeder.seedMinimalMockData()).thenAnswer((_) async {});
-
-      // This test would require dependency injection to properly test
-      // Verify behavior would be tested with injected dependencies
-      verifyNever(mockSeeder.verifyEssentialData()); // Not actually called yet
-    });
   });
 
   group('AuthInitializationStep', () {

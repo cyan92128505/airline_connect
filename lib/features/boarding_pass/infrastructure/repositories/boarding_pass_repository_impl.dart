@@ -1,6 +1,6 @@
 import 'package:app/core/failures/failure.dart';
 import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_local_data_source.dart';
-import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_dataSource.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_data_source.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
