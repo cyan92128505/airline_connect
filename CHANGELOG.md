@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/cyan92128505/airline_connect/compare/v1.1.0...v1.1.1) (2025-08-14)
+
+
+### Bug Fixes
+
+* correct changelog extraction in Android release workflow ([#4](https://github.com/cyan92128505/airline_connect/issues/4)) ([7542b78](https://github.com/cyan92128505/airline_connect/commit/7542b78c4c32c46002df8b97dee632a59428f47c))
+
 # [1.1.0](https://github.com/cyan92128505/airline_connect/compare/v1.0.0...v1.1.0) (2025-08-13)
 
 
