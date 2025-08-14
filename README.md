@@ -4,6 +4,55 @@
 
 AirlineConnect 是一個航空登機證管理系統，採用 Flutter 框架開發，實現跨平台的移動應用解決方案。系統提供會員認證、登機證管理、QR Code 掃描驗證等核心功能。
 
+## 應用程式截圖
+
+### 核心功能展示
+
+<table>
+  <tr>
+    <td align="center" width="200">
+      <img src="docs/screens/5_splash_screen.png" width="180" alt="啟動畫面"/><br/>
+      <b>啟動畫面</b><br/>
+      <sub>應用程式載入與品牌展示</sub>
+    </td>
+    <td align="center" width="200">
+      <img src="docs/screens/3_member_auth_screen.png" width="180" alt="會員登入"/><br/>
+      <b>會員登入</b><br/>
+      <sub>會員號碼與姓名後四碼驗證</sub>
+    </td>
+    <td align="center" width="200">
+      <img src="docs/screens/1_boarding_pass_screen.png" width="180" alt="登機證管理"/><br/>
+      <b>登機證管理</b><br/>
+      <sub>航班資訊與登機證狀態顯示</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="200">
+      <img src="docs/screens/2_qrcode_scan_screen.png" width="180" alt="QR Code 掃描"/><br/>
+      <b>QR Code 掃描</b><br/>
+      <sub>登機證驗證與掃描功能</sub>
+    </td>
+    <td align="center" width="200">
+      <img src="docs/screens/4_member_profile_screen.png" width="180" alt="會員中心"/><br/>
+      <b>會員中心</b><br/>
+      <sub>個人資料與會員等級管理</sub>
+    </td>
+    <td align="center" width="200">
+      <!-- 預留空間供未來新增 -->
+    </td>
+  </tr>
+</table>
+
+### 主要功能特色
+
+| 功能模組 | 說明 | 截圖參考 |
+|---------|------|----------|
+| **會員認證系統** | 支援會員號碼 + 姓名後四碼雙重驗證機制 | 會員登入、會員中心 |
+| **登機證管理** | 完整的登機證生命週期管理，包含狀態追蹤 | 登機證管理 |
+| **QR Code 驗證** | 採用 AES-256-GCM 加密的安全 QR Code 系統 | QR Code 掃描 |
+| **會員分級制度** | 支援銅級、銀級、金級會員等級管理 | 會員中心 |
+| **航班資訊整合** | 即時航班狀態更新與登機時間提醒 | 登機證管理 |
+
 ## 技術架構
 
 - **前端框架**: Flutter 3.8.1+
