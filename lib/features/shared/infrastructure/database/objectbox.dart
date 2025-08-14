@@ -26,34 +26,23 @@ class ObjectBox {
   }
 
   Box<MemberEntity> get memberBox {
-    if (_memberBox == null) {
-      _memberBox = store.box<MemberEntity>();
-      _logger.d('Member box initialized lazily');
-    }
+    _memberBox ??= store.box<MemberEntity>();
     return _memberBox!;
   }
 
   Box<FlightEntity> get flightBox {
-    if (_flightBox == null) {
-      _flightBox = store.box<FlightEntity>();
-      _logger.d('Flight box initialized lazily');
-    }
+    _flightBox ??= store.box<FlightEntity>();
     return _flightBox!;
   }
 
   Box<BoardingPassEntity> get boardingPassBox {
-    if (_boardingPassBox == null) {
-      _boardingPassBox = store.box<BoardingPassEntity>();
-      _logger.d('BoardingPass box initialized lazily');
-    }
+    _boardingPassBox ??= store.box<BoardingPassEntity>();
     return _boardingPassBox!;
   }
 
   /// Create ObjectBox instance with completely safe initialization
   static Future<ObjectBox> create() async {
     try {
-      _logger.i('Initializing ObjectBox with safe strategy...');
-
       final docsDir = await getApplicationDocumentsDirectory();
       final dbPath = path.join(docsDir.path, 'objectbox');
 
@@ -71,9 +60,6 @@ class ObjectBox {
       while (store == null && retryCount < maxRetries) {
         try {
           store = await openStore(directory: dbPath);
-          _logger.i(
-            'ObjectBox store opened successfully on attempt ${retryCount + 1}',
-          );
         } catch (e) {
           retryCount++;
           _logger.w('Store open attempt $retryCount failed: $e');
@@ -105,7 +91,6 @@ class ObjectBox {
       // Validate initialization with retry mechanism
       await _validateInitialization(objectBox);
 
-      _logger.i('ObjectBox initialized successfully at: $dbPath');
       return objectBox;
     } catch (e, stackTrace) {
       _logger.e(
@@ -134,7 +119,6 @@ class ObjectBox {
         objectBox.flightBox.isEmpty();
         objectBox.boardingPassBox.isEmpty();
 
-        _logger.i('ObjectBox validation passed on attempt ${attempt + 1}');
         return;
       } catch (e) {
         attempt++;
@@ -164,7 +148,6 @@ class ObjectBox {
       final dbDir = Directory(dbPath);
       if (await dbDir.exists()) {
         await dbDir.delete(recursive: true);
-        _logger.i('Corrupted database cleaned up');
       }
     } catch (e) {
       _logger.e('Failed to cleanup corrupted database: $e');
@@ -179,7 +162,6 @@ class ObjectBox {
       _memberBox = null;
       _flightBox = null;
       _boardingPassBox = null;
-      _logger.i('ObjectBox store closed safely');
     } catch (e) {
       _logger.e('Error closing ObjectBox store: $e');
     }

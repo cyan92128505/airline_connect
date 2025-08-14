@@ -36,8 +36,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, void>> saveMember(Member member) async {
     try {
-      _logger.d('Saving member to secure storage: ${member.memberId.value}');
-
       // Prepare member data for storage
       final memberData = _memberToStorageFormat(member);
 
@@ -49,7 +47,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
         ),
       ]);
 
-      _logger.d('Member saved successfully to secure storage');
       return const Right(null);
     } on PlatformException catch (e) {
       _logger.e('Platform error saving member: ${e.code} - ${e.message}');
@@ -73,18 +70,14 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, Member?>> getMember() async {
     try {
-      _logger.d('Retrieving member from secure storage');
-
       final memberDataJson = await _storage.read(key: _keyCurrentMember);
       if (memberDataJson == null) {
-        _logger.d('No member found in secure storage');
         return const Right(null);
       }
 
       final memberData = jsonDecode(memberDataJson) as Map<String, dynamic>;
       final member = _memberFromStorageFormat(memberData);
 
-      _logger.d('Member retrieved successfully from secure storage');
       return Right(member);
     } on PlatformException catch (e) {
       _logger.e('Platform error retrieving member: ${e.code} - ${e.message}');
@@ -109,8 +102,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, MemberNumber?>> getLastMemberNumber() async {
     try {
-      _logger.d('Retrieving last member number');
-
       final memberNumberStr = await _storage.read(key: _keyLastMemberNumber);
       if (memberNumberStr == null) {
         return const Right(null);
@@ -134,8 +125,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, void>> updateMemberActivity() async {
     try {
-      _logger.d('Updating member session activity');
-
       final memberResult = await getMember();
       return memberResult.fold((failure) => Left(failure), (member) async {
         if (member == null) {
@@ -187,12 +176,9 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, void>> clearMember() async {
     try {
-      _logger.d('Clearing member data from secure storage');
-
       await _storage.delete(key: _keyCurrentMember);
       // Keep last member number for login convenience
 
-      _logger.d('Member data cleared successfully');
       return const Right(null);
     } on PlatformException catch (e) {
       _logger.e('Platform error clearing member: $e');
@@ -206,11 +192,8 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, void>> clearAll() async {
     try {
-      _logger.d('Clearing all secure storage data');
-
       await _storage.deleteAll();
 
-      _logger.d('All storage data cleared successfully');
       return const Right(null);
     } on PlatformException catch (e) {
       _logger.e('Platform error clearing all storage: $e');
@@ -226,14 +209,11 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
     Map<String, dynamic> preferences,
   ) async {
     try {
-      _logger.d('Saving app preferences');
-
       await _storage.write(
         key: _keyAppPreferences,
         value: jsonEncode(preferences),
       );
 
-      _logger.d('App preferences saved successfully');
       return const Right(null);
     } on PlatformException catch (e) {
       _logger.e('Platform error saving preferences: $e');
@@ -251,8 +231,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, Map<String, dynamic>>> getAppPreferences() async {
     try {
-      _logger.d('Retrieving app preferences');
-
       final prefsJson = await _storage.read(key: _keyAppPreferences);
       if (prefsJson == null) {
         return const Right({});
@@ -276,8 +254,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, bool>> validateIntegrity() async {
     try {
-      _logger.d('Validating storage integrity');
-
       final memberResult = await getMember();
       return memberResult.fold((failure) => Left(failure), (member) async {
         // If we have a member, validate all required fields
@@ -307,8 +283,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, void>> cleanupExpiredSessions() async {
     try {
-      _logger.d('Cleaning up expired sessions');
-
       final memberResult = await getMember();
       return memberResult.fold((failure) => Left(failure), (member) async {
         // getMember() already handles expired session cleanup
@@ -325,8 +299,6 @@ class SecureStorageRepositoryImpl implements SecureStorageRepository {
   @override
   Future<Either<Failure, StorageStatistics>> getStatistics() async {
     try {
-      _logger.d('Generating storage statistics');
-
       final currentMember = await _storage.read(key: _keyCurrentMember);
       final lastMemberNumber = await _storage.read(key: _keyLastMemberNumber);
       final appPreferences = await _storage.read(key: _keyAppPreferences);

@@ -1,9 +1,6 @@
 import 'package:app/core/bootstrap/contracts/initialization_context.dart';
 import 'package:app/core/bootstrap/initialization_step.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
-import 'package:logger/logger.dart';
-
-final Logger _logger = Logger();
 
 /// Initialize ObjectBox database with validation
 class DatabaseInitializationStep extends InitializationStep {
@@ -24,8 +21,6 @@ class DatabaseInitializationStep extends InitializationStep {
 
     // Store initialized database in context
     context.objectBox = objectBox;
-
-    _logger.i('ObjectBox database initialized and validated successfully');
   }
 
   /// Validate that all required database boxes are accessible
@@ -35,8 +30,6 @@ class DatabaseInitializationStep extends InitializationStep {
       objectBox.memberBox.isEmpty();
       objectBox.flightBox.isEmpty();
       objectBox.boardingPassBox.isEmpty();
-
-      _logger.d('All database boxes are accessible');
     } catch (e) {
       // Clean up on validation failure
       objectBox.close();

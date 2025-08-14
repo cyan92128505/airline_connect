@@ -12,13 +12,11 @@ class AuthInitializationStep extends InitializationStep {
   @override
   Future<void> execute(InitializationContext context) async {
     if (context.container == null) {
-      _logger.w('Container not available, skipping auth initialization');
+      _logger.w(' Container not available, skipping auth initialization');
       return;
     }
 
     try {
-      _logger.i('Initializing authentication through DI...');
-
       // Get auth initializer from DI container
       final authInitializer = context.container!.read(authInitializerProvider);
 
@@ -27,12 +25,12 @@ class AuthInitializationStep extends InitializationStep {
 
       result.fold(
         (failure) =>
-            _logger.w('Auth initialization failed: ${failure.message}'),
-        (_) => _logger.i('Auth initialization completed successfully'),
+            _logger.w(' Auth initialization failed: ${failure.message}'),
+        (_) => _logger.i(' Auth initialization completed successfully'),
       );
     } catch (e, stackTrace) {
-      _logger.e('Auth initialization error: $e');
-      _logger.e('StackTrace: $stackTrace');
+      _logger.e(' Auth initialization error: $e');
+      _logger.e(' StackTrace: $stackTrace');
       // Don't rethrow - auth failure shouldn't prevent app startup
     }
   }

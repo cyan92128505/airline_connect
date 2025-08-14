@@ -26,8 +26,6 @@ class FlightRepositoryImpl implements FlightRepository {
     FlightNumber flightNumber,
   ) async {
     try {
-      _logger.d('Finding flight by number: ${flightNumber.value}');
-
       final query = _flightBox
           .query(FlightEntity_.flightNumber.equals(flightNumber.value))
           .build();
@@ -36,13 +34,10 @@ class FlightRepositoryImpl implements FlightRepository {
         final flightEntity = query.findFirst();
 
         if (flightEntity == null) {
-          _logger.d('Flight not found: ${flightNumber.value}');
           return const Right(null);
         }
 
         final flight = flightEntity.toDomain();
-        _logger.d('Flight found: ${flight.flightNumber.value}');
-
         return Right(flight);
       } finally {
         query.close();
@@ -88,7 +83,6 @@ class FlightRepositoryImpl implements FlightRepository {
             .map((entity) => entity.toDomain())
             .toList();
 
-        _logger.d('Found ${flights.length} flights for $airportCode on $date');
         return Right(flights);
       } finally {
         query.close();
@@ -153,8 +147,6 @@ class FlightRepositoryImpl implements FlightRepository {
   @override
   Future<Either<Failure, List<Flight>>> findActiveFlights() async {
     try {
-      _logger.d('Finding active flights');
-
       // Query for flights that are not in terminal states
       final activeStatuses = [
         FlightStatus.scheduled.value,
@@ -175,7 +167,6 @@ class FlightRepositoryImpl implements FlightRepository {
             .where((flight) => flight.isActive)
             .toList();
 
-        _logger.d('Found ${flights.length} active flights');
         return Right(flights);
       } finally {
         query.close();
@@ -193,13 +184,10 @@ class FlightRepositoryImpl implements FlightRepository {
   @override
   Future<Either<Failure, void>> save(Flight flight) async {
     try {
-      _logger.d('Saving flight: ${flight.flightNumber.value}');
-
       // Use ObjectBox replace strategy for updates
       _objectBox.store.runInTransaction(TxMode.write, () {
         final entity = FlightEntity.fromDomain(flight);
         _flightBox.put(entity);
-        _logger.d('Saved flight: ${flight.flightNumber.value}');
       });
 
       return const Right(null);
@@ -218,8 +206,6 @@ class FlightRepositoryImpl implements FlightRepository {
   @override
   Future<Either<Failure, bool>> exists(FlightNumber flightNumber) async {
     try {
-      _logger.d('Checking if flight exists: ${flightNumber.value}');
-
       final query = _flightBox
           .query(FlightEntity_.flightNumber.equals(flightNumber.value))
           .build();
@@ -228,7 +214,6 @@ class FlightRepositoryImpl implements FlightRepository {
         final count = query.count();
         final exists = count > 0;
 
-        _logger.d('Flight exists: $exists');
         return Right(exists);
       } finally {
         query.close();
@@ -246,8 +231,6 @@ class FlightRepositoryImpl implements FlightRepository {
   @override
   Future<Either<Failure, void>> syncWithServer() async {
     try {
-      _logger.d('Syncing flights with server');
-
       // Placeholder for server sync implementation
       await _objectBox.store.runInTransactionAsync(TxMode.write, (s, p) async {
         // Example bulk sync operation
@@ -256,7 +239,6 @@ class FlightRepositoryImpl implements FlightRepository {
         // _flightBox.putMany(localEntities);
       }, {});
 
-      _logger.d('Flight sync completed');
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e('Error syncing with server', error: e, stackTrace: stackTrace);
@@ -269,8 +251,6 @@ class FlightRepositoryImpl implements FlightRepository {
     Map<FlightNumber, FlightStatus> statusUpdates,
   ) async {
     try {
-      _logger.d('Bulk updating ${statusUpdates.length} flight statuses');
-
       await _objectBox.store.runInTransactionAsync(TxMode.write, (s, p) async {
         for (final entry in statusUpdates.entries) {
           final flightNumber = entry.key;
@@ -297,7 +277,6 @@ class FlightRepositoryImpl implements FlightRepository {
         }
       }, {});
 
-      _logger.d('Bulk status update completed');
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e(
@@ -343,14 +322,11 @@ class FlightRepositoryImpl implements FlightRepository {
   /// Bulk save operation using transactions for performance
   Future<Either<Failure, void>> saveMany(List<Flight> flights) async {
     try {
-      _logger.d('Bulk saving ${flights.length} flights');
-
       await _objectBox.store.runInTransactionAsync(TxMode.write, (s, p) async {
         final entities = flights.map(FlightEntity.fromDomain).toList();
         _flightBox.putMany(entities);
       }, {});
 
-      _logger.d('Bulk save completed');
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e('Error in bulk save', error: e, stackTrace: stackTrace);
@@ -363,8 +339,6 @@ class FlightRepositoryImpl implements FlightRepository {
     FlightStatus status,
   ) async {
     try {
-      _logger.d('Finding flights by status: ${status.value}');
-
       final query = _flightBox
           .query(FlightEntity_.status.equals(status.value))
           .order(FlightEntity_.departureTime)
@@ -396,8 +370,6 @@ class FlightRepositoryImpl implements FlightRepository {
   /// Get flights departing in next N hours
   Future<Either<Failure, List<Flight>>> findDepartingSoon(int hours) async {
     try {
-      _logger.d('Finding flights departing in next $hours hours');
-
       final now = DateTime.now();
       final futureTime = now.add(Duration(hours: hours));
 
@@ -418,7 +390,6 @@ class FlightRepositoryImpl implements FlightRepository {
             .where((flight) => flight.isActive)
             .toList();
 
-        _logger.d('Found ${flights.length} flights departing soon');
         return Right(flights);
       } finally {
         query.close();

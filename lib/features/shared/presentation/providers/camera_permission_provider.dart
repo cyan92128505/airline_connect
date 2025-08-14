@@ -75,8 +75,6 @@ class CameraPermission extends _$CameraPermission {
       return state.isGranted;
     }
 
-    _logger.d('Requesting camera permission');
-
     state = state.copyWith(isRequesting: true, errorMessage: null);
 
     try {
@@ -84,7 +82,6 @@ class CameraPermission extends _$CameraPermission {
 
       return result.when(
         granted: () {
-          _logger.i('Camera permission granted');
           state = state.copyWith(
             status: PermissionStatus.granted,
             isRequesting: false,
@@ -129,14 +126,12 @@ class CameraPermission extends _$CameraPermission {
   /// Open app settings for user to manually enable permission
   Future<void> openSettings() async {
     try {
-      _logger.d('Opening app settings for camera permission');
       final opened = await _permissionAppService.openAppSettings();
 
       if (!opened) {
         _logger.w('Failed to open app settings');
         state = state.copyWith(errorMessage: '無法開啟設定頁面');
       } else {
-        _logger.i('App settings opened successfully');
         // Clear error message as user is going to settings
         state = state.copyWith(errorMessage: null);
       }
@@ -149,14 +144,12 @@ class CameraPermission extends _$CameraPermission {
   /// Clear any error message
   void clearError() {
     if (state.errorMessage != null) {
-      _logger.d('Clearing permission error message');
       state = state.copyWith(errorMessage: null);
     }
   }
 
   /// Reset permission state (useful for testing or refresh)
   void reset() {
-    _logger.d('Resetting camera permission state');
     state = const CameraPermissionState();
     _checkPermissionStatus();
   }
@@ -175,8 +168,6 @@ class CameraPermission extends _$CameraPermission {
   Future<void> _checkPermissionStatus() async {
     try {
       final status = await Permission.camera.status;
-
-      _logger.i('Current camera permission status: $status');
 
       // Only update if status actually changed to avoid unnecessary rebuilds
       if (state.status != status) {

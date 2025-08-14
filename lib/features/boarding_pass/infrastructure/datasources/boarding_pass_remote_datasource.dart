@@ -32,10 +32,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
 
   /// Initialize with standardized test data that matches MockDataSeeder
   void initializeWithTestData(List<BoardingPass> boardingPasses) {
-    _logger.d(
-      'Initializing remote datasource with ${boardingPasses.length} boarding passes',
-    );
-
     _boardingPassDatabase.clear();
     _memberPassIndex.clear();
     _usedTokens.clear();
@@ -43,8 +39,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     for (final pass in boardingPasses) {
       _addBoardingPassToDatabase(pass);
     }
-
-    _logger.i('Remote datasource initialized with standardized test data');
   }
 
   /// Add single boarding pass to the simulated database
@@ -63,8 +57,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     await _simulateDelay();
 
     try {
-      _logger.d('Verifying QR code for pass: $passId');
-
       // Basic token validation
       if (!_isValidToken(qrToken)) {
         return Left(AuthenticationFailure('Invalid QR token format'));
@@ -96,7 +88,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
       // Mark token as used
       _usedTokens.add(qrToken);
 
-      _logger.d('QR code verified successfully for pass: $passId');
       return Right(boardingPass);
     } catch (e) {
       _logger.e('Error verifying QR code', error: e);
@@ -113,8 +104,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     }
 
     try {
-      _logger.d('Fetching boarding pass: ${passId.value}');
-
       final boardingPass = _boardingPassDatabase[passId.value];
 
       _logger.d(
@@ -137,8 +126,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     await _simulateDelay();
 
     try {
-      _logger.d('Fetching boarding passes for member: ${memberNumber.value}');
-
       final passIds = _memberPassIndex[memberNumber.value] ?? [];
       final boardingPasses = passIds
           .map((id) => _boardingPassDatabase[id])
@@ -153,7 +140,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
         ),
       );
 
-      _logger.d('Found ${boardingPasses.length} boarding passes for member');
       return Right(boardingPasses);
     } catch (e) {
       _logger.e('Error fetching member boarding passes', error: e);
@@ -168,8 +154,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     await _simulateDelay();
 
     try {
-      _logger.d('Updating boarding pass status: ${boardingPass.passId.value}');
-
       final existingPass = _boardingPassDatabase[boardingPass.passId.value];
       if (existingPass == null) {
         return Left(NotFoundFailure('Boarding pass not found'));
@@ -183,7 +167,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
       // Update the database
       _boardingPassDatabase[boardingPass.passId.value] = boardingPass;
 
-      _logger.d('Boarding pass status updated successfully');
       return Right(boardingPass);
     } catch (e) {
       _logger.e('Error updating boarding pass status', error: e);
@@ -200,8 +183,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     );
 
     try {
-      _logger.d('Syncing ${localPasses.length} boarding passes');
-
       final syncedPasses = <BoardingPass>[];
 
       for (final localPass in localPasses) {
@@ -219,7 +200,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
         }
       }
 
-      _logger.d('Sync completed for ${syncedPasses.length} passes');
       return Right(syncedPasses);
     } catch (e) {
       _logger.e('Error syncing boarding passes', error: e);
@@ -235,8 +215,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
     await _simulateDelay(const Duration(milliseconds: 300));
 
     try {
-      _logger.d('Validating boarding pass $passId at gate $gateCode');
-
       final boardingPass = _boardingPassDatabase[passId];
       if (boardingPass == null) {
         return Right(
@@ -379,7 +357,6 @@ class MockBoardingPassRemoteDataSource implements BoardingPassRemoteDataSource {
   /// Clear used tokens for testing
   void clearUsedTokens() {
     _usedTokens.clear();
-    _logger.d('Cleared used tokens for testing');
   }
 
   /// Check if a boarding pass exists in remote database

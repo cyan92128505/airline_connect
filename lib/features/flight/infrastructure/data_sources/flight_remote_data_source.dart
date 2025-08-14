@@ -32,8 +32,6 @@ class FlightRemoteDataSourceImpl implements FlightRemoteDataSource {
   @override
   Future<List<Flight>> getFlights() async {
     try {
-      _logger.d('Fetching flights from server');
-
       final response = await httpClient.get(
         Uri.parse('$baseUrl/flights'),
         headers: {'Content-Type': 'application/json'},
@@ -47,7 +45,6 @@ class FlightRemoteDataSourceImpl implements FlightRemoteDataSource {
             .cast<Flight>()
             .toList();
 
-        _logger.d('Retrieved ${flights.length} flights from server');
         return flights;
       } else {
         throw InfrastructureException(
@@ -64,8 +61,6 @@ class FlightRemoteDataSourceImpl implements FlightRemoteDataSource {
   @override
   Future<Flight?> getFlightByNumber(FlightNumber flightNumber) async {
     try {
-      _logger.d('Fetching flight ${flightNumber.value} from server');
-
       final response = await httpClient.get(
         Uri.parse('$baseUrl/flights/${flightNumber.value}'),
         headers: {'Content-Type': 'application/json'},
@@ -91,8 +86,6 @@ class FlightRemoteDataSourceImpl implements FlightRemoteDataSource {
   @override
   Future<List<Flight>> getFlightsByStatus(FlightStatus status) async {
     try {
-      _logger.d('Fetching flights with status ${status.value} from server');
-
       final response = await httpClient.get(
         Uri.parse('$baseUrl/flights?status=${status.value}'),
         headers: {'Content-Type': 'application/json'},
@@ -141,8 +134,6 @@ class FlightRemoteDataSourceImpl implements FlightRemoteDataSource {
           code: response.statusCode.toString(),
         );
       }
-
-      _logger.d('Flight status updated successfully');
     } catch (e) {
       _logger.e('Error updating flight status', error: e);
       throw InfrastructureException('Network error: $e');
@@ -152,8 +143,6 @@ class FlightRemoteDataSourceImpl implements FlightRemoteDataSource {
   @override
   Future<Map<FlightNumber, FlightStatus>> getStatusUpdates() async {
     try {
-      _logger.d('Fetching status updates from server');
-
       final response = await httpClient.get(
         Uri.parse('$baseUrl/flights/status-updates'),
         headers: {'Content-Type': 'application/json'},
@@ -173,7 +162,6 @@ class FlightRemoteDataSourceImpl implements FlightRemoteDataSource {
           }
         });
 
-        _logger.d('Retrieved ${statusUpdates.length} status updates');
         return statusUpdates;
       } else {
         throw InfrastructureException(

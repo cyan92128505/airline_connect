@@ -26,9 +26,8 @@ class TimezoneInitializationStep extends InitializationStep {
     // Set local timezone - fallback to UTC if timezone not found
     try {
       tz.setLocalLocation(tz.getLocation(timezoneName));
-      _logger.i('Timezone set to: $timezoneName');
     } catch (e) {
-      _logger.w('Failed to set timezone $timezoneName, using UTC: $e');
+      _logger.w(' Failed to set timezone $timezoneName, using UTC: $e');
       tz.setLocalLocation(tz.UTC);
     }
   }

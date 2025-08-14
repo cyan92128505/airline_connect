@@ -113,9 +113,6 @@ void main() {
 
         // Get real QR codes for testing
         realQRCodes = await TestQrcodeHelper.generateRealQRCodes(objectBox);
-
-        debugPrint('Test ObjectBox initialized at: ${tempDir.path}');
-        debugPrint('Generated ${realQRCodes.length} real QR codes for testing');
       } catch (e) {
         debugPrint('Failed to initialize test ObjectBox: $e');
         rethrow;

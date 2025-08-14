@@ -61,9 +61,7 @@ class MockScannerServiceImpl implements ScannerService {
   Future<bool> get isAvailable async => true;
 
   @override
-  Future<void> config([ScannerConfig? config]) async {
-    _logger.d('Configuring enhanced mock scanner service');
-  }
+  Future<void> config([ScannerConfig? config]) async {}
 
   @override
   Future<bool> start() async {
@@ -92,7 +90,6 @@ class MockScannerServiceImpl implements ScannerService {
       _isScanning = true;
       _startMockScanning();
 
-      _logger.i('Mock scanner service started successfully');
       return true;
     } catch (e, stackTrace) {
       _logger.e('Mock scanner startup failed: $e \n $stackTrace');
@@ -112,19 +109,13 @@ class MockScannerServiceImpl implements ScannerService {
   Future<void> stop() async {
     if (!_isScanning || _isDisposed) return;
 
-    _logger.d('Stopping enhanced mock scanner service');
-
     _isScanning = false;
     _stopMockScanning();
-
-    _logger.i('Mock scanner service stopped');
   }
 
   @override
   Future<void> dispose() async {
     if (_isDisposed) return;
-
-    _logger.d('Disposing enhanced mock scanner service');
 
     _isDisposed = true;
     _isScanning = false;
@@ -133,8 +124,6 @@ class MockScannerServiceImpl implements ScannerService {
 
     await _scanResultsController.close();
     await _errorsController.close();
-
-    _logger.i('Mock scanner service disposed');
   }
 
   /// Start enhanced mock scanning behavior
@@ -177,7 +166,6 @@ class MockScannerServiceImpl implements ScannerService {
       mockData = _mockQRCodes[random.nextInt(_mockQRCodes.length)];
     }
 
-    _logger.i('Mock scanner detected QR: ${_truncateQRCode(mockData)}');
     _scanResultsController.add(mockData);
   }
 
@@ -198,7 +186,7 @@ class MockScannerServiceImpl implements ScannerService {
     _errorsController.add(error);
   }
 
-  // 🔥 ENHANCED: Public methods for test control
+  //  ENHANCED: Public methods for test control
 
   /// Manually trigger a scan result (for testing) - ENHANCED
   void simulateScan(String qrData) {
@@ -214,7 +202,6 @@ class MockScannerServiceImpl implements ScannerService {
   void simulateError(ScannerError error) {
     if (_isDisposed) return;
 
-    _logger.d('Manually triggering mock error: ${error.toString()}');
     _errorsController.add(error);
   }
 
@@ -223,13 +210,11 @@ class MockScannerServiceImpl implements ScannerService {
     _mockQRCodes.clear();
     _mockQRCodes.addAll(qrCodes);
     _currentQRIndex = 0; // Reset sequence
-    _logger.d('Updated mock QR codes: ${qrCodes.length} codes available');
   }
 
   /// Add a single QR code to the mock list
   void addMockQRCode(String qrCode) {
     _mockQRCodes.add(qrCode);
-    _logger.d('Added mock QR code: ${_truncateQRCode(qrCode)}');
   }
 
   /// Get current QR codes for debugging
@@ -238,7 +223,6 @@ class MockScannerServiceImpl implements ScannerService {
   /// Reset sequence to start from beginning
   void resetSequence() {
     _currentQRIndex = 0;
-    _logger.d('Reset QR code sequence');
   }
 
   /// Get next QR code in sequence without emitting
@@ -256,7 +240,6 @@ class MockScannerServiceImpl implements ScannerService {
 
     final qrCode = specificQRCode ?? getNextQRCode();
     if (qrCode != null) {
-      _logger.d('Immediate scan: ${_truncateQRCode(qrCode)}');
       _scanResultsController.add(qrCode);
     }
   }

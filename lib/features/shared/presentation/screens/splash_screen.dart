@@ -37,15 +37,7 @@ class SplashScreen extends HookConsumerWidget {
 
     // Handle navigation after initialization is complete
     useEffect(() {
-      // Wait for both conditions:
-      // 1. Authentication state is initialized
-      // 2. Minimum display time has passed (2 seconds)
       if (authState.isInitialized && !hasNavigated.value) {
-        debugPrint(
-          'SplashScreen: Auth state initialized, waiting for minimum display time',
-        );
-
-        // Calculate remaining time for minimum display
         Future.delayed(const Duration(seconds: 2), () {
           if (context.mounted && !hasNavigated.value) {
             hasNavigated.value = true;
@@ -222,27 +214,12 @@ class SplashScreen extends HookConsumerWidget {
 
   /// Navigate to appropriate screen after splash display
   void _navigateToNextScreen(BuildContext context, MemberAuthState authState) {
-    // Detailed logging for troubleshooting
-    debugPrint('SplashScreen Navigation Decision:');
-    debugPrint('- isInitialized: ${authState.isInitialized}');
-    debugPrint('- isAuthenticated: ${authState.isAuthenticated}');
-    debugPrint('- member exists: ${authState.member != null}');
-    debugPrint('- member number: ${authState.member?.memberNumber}');
-    debugPrint(
-      '- member isAuthenticated: ${authState.member?.isAuthenticated}',
-    );
-    debugPrint(
-      '- member isUnauthenticated: ${authState.member?.isUnauthenticated}',
-    );
-
     if (authState.isAuthenticated &&
         authState.member?.isAuthenticated == true) {
       // User is authenticated with valid session, navigate to main screen
-      debugPrint('- Navigation: Going to ${AppRoutes.boardingPass}');
       context.go(AppRoutes.boardingPass);
     } else {
       // User is not authenticated, navigate to login screen
-      debugPrint('- Navigation: Going to ${AppRoutes.memberAuth}');
       context.go(AppRoutes.memberAuth);
     }
   }

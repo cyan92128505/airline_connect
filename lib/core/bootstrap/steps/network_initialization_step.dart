@@ -20,10 +20,8 @@ class NetworkInitializationStep extends InitializationStep {
 
       // Perform initial network state detection
       await _performInitialNetworkCheck(context);
-
-      _logger.i('Network initialization completed successfully');
     } catch (e, stackTrace) {
-      _logger.e('Network initialization failed: $e', stackTrace: stackTrace);
+      _logger.e(' Network initialization failed: $e', stackTrace: stackTrace);
 
       // Store initialization error in context for later reference
       context.setData('network_init_error', e.toString());
@@ -46,10 +44,8 @@ class NetworkInitializationStep extends InitializationStep {
           Duration(seconds: 5),
         ),
       );
-
-      _logger.d('Connectivity service verified');
     } catch (e) {
-      _logger.w('Connectivity service verification failed: $e');
+      _logger.w(' Connectivity service verification failed: $e');
       rethrow;
     }
   }
@@ -72,18 +68,14 @@ class NetworkInitializationStep extends InitializationStep {
       context.setData('initial_network_online', isOnline);
       context.setData('initial_connection_type', connectionType.toString());
 
-      _logger.i(
-        'Initial network state: ${isOnline ? 'online' : 'offline'} ($connectionType)',
-      );
-
       // If offline, log warning but don't fail
       if (!isOnline) {
         _logger.w(
-          'App starting in offline mode - limited functionality available',
+          ' App starting in offline mode - limited functionality available',
         );
       }
     } catch (e) {
-      _logger.e('Initial network check failed: $e');
+      _logger.e(' Initial network check failed: $e');
 
       // Assume offline if check fails
       context.setData('initial_network_online', false);
