@@ -1,4 +1,3 @@
-import 'package:app/core/exceptions/domain_exception.dart';
 import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:app/features/member/domain/value_objects/contact_info.dart';
 import 'package:app/features/member/domain/value_objects/full_name.dart';
@@ -87,24 +86,6 @@ class Member {
     );
   }
 
-  Member upgradeTier(MemberTier newTier) {
-    if (!_canUpgradeTo(newTier)) {
-      throw DomainException(
-        'Cannot upgrade from ${tier.name} to ${newTier.name}',
-      );
-    }
-
-    return Member._(
-      memberId: memberId,
-      memberNumber: memberNumber,
-      fullName: fullName,
-      tier: newTier,
-      contactInfo: contactInfo,
-      createdAt: createdAt,
-      lastLoginAt: lastLoginAt,
-    );
-  }
-
   bool isEligibleForBoardingPass() {
     return tier != MemberTier.suspended;
   }
@@ -116,23 +97,6 @@ class Member {
     if (fullNameValue.length < 4) return false;
 
     return fullNameValue.substring(fullNameValue.length - 4) == nameSuffix;
-  }
-
-  bool _canUpgradeTo(MemberTier targetTier) {
-    const upgradeOrder = [
-      MemberTier.bronze,
-      MemberTier.silver,
-      MemberTier.gold,
-    ];
-
-    final currentIndex = upgradeOrder.indexOf(tier);
-    final targetIndex = upgradeOrder.indexOf(targetTier);
-
-    if (tier == MemberTier.suspended || targetTier == MemberTier.suspended) {
-      return false;
-    }
-
-    return targetIndex > currentIndex;
   }
 
   @override

@@ -67,9 +67,6 @@ void main() {
 
         // Get real QR codes for testing
         realQRCodes = await TestQrcodeHelper.generateRealQRCodes(objectBox);
-
-        debugPrint('Test ObjectBox initialized at: ${tempDir.path}');
-        debugPrint('Generated ${realQRCodes.length} real QR codes for testing');
       } catch (e) {
         debugPrint('Failed to initialize test ObjectBox: $e');
         rethrow;
@@ -117,7 +114,6 @@ void main() {
 
       // Should be on boarding pass screen (authenticated)
       expect(find.byType(BoardingPassScreen), findsOneWidget);
-      debugPrint('✓ Authenticated user on boarding pass screen');
 
       // Navigate to QR Scanner
       await _navigateToQRScanner(tester);
@@ -127,7 +123,6 @@ void main() {
       // Verify QR Scanner screen is displayed
       expect(find.byType(QRScannerScreen), findsOneWidget);
       expect(find.textContaining('QR Code 掃描器'), findsOneWidget);
-      debugPrint('✓ QR Scanner screen displayed');
 
       // Look for the actual start button
       final startButton = find.byKey(StartScannerButton.widgetKey);
@@ -139,11 +134,8 @@ void main() {
           : startButtonText;
 
       if (buttonFinder.evaluate().isNotEmpty) {
-        debugPrint('✓ Found start scanner button');
-
         await tester.tap(buttonFinder);
         await tester.pumpAndSettle();
-        debugPrint('✓ Scanner start button tapped');
 
         // Wait for initialization and scanning
         await tester.pump(const Duration(milliseconds: 600));
@@ -151,7 +143,6 @@ void main() {
 
         // Should show scanning status
         await tester.pump(const Duration(milliseconds: 500));
-        debugPrint('✓ Scanner in scanning mode');
 
         // Wait for real QR scan to complete
         await tester.pump(const Duration(seconds: 2));
@@ -163,14 +154,11 @@ void main() {
 
         if (resultWidget.evaluate().isNotEmpty ||
             anyResultText.evaluate().isNotEmpty) {
-          debugPrint('✓ QR Scanner flow completed with result display');
         } else {
-          debugPrint('⚠️ No explicit result widget found, but flow completed');
+          debugPrint('️ No explicit result widget found, but flow completed');
         }
-
-        debugPrint('✓ QR Scanner flow completed successfully');
       } else {
-        debugPrint('❌ Could not find start scanner button');
+        debugPrint('Could not find start scanner button');
 
         // Debug: Print all text widgets to see what's available
         final allTexts = find.byType(Text);
@@ -221,10 +209,10 @@ void main() {
         await tester.pump(const Duration(milliseconds: 500));
         await tester.pumpAndSettle();
 
-        debugPrint('✓ QR code ${i + 1} scanned successfully');
+        debugPrint('QR code ${i + 1} scanned successfully');
       }
 
-      debugPrint('✓ Multiple real QR codes tested successfully');
+      debugPrint('Multiple real QR codes tested successfully');
     });
 
     // Keep existing permission and error tests...
@@ -252,7 +240,7 @@ void main() {
       // Verify QR Scanner screen
       expect(find.byType(QRScannerScreen), findsOneWidget);
 
-      debugPrint('✓ Permission flow handled correctly');
+      debugPrint('Permission flow handled correctly');
     });
   });
 }
@@ -316,7 +304,6 @@ class TestQRScannerApp extends ConsumerWidget {
           isInitialized: true,
         );
         authNotifier.initializeWithRestoredState(authState);
-        debugPrint('✓ Test auth state initialized with member');
       } else {
         final authState = MemberAuthState(
           member: MemberDTOExtensions.unauthenticated(),
@@ -324,7 +311,6 @@ class TestQRScannerApp extends ConsumerWidget {
           isInitialized: true,
         );
         authNotifier.initializeWithRestoredState(authState);
-        debugPrint('✓ Test auth state initialized without member');
       }
     } catch (e) {
       debugPrint('Failed to initialize test auth state: $e');
@@ -395,5 +381,4 @@ Future<void> _navigateToQRScanner(WidgetTester tester) async {
   await tester.tap(qrScannerButton.first);
 
   await tester.pumpAndSettle();
-  debugPrint('✓ Navigated to QR Scanner');
 }

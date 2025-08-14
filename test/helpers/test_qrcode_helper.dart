@@ -2,9 +2,11 @@ import 'package:app/features/boarding_pass/infrastructure/services/crypto_servic
 import 'package:app/features/boarding_pass/infrastructure/services/qr_code_service_impl.dart';
 import 'package:app/features/shared/infrastructure/database/mock_data_seeder.dart';
 import 'package:app/features/shared/infrastructure/database/objectbox.dart';
-import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 
 class TestQrcodeHelper {
+  static final _logger = Logger();
+
   /// Seed test data and generate real QR codes
   static Future<void> seedTestDataWithRealQRCodes(ObjectBox objectBox) async {
     try {
@@ -23,12 +25,10 @@ class TestQrcodeHelper {
       );
 
       // Seed the data
-      await seeder.seedMinimalMockData();
-
-      debugPrint('✓ Test data seeded with real QR codes');
+      await seeder.resetToStandardData();
     } catch (e, stackTrace) {
-      debugPrint('❌ Failed to seed test data: $e');
-      debugPrint('Stack trace: $stackTrace');
+      _logger.e('Failed to seed test data: $e');
+      _logger.e('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -41,10 +41,6 @@ class TestQrcodeHelper {
       // Get all boarding passes from database
       final allBoardingPasses = objectBox.boardingPassBox.getAll();
 
-      debugPrint(
-        'Found ${allBoardingPasses.length} boarding passes for QR generation',
-      );
-
       for (final entity in allBoardingPasses) {
         try {
           // Convert entity to domain object
@@ -53,23 +49,19 @@ class TestQrcodeHelper {
           // Get the real QR string
           final qrString = domainBoardingPass.qrCode.toQRString();
           realQRCodes.add(qrString);
-
-          debugPrint('✓ Generated QR code for pass: ${entity.passId}');
         } catch (e) {
-          debugPrint('❌ Failed to generate QR for pass ${entity.passId}: $e');
+          _logger.e('Failed to generate QR for pass ${entity.passId}: $e');
         }
       }
 
       if (realQRCodes.isEmpty) {
         // Fallback: create at least one working QR code
-        debugPrint('⚠️ No real QR codes generated, creating fallback');
         realQRCodes.add(_createFallbackQRCode());
       }
 
-      debugPrint('✓ Generated ${realQRCodes.length} real QR codes for testing');
       return realQRCodes;
     } catch (e) {
-      debugPrint('❌ Failed to generate real QR codes: $e');
+      _logger.e('Failed to generate real QR codes: $e');
       return [_createFallbackQRCode()];
     }
   }

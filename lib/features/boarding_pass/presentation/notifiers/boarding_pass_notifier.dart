@@ -107,7 +107,6 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
   ) {
     // Connection restored
     if (previous != null && !previous.isOnline && current.isOnline) {
-      _logger.i('Network connection restored, triggering sync');
       _performAutoSync();
     }
 
@@ -115,7 +114,6 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
     if (previous != null &&
         previous.quality == NetworkQuality.poor &&
         current.quality == NetworkQuality.good) {
-      _logger.i('Network quality improved, attempting pending operations');
       _retryPendingOperations();
     }
 
@@ -175,7 +173,6 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
 
       // If offline, try to load from local cache only
       if (!networkState.isOnline) {
-        _logger.i('Loading boarding passes in offline mode');
         // Repository will automatically return local data
       } else if (networkState.isPoorConnection) {
         _logger.w('Loading boarding passes with poor network connection');
@@ -373,8 +370,6 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
       return;
     }
 
-    _logger.i('Performing automatic sync');
-
     state = state.copyWith(lastSyncAttempt: DateTime.now());
 
     try {
@@ -396,8 +391,6 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
     if (!networkState.isOnline || networkState.isPoorConnection) {
       return;
     }
-
-    _logger.i('Retrying ${state.pendingOperations.length} pending operations');
 
     final operations = List<String>.from(state.pendingOperations);
 

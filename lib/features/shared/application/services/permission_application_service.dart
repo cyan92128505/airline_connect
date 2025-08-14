@@ -24,14 +24,11 @@ class PermissionApplicationService {
   /// Returns result indicating permission status and suggested action
   Future<CameraPermissionResult> ensureCameraPermission() async {
     try {
-      _logger.d('Ensuring camera permission...');
-
       final status = await _permissionService.checkPermission(
         Permission.camera,
       );
 
       if (status.isGranted) {
-        _logger.i('Camera permission already granted');
         return const CameraPermissionResult.granted();
       }
 
@@ -40,13 +37,11 @@ class PermissionApplicationService {
         return const CameraPermissionResult.permanentlyDenied();
       }
 
-      _logger.d('Requesting camera permission from user');
       final result = await _permissionService.requestPermission(
         Permission.camera,
       );
 
       if (result.isGranted) {
-        _logger.i('Camera permission granted by user');
         return const CameraPermissionResult.granted();
       } else {
         _logger.w('Camera permission denied by user');
@@ -96,7 +91,6 @@ class PermissionApplicationService {
   /// Open app settings for user to manually enable permissions
   Future<bool> openAppSettings() async {
     try {
-      _logger.d('Opening app settings for permission configuration');
       return await _permissionService.openAppSettings();
     } catch (e) {
       _logger.e('Error opening app settings: $e');

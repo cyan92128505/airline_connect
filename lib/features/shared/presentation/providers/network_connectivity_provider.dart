@@ -135,8 +135,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
   /// Initialize connectivity monitoring
   Future<void> _initializeConnectivityMonitoring() async {
     try {
-      _logger.d('Initializing network connectivity monitoring');
-
       // Start monitoring connectivity changes
       _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
         _handleConnectivityChange,
@@ -160,7 +158,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
       await _performInitialConnectivityCheck();
 
       _initializationCompleter.complete();
-      _logger.d('Network connectivity monitoring initialized successfully');
     } catch (e) {
       _logger.e('Failed to initialize network connectivity monitoring: $e');
       _updateState(lastError: 'Initialization failed: $e');
@@ -178,10 +175,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
     final wasOnline = state.isOnline;
     final isNowOnline = primaryResult != ConnectivityResult.none;
 
-    _logger.i(
-      'Connectivity changed: $primaryResult (was online: $wasOnline, now online: $isNowOnline)',
-    );
-
     if (!wasOnline && isNowOnline) {
       _handleConnectionRestored(primaryResult);
     } else if (wasOnline && !isNowOnline) {
@@ -193,8 +186,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
 
   /// Handle connection restoration
   void _handleConnectionRestored(ConnectivityResult connectionType) {
-    _logger.i('Connection restored: $connectionType');
-
     final event = NetworkEvent(
       timestamp: DateTime.now(),
       type: NetworkEventType.connected,
@@ -219,7 +210,7 @@ class NetworkConnectivity extends _$NetworkConnectivity {
 
   /// Handle connection loss
   void _handleConnectionLost() {
-    _logger.w('Connection lost');
+    _logger.w(' Connection lost');
 
     final event = NetworkEvent(
       timestamp: DateTime.now(),
@@ -239,8 +230,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
 
   /// Handle connection type change
   void _handleConnectionTypeChanged(ConnectivityResult newType) {
-    _logger.i('Connection type changed: ${state.connectionType} → $newType');
-
     final event = NetworkEvent(
       timestamp: DateTime.now(),
       type: NetworkEventType.connectionChanged,
@@ -289,8 +278,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
     _isQualityCheckInProgress = true;
 
     try {
-      _logger.d('Checking network quality...');
-
       // Create a fresh HTTP client for this specific request
       final client = http.Client();
       final stopwatch = Stopwatch()..start();
@@ -310,10 +297,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
         final quality = _assessNetworkQuality(latency);
 
         if (quality != state.quality) {
-          _logger.i(
-            'Network quality changed: ${state.quality} → $quality (${latency}ms)',
-          );
-
           final event = NetworkEvent(
             timestamp: DateTime.now(),
             type: NetworkEventType.qualityChanged,
@@ -364,7 +347,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
     }
 
     final retryCount = state.retryCount + 1;
-    _logger.i('Retrying connection (attempt $retryCount/$_maxRetryCount)');
 
     _updateState(isRetrying: true, retryCount: retryCount);
 
@@ -396,8 +378,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
 
   /// Trigger sync notification
   void _triggerSync(String reason) {
-    _logger.i('Triggering sync due to: $reason');
-
     final event = NetworkEvent(
       timestamp: DateTime.now(),
       type: NetworkEventType.syncTriggered,
@@ -450,7 +430,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
 
   /// Cleanup resources
   void _cleanup() {
-    _logger.d('Cleaning up network connectivity monitoring');
     _connectivitySubscription?.cancel();
     _qualityCheckTimer?.cancel();
     _heartbeatTimer?.cancel();
@@ -461,8 +440,6 @@ class NetworkConnectivity extends _$NetworkConnectivity {
 
   /// Force refresh network status
   Future<void> refresh() async {
-    _logger.d('Force refreshing network status');
-
     // Wait for initialization if still in progress
     if (!_initializationCompleter.isCompleted) {
       try {

@@ -358,17 +358,17 @@ jobs:
             
             # Extract content between first version header and next version header
             CHANGELOG_CONTENT=$(awk '
-              /^# \[.*\]/ { 
+              /^[#]{1,2} \[.*\]/ { 
                 if (found) exit; 
                 found=1; 
                 next 
               } 
-              /^# [0-9]/ { 
+              /^[#]{1,2} [0-9]/ { 
                 if (found) exit; 
                 found=1; 
                 next 
               }
-              found && /^# / { exit } 
+              found && /^[#]{1,2} / { exit } 
               found { 
                 if ($0 !~ /^$/) print $0 
               }

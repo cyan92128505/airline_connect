@@ -34,8 +34,6 @@ class MemberRepositoryImpl implements MemberRepository {
     MemberNumber memberNumber,
   ) async {
     try {
-      _logger.d('Finding member by number: ${memberNumber.value}');
-
       // Validate ObjectBox health before operation
       if (!_objectBox.isHealthy()) {
         throw StateError('ObjectBox is not healthy');
@@ -50,13 +48,10 @@ class MemberRepositoryImpl implements MemberRepository {
         final memberEntity = query.findFirst();
 
         if (memberEntity == null) {
-          _logger.d('Member not found: ${memberNumber.value}');
           return const Right(null);
         }
 
         final member = memberEntity.toDomain();
-        _logger.d('Member found: ${member.memberId.value}');
-
         return Right(member);
       } finally {
         // Always close query to free resources
@@ -84,8 +79,6 @@ class MemberRepositoryImpl implements MemberRepository {
   @override
   Future<Either<Failure, Member?>> findById(MemberId memberId) async {
     try {
-      _logger.d('Finding member by ID: ${memberId.value}');
-
       if (!_objectBox.isHealthy()) {
         throw StateError('ObjectBox is not healthy');
       }
@@ -98,7 +91,6 @@ class MemberRepositoryImpl implements MemberRepository {
         final memberEntity = query.findFirst();
 
         if (memberEntity == null) {
-          _logger.d('Member not found: ${memberId.value}');
           return const Right(null);
         }
 
@@ -124,8 +116,6 @@ class MemberRepositoryImpl implements MemberRepository {
   @override
   Future<Either<Failure, void>> save(Member member) async {
     try {
-      _logger.d('Saving member: ${member.memberId.value}');
-
       if (!_objectBox.isHealthy()) {
         throw StateError('ObjectBox is not healthy');
       }
@@ -144,12 +134,10 @@ class MemberRepositoryImpl implements MemberRepository {
             // Update existing entity preserving ObjectBox ID
             existingEntity.updateFromDomain(member);
             _memberBox.put(existingEntity);
-            _logger.d('Updated existing member: ${member.memberId.value}');
           } else {
             // Create new entity
             final newEntity = MemberEntity.fromDomain(member);
             _memberBox.put(newEntity);
-            _logger.d('Created new member: ${member.memberId.value}');
           }
         } finally {
           existingQuery.close();
@@ -180,8 +168,6 @@ class MemberRepositoryImpl implements MemberRepository {
   @override
   Future<Either<Failure, bool>> exists(MemberNumber memberNumber) async {
     try {
-      _logger.d('Checking if member exists: ${memberNumber.value}');
-
       if (!_objectBox.isHealthy()) {
         throw StateError('ObjectBox is not healthy');
       }
@@ -194,7 +180,6 @@ class MemberRepositoryImpl implements MemberRepository {
         final count = query.count();
         final exists = count > 0;
 
-        _logger.d('Member exists: $exists');
         return Right(exists);
       } finally {
         query.close();
@@ -222,8 +207,6 @@ class MemberRepositoryImpl implements MemberRepository {
   @override
   Future<Either<Failure, void>> syncWithServer() async {
     try {
-      _logger.d('Syncing members with server');
-
       if (!_objectBox.isHealthy()) {
         throw StateError('ObjectBox is not healthy');
       }
@@ -241,7 +224,6 @@ class MemberRepositoryImpl implements MemberRepository {
         return null;
       }, {});
 
-      _logger.d('Member sync completed');
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e('Error syncing with server', error: e, stackTrace: stackTrace);
@@ -274,8 +256,6 @@ class MemberRepositoryImpl implements MemberRepository {
   /// Bulk save operation using transactions for performance
   Future<Either<Failure, void>> saveMany(List<Member> members) async {
     try {
-      _logger.d('Bulk saving ${members.length} members');
-
       if (!_objectBox.isHealthy()) {
         throw StateError('ObjectBox is not healthy');
       }
@@ -285,7 +265,6 @@ class MemberRepositoryImpl implements MemberRepository {
         _memberBox.putMany(entities);
       }, {});
 
-      _logger.d('Bulk save completed');
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e('Error in bulk save', error: e, stackTrace: stackTrace);
@@ -336,7 +315,6 @@ class MemberRepositoryImpl implements MemberRepository {
       // Test access to ensure it works
       _memberBox.isEmpty();
 
-      _logger.i('Member box reinitialized successfully');
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e(

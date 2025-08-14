@@ -19,8 +19,6 @@ class AppBootstrap {
   static final Logger _logger = Logger();
 
   static Future<ProviderContainer> initialize(BootstrapConfig config) async {
-    _logger.i('Starting application bootstrap with config: $config');
-
     try {
       return _performInitialization(config).timeout(
         Duration(seconds: config.maxInitializationTimeoutSeconds),
@@ -63,10 +61,6 @@ class AppBootstrap {
       final container = ProviderContainer(overrides: overrides);
       context.container = container;
 
-      _logger.i(
-        'Provider container created with ${overrides.length} overrides',
-      );
-
       if (config.enableAuthInitialization) {
         await _executeAuthInitialization(context);
       }
@@ -75,7 +69,6 @@ class AppBootstrap {
 
       await _validateInitializations(context, config);
 
-      _logger.i('Application bootstrap completed successfully');
       return container;
     } catch (e) {
       _logger.e('Initialization failed, performing cleanup');
@@ -108,12 +101,8 @@ class AppBootstrap {
     InitializationContext context,
   ) async {
     try {
-      _logger.i('Executing authentication initialization...');
-
       final authStep = AuthInitializationStep();
       await _executeStep(authStep, context);
-
-      _logger.i('Authentication initialization completed');
     } catch (e) {
       _logger.e('Authentication initialization failed: $e');
       // Don't rethrow - auth failure shouldn't prevent app startup
@@ -125,11 +114,8 @@ class AppBootstrap {
     InitializationStep step,
     InitializationContext context,
   ) async {
-    _logger.i('Executing initialization step: ${step.name}');
-
     try {
       await step.execute(context);
-      _logger.i('Successfully completed step: ${step.name}');
     } catch (e, stackTrace) {
       _logger.e('Failed to execute step ${step.name}: $e');
       _logger.e('StackTrace: $stackTrace');
@@ -153,8 +139,6 @@ class AppBootstrap {
     InitializationContext context,
     BootstrapConfig config,
   ) async {
-    _logger.i('Validating initialization results...');
-
     // Validate database if available
     if (context.objectBox != null) {
       if (!context.objectBox!.isHealthy()) {
@@ -170,12 +154,6 @@ class AppBootstrap {
       }
 
       final isOnline = context.getData('initial_network_online') ?? false;
-      final connectionType =
-          context.getData('initial_connection_type') ?? 'unknown';
-
-      _logger.i(
-        'Network validation - Online: $isOnline, Type: $connectionType',
-      );
 
       if (!isOnline && !config.enableOfflineMode) {
         _logger.w(
@@ -200,9 +178,6 @@ class AppBootstrap {
         _logger.w('Auth validation error: $e');
       }
     }
-
-    _logger.i('Initialization validation completed');
-    _logger.d('Context summary: ${context.getSummary()}');
   }
 
   /// Cleanup resources on initialization failure
@@ -227,8 +202,6 @@ class AppBootstrap {
 
       // Clear context data
       context.clearData();
-
-      _logger.i('Cleanup completed');
     } catch (e) {
       _logger.e('Error during cleanup: $e');
       // Don't rethrow cleanup errors
@@ -256,7 +229,5 @@ class AppBootstrap {
         'Continuing bootstrap despite container-dependent step failures',
       );
     }
-
-    _logger.i('Container-dependent initialization steps completed');
   }
 }

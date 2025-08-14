@@ -24,8 +24,6 @@ class MemberAuthInitializer implements AuthInitializer {
     InitializationContext context,
   ) async {
     try {
-      _logger.i('Initializing member authentication state...');
-
       final authStateResult = await _restoreAuthenticationState();
 
       final initialAuthState = authStateResult.fold(
@@ -36,7 +34,6 @@ class MemberAuthInitializer implements AuthInitializer {
           );
         },
         (state) {
-          _logger.i('Auth state restored successfully');
           return state;
         },
       );
@@ -47,7 +44,6 @@ class MemberAuthInitializer implements AuthInitializer {
         await _initializeAuthNotifier(context.container!, initialAuthState);
       }
 
-      _logger.i('Member authentication initialization completed successfully');
       return const Right(null);
     } catch (e, stackTrace) {
       _logger.e(
@@ -87,7 +83,6 @@ class MemberAuthInitializer implements AuthInitializer {
             return Left(ValidationFailure('Notifier state not initialized'));
           }
 
-          _logger.d('Member auth validation passed');
           return const Right(true);
         } catch (e) {
           _logger.w('Notifier validation failed: $e');
@@ -105,7 +100,6 @@ class MemberAuthInitializer implements AuthInitializer {
   @override
   Future<void> cleanup() async {
     try {
-      _logger.d('Cleaning up member auth initializer resources');
       // Currently no specific cleanup required
       // Future: cleanup any resources, close connections, etc.
     } catch (e) {
@@ -122,14 +116,10 @@ class MemberAuthInitializer implements AuthInitializer {
 
       return memberResult.fold(
         (failure) {
-          _logger.i('No existing session found: ${failure.message}');
           return Right(_createUnauthenticatedState());
         },
         (member) {
           if (member != null) {
-            _logger.i(
-              'Session restored for member: ${member.memberNumber.value}',
-            );
             return Right(
               MemberAuthState(
                 member: MemberDTOExtensions.fromDomain(member),
@@ -138,7 +128,6 @@ class MemberAuthInitializer implements AuthInitializer {
               ),
             );
           } else {
-            _logger.i('No member found in secure storage');
             return Right(_createUnauthenticatedState());
           }
         },
@@ -154,12 +143,8 @@ class MemberAuthInitializer implements AuthInitializer {
     MemberAuthState initialState,
   ) async {
     try {
-      _logger.d('Initializing auth notifier with restored state');
-
       final authNotifier = container.read(memberAuthNotifierProvider.notifier);
       authNotifier.initializeWithRestoredState(initialState);
-
-      _logger.d('Auth notifier initialized successfully');
     } catch (e) {
       _logger.e('Failed to initialize auth notifier: $e');
       rethrow;

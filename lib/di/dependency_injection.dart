@@ -4,7 +4,7 @@ import 'package:app/features/boarding_pass/application/use_cases/activate_boardi
 import 'package:app/features/boarding_pass/application/use_cases/get_boarding_passes_for_member_use_case.dart';
 import 'package:app/features/boarding_pass/application/use_cases/validate_qr_code_use_case.dart';
 import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_local_data_source.dart';
-import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_dataSource.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_data_source.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/services/boarding_pass_service.dart';
 import 'package:app/features/boarding_pass/domain/services/crypto_service.dart';
@@ -14,9 +14,6 @@ import 'package:app/features/boarding_pass/infrastructure/datasources/boarding_p
 import 'package:app/features/boarding_pass/infrastructure/repositories/boarding_pass_repository_impl.dart';
 import 'package:app/features/boarding_pass/infrastructure/services/crypto_service_impl.dart';
 import 'package:app/features/boarding_pass/infrastructure/services/qr_code_service_impl.dart';
-import 'package:app/features/flight/domain/repositories/flight_repository.dart';
-import 'package:app/features/flight/domain/services/flight_status_service.dart';
-import 'package:app/features/flight/infrastructure/repositories/flight_repository_impl.dart';
 import 'package:app/features/member/application/services/member_application_service.dart';
 import 'package:app/features/member/application/use_cases/authenticate_member_use_case.dart';
 import 'package:app/features/member/application/use_cases/logout_member_use_case.dart';
@@ -212,22 +209,6 @@ final boardingPassApplicationServiceProvider =
         ref.watch(getBoardingPassesForMemberUseCaseProvider),
       );
     });
-
-// ================================================================
-// FLIGHT MODULE PROVIDERS
-// ================================================================
-
-/// Repository providers
-final flightRepositoryProvider = Provider<FlightRepository>((ref) {
-  final objectBox = ref.watch(objectBoxProvider);
-  return FlightRepositoryImpl(objectBox);
-});
-
-/// Service providers
-final flightStatusServiceProvider = Provider<FlightStatusService>((ref) {
-  final flightRepository = ref.watch(flightRepositoryProvider);
-  return FlightStatusService(flightRepository);
-});
 
 // ================================================================
 // DEMO HELPER PROVIDERS

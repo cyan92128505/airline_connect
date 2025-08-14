@@ -62,8 +62,6 @@ void main() {
 
         // Seed test data
         await _seedTestData(objectBox);
-
-        debugPrint('Test ObjectBox initialized at: ${tempDir.path}');
       } catch (e) {
         debugPrint('Failed to initialize test ObjectBox: $e');
         rethrow;
@@ -91,7 +89,6 @@ void main() {
 
       // Wait for splash screen to appear
       expect(find.byType(SplashScreen), findsOneWidget);
-      debugPrint('✓ Splash screen appeared');
 
       // Wait for initialization to complete and splash to finish
       await tester.pumpAndSettle(const Duration(seconds: 4));
@@ -99,7 +96,6 @@ void main() {
       // After initialization, should redirect to auth screen for unauthenticated user
       expect(find.byType(MemberAuthScreen), findsOneWidget);
       expect(find.text('會員登入'), findsOneWidget);
-      debugPrint('✓ Redirected to auth screen');
 
       // Verify current route is member auth
       final context = tester.element(find.byType(MemberAuthScreen));
@@ -118,14 +114,12 @@ void main() {
       await tester.enterText(memberNumberInput, 'AA123456');
       await tester.enterText(nameSuffixInput, '1234');
       await tester.pumpAndSettle();
-      debugPrint('✓ Entered credentials');
 
       // Find and tap login button
       final loginButton = _findLoginButton(tester);
       expect(loginButton, findsOneWidget);
       await tester.ensureVisible(loginButton);
       await tester.tap(loginButton);
-      debugPrint('✓ Tapped login button');
 
       // Wait for authentication request to start
       await tester.pump();
@@ -136,7 +130,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
         if (find.byType(BoardingPassScreen).evaluate().isNotEmpty) {
           foundBoardingPassScreen = true;
-          debugPrint('✓ Found boarding pass screen after ${attempt * 100}ms');
+          debugPrint('Found boarding pass screen after ${attempt * 100}ms');
           break;
         }
       }
@@ -159,7 +153,6 @@ void main() {
       final newContext = tester.element(find.byType(BoardingPassScreen));
       final newLocation = GoRouterState.of(newContext).uri.path;
       expect(newLocation, equals(AppRoutes.boardingPass));
-      debugPrint('✓ Successfully navigated to boarding pass screen');
     });
 
     testWidgets('Session restoration works with mock storage', (tester) async {
@@ -184,9 +177,6 @@ void main() {
 
       // Should directly go to boarding pass (authenticated)
       expect(find.byType(BoardingPassScreen), findsOneWidget);
-      debugPrint(
-        '✓ Successfully restored session and navigated to main screen',
-      );
     });
   });
 }
@@ -256,7 +246,6 @@ class TestAppWithGoRouter extends ConsumerWidget {
 
       final initialAuthState = memberResult.fold(
         (failure) {
-          debugPrint('Test: No existing session found: ${failure.message}');
           return MemberAuthState(
             member: MemberDTOExtensions.unauthenticated(),
             isAuthenticated: false,
@@ -265,9 +254,6 @@ class TestAppWithGoRouter extends ConsumerWidget {
         },
         (member) {
           if (member != null) {
-            debugPrint(
-              'Test: Session restored for member: ${member.memberNumber.value}',
-            );
             return MemberAuthState(
               member: MemberDTOExtensions.fromDomain(member),
               isAuthenticated: true,
@@ -287,8 +273,6 @@ class TestAppWithGoRouter extends ConsumerWidget {
       // Get the MemberAuthNotifier and initialize it
       final authNotifier = container.read(memberAuthNotifierProvider.notifier);
       authNotifier.initializeWithRestoredState(initialAuthState);
-
-      debugPrint('Test auth state initialized successfully');
     } catch (e, stackTrace) {
       debugPrint('Test: Failed to initialize auth state: $e');
       debugPrint('Test: StackTrace: $stackTrace');
@@ -397,6 +381,4 @@ Future<void> _seedTestData(ObjectBox objectBox) async {
   objectBox.memberBox.put(testMember2);
 
   debugPrint('Test data seeded: ${objectBox.memberBox.count()} members');
-  debugPrint('Test credentials: AA123456 / 1234');
-  debugPrint('Test credentials: BB789012 / 5678');
 }

@@ -5,13 +5,14 @@ import 'package:app/features/member/domain/repositories/member_repository.dart';
 import 'package:app/features/member/domain/repositories/secure_storage_repository.dart';
 import 'package:app/features/member/domain/value_objects/member_number.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
+import 'package:logger/logger.dart';
 
 /// Member authentication domain service
 /// Coordinates member identity verification process
 class MemberAuthService {
   final MemberRepository _memberRepository;
   final SecureStorageRepository _secureStorageRepository;
+  static final _logger = Logger();
 
   const MemberAuthService(
     this._memberRepository,
@@ -66,7 +67,7 @@ class MemberAuthService {
           // Log storage failure but don't fail authentication
           // Session storage is for convenience, not critical for authentication
           storageResult.fold(
-            (failure) => debugPrint(
+            (failure) => _logger.e(
               'Warning: Failed to save member to secure storage: $failure',
             ),
             (_) => {},
@@ -114,7 +115,7 @@ class MemberAuthService {
       // Clear from secure storage
       final clearResult = await _secureStorageRepository.clearMember();
       clearResult.fold(
-        (failure) => debugPrint(
+        (failure) => _logger.e(
           'Warning: Failed to clear member from secure storage: $failure',
         ),
         (_) => {},

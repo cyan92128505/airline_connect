@@ -194,7 +194,6 @@ class QRScanner extends _$QRScanner {
     // Handle permission state changes
     if (cameraPermission.isGranted) {
       if (state.isPermissionBlocked) {
-        _logger.i('Camera permission granted, updating scanner state');
         state = state.copyWith(
           status: ScannerStatus.inactive,
           isPermissionBlocked: false,
@@ -213,8 +212,6 @@ class QRScanner extends _$QRScanner {
   }
 
   Future<void> setupScannerContorller() async {
-    _logger.d('Starting QR scanner...');
-
     // Check camera permission first
     final cameraPermission = ref.read(cameraPermissionProvider);
     if (!cameraPermission.isGranted) {
@@ -257,8 +254,6 @@ class QRScanner extends _$QRScanner {
 
   /// Stop QR scanner
   Future<void> stopScanner() async {
-    _logger.d('Stopping QR scanner...');
-
     final scannerService = ref.read(scannerServiceProvider);
     await scannerService.stop();
 
@@ -267,8 +262,6 @@ class QRScanner extends _$QRScanner {
 
   /// Clear scan result and reset to ready state
   void clearResult() {
-    _logger.d('Clearing scan result');
-
     state = state.copyWith(
       scannedData: null,
       errorMessage: null,
@@ -280,8 +273,6 @@ class QRScanner extends _$QRScanner {
 
   /// Reset scanner to initial state
   Future<void> reset() async {
-    _logger.d('Resetting QR scanner');
-
     await stopScanner();
     state = const QRScannerState();
   }
@@ -306,8 +297,6 @@ class QRScanner extends _$QRScanner {
         if (!_isDisposed && state.status == ScannerStatus.ready) {
           state = state.copyWith(status: ScannerStatus.scanning);
         }
-
-        _logger.i('QR scanner started successfully');
       }
 
       return success;
@@ -374,8 +363,6 @@ class QRScanner extends _$QRScanner {
   /// Dispose all resources
   void _dispose() {
     _isDisposed = true;
-    _logger.d('Disposing QR scanner resources');
-
     _scanSubscription?.cancel();
     _scanSubscription = null;
 

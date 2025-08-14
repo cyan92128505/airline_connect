@@ -67,8 +67,6 @@ class MobileScannerServiceImpl implements ScannerService {
     }
 
     try {
-      _logger.d('Starting mobile scanner service');
-
       // Listen for scan results
       _scanSubscription = _controller!.barcodes.listen(
         _handleBarcodeCapture,
@@ -76,8 +74,6 @@ class MobileScannerServiceImpl implements ScannerService {
       );
 
       _isScanning = true;
-      _logger.i('Mobile scanner service started successfully');
-
       return true;
     } catch (e, stackTrace) {
       _logger.e('Failed to start mobile scanner service: $e\n $stackTrace');
@@ -100,12 +96,8 @@ class MobileScannerServiceImpl implements ScannerService {
     if (!_isScanning || _isDisposed) return;
 
     try {
-      _logger.d('Stopping mobile scanner service');
-
       _isScanning = false;
       await _cleanup();
-
-      _logger.i('Mobile scanner service stopped');
     } catch (e, stackTrace) {
       _logger.e('Error stopping mobile scanner service: $e\n $stackTrace');
 
@@ -122,8 +114,6 @@ class MobileScannerServiceImpl implements ScannerService {
   Future<void> dispose() async {
     if (_isDisposed) return;
 
-    _logger.d('Disposing mobile scanner service');
-
     _isDisposed = true;
     _isScanning = false;
 
@@ -131,8 +121,6 @@ class MobileScannerServiceImpl implements ScannerService {
 
     await _scanResultsController.close();
     await _errorsController.close();
-
-    _logger.i('Mobile scanner service disposed');
   }
 
   /// Handle barcode capture from mobile scanner

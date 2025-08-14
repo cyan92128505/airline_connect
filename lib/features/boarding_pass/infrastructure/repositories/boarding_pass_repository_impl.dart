@@ -1,6 +1,6 @@
 import 'package:app/core/failures/failure.dart';
 import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_local_data_source.dart';
-import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_dataSource.dart';
+import 'package:app/features/boarding_pass/domain/datasources/boarding_pass_remote_data_source.dart';
 import 'package:app/features/boarding_pass/domain/entities/boarding_pass.dart';
 import 'package:app/features/boarding_pass/domain/repositories/boarding_pass_repository.dart';
 import 'package:app/features/boarding_pass/domain/value_objects/pass_id.dart';
@@ -22,8 +22,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
   @override
   Future<Either<Failure, BoardingPass?>> findByPassId(PassId passId) async {
     try {
-      _logger.d('Finding boarding pass by ID: ${passId.value}');
-
       // 1. Try local first (offline-first strategy)
       final localResult = await _localDataSource.findByPassId(passId);
 
@@ -63,8 +61,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
     MemberNumber memberNumber,
   ) async {
     try {
-      _logger.d('Finding boarding passes for member: ${memberNumber.value}');
-
       // 1. Get local passes first
       final localResult = await _localDataSource.findByMemberNumber(
         memberNumber,
@@ -94,8 +90,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
   ) async {
     // Flight queries are typically admin/staff functions, so try remote first
     try {
-      _logger.d('Finding boarding passes for flight: ${flightNumber.value}');
-
       final remoteResult = await _remoteDataSource.getBoardingPassesForMember(
         // This would need a different remote method for flight-based queries
         // For now, fallback to local
@@ -136,8 +130,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
   @override
   Future<Either<Failure, void>> save(BoardingPass boardingPass) async {
     try {
-      _logger.d('Saving boarding pass: ${boardingPass.passId.value}');
-
       // 1. Save locally first (immediate response)
       final localResult = await _localDataSource.save(boardingPass);
 
@@ -177,8 +169,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
   @override
   Future<Either<Failure, void>> syncWithServer() async {
     try {
-      _logger.d('Starting full sync with server');
-
       // 1. Get all local passes that need syncing
       final localPasses = await _getAllLocalPasses();
 
@@ -194,7 +184,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
             await _localDataSource.save(pass);
           }
 
-          _logger.d('Sync completed successfully');
           return const Right(null);
         });
       });
@@ -236,8 +225,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
     String qrToken,
   ) async {
     try {
-      _logger.d('Verifying QR code with remote service');
-
       final remoteResult = await _remoteDataSource.verifyQRCodeAndGetPass(
         passId,
         qrToken,
@@ -264,8 +251,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
     String gateCode,
   ) async {
     try {
-      _logger.d('Validating boarding pass for gate: $passId at $gateCode');
-
       return _remoteDataSource.validateForBoarding(passId, gateCode);
     } catch (e) {
       _logger.e('Error validating for boarding', error: e);
@@ -294,7 +279,6 @@ class BoardingPassRepositoryImpl implements BoardingPassRepository {
           (remoteBoardingPass) async {
             if (remoteBoardingPass != null) {
               await _localDataSource.save(remoteBoardingPass);
-              _logger.d('Background sync completed for $passId');
             }
           },
         );
