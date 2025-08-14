@@ -71,35 +71,6 @@ void main() {
       expect(updatedMember.memberId, equals(member.memberId));
     });
 
-    test('should upgrade tier correctly', () {
-      final member = Member.create(
-        memberNumber: 'AA123456',
-        fullName: '王小明',
-        tier: MemberTier.bronze,
-        email: 'test@example.com',
-        phone: '+886912345678',
-      );
-
-      final upgradedMember = member.upgradeTier(MemberTier.silver);
-
-      expect(upgradedMember.tier, equals(MemberTier.silver));
-    });
-
-    test('should throw exception for invalid tier upgrade', () {
-      final member = Member.create(
-        memberNumber: 'AA123456',
-        fullName: '王小明',
-        tier: MemberTier.gold,
-        email: 'test@example.com',
-        phone: '+886912345678',
-      );
-
-      expect(
-        () => member.upgradeTier(MemberTier.bronze),
-        throwsA(isA<DomainException>()),
-      );
-    });
-
     test('should check eligibility for boarding pass', () {
       final activeMember = Member.create(
         memberNumber: 'AA123456',

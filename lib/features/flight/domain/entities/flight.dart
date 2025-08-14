@@ -88,37 +88,6 @@ class Flight {
     );
   }
 
-  Flight delay(Duration delayDuration) {
-    final delayedSchedule = schedule.delay(delayDuration);
-    final newStatus = status == FlightStatus.scheduled
-        ? FlightStatus.delayed
-        : status;
-
-    return Flight._(
-      flightNumber: flightNumber,
-      schedule: delayedSchedule,
-      status: newStatus,
-      aircraftType: aircraftType,
-      createdAt: createdAt,
-      updatedAt: TZDateTime.now(local),
-    );
-  }
-
-  Flight cancel() {
-    if (status == FlightStatus.departed || status == FlightStatus.arrived) {
-      throw DomainException('Cannot cancel flight that has already departed');
-    }
-
-    return Flight._(
-      flightNumber: flightNumber,
-      schedule: schedule,
-      status: FlightStatus.cancelled,
-      aircraftType: aircraftType,
-      createdAt: createdAt,
-      updatedAt: TZDateTime.now(local),
-    );
-  }
-
   bool get isActive {
     return status != FlightStatus.cancelled &&
         status != FlightStatus.arrived &&
