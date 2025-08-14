@@ -12,6 +12,113 @@ AirlineConnect 是一個航空登機證管理系統，採用 Flutter 框架開�
 - **架構模式**: Clean Architecture + DDD (Domain-Driven Design)
 - **測試策略**: Unit Testing + Integration Testing
 
+### Domain 架構設計
+
+本專案採用 Domain-Driven Design (DDD) 架構模式，以下為核心領域實體關係圖：
+
+```mermaid
+graph TB
+    %% === Core Aggregates ===
+    subgraph MemberDomain [Member Domain 會員領域]
+        direction TB
+        Member["<b>Member</b><br/>聚合根<br/>────────────<br/>+ memberId: MemberId<br/>+ memberNumber: MemberNumber<br/>+ fullName: FullName<br/>+ tier: MemberTier<br/>+ contactInfo: ContactInfo<br/>+ createdAt: TZDateTime?<br/>+ lastLoginAt: TZDateTime?<br/>────────────<br/>+ updateLastLogin()<br/>+ updateContactInfo()<br/>+ isEligibleForBoardingPass()<br/>+ validateNameSuffix()"]
+        
+        MemberVO1[MemberId<br/>值物件<br/>UUID format]
+        MemberVO2[MemberNumber<br/>值物件<br/>AA123456 format]
+        MemberVO3[FullName<br/>值物件<br/>2-50 chars validation]
+        MemberVO4[ContactInfo<br/>值物件<br/>email + phone validation]
+        MemberEnum[MemberTier<br/>列舉<br/>BRONZE, SILVER<br/>GOLD, SUSPENDED]
+        
+        Member -.-> MemberVO1
+        Member -.-> MemberVO2  
+        Member -.-> MemberVO3
+        Member -.-> MemberVO4
+        Member -.-> MemberEnum
+    end
+
+    subgraph FlightDomain [Flight Domain 航班領域]
+        direction TB
+        Flight["<b>Flight</b><br/>聚合根<br/>────────────<br/>+ flightNumber: FlightNumber<br/>+ schedule: FlightSchedule<br/>+ status: FlightStatus<br/>+ aircraftType: String<br/>+ createdAt: TZDateTime<br/>+ updatedAt: TZDateTime?<br/>────────────<br/>+ updateStatus()<br/>+ updateSchedule()<br/>+ isActive<br/>+ isBoardingEligible"]
+        
+        FlightVO1[FlightNumber<br/>值物件<br/>BR857, CI101 format]
+        FlightVO2[FlightSchedule<br/>值物件<br/>Complete schedule info]
+        FlightEnum[FlightStatus<br/>列舉<br/>SCHEDULED, DELAYED<br/>BOARDING, DEPARTED<br/>ARRIVED, CANCELLED<br/>DIVERTED]
+        
+        %% FlightSchedule components
+        FlightVO3[AirportCode<br/>值物件<br/>3-letter IATA codes]
+        FlightVO4[Gate<br/>值物件<br/>A12, B5, T1A15 format]
+        
+        Flight -.-> FlightVO1
+        Flight -.-> FlightVO2
+        Flight -.-> FlightEnum
+        FlightVO2 -.-> FlightVO3
+        FlightVO2 -.-> FlightVO4
+    end
+
+    subgraph BoardingPassDomain [BoardingPass Domain 登機證領域]
+        direction TB
+        BoardingPass["<b>BoardingPass</b><br/>聚合根<br/>────────────<br/>+ passId: PassId<br/>+ memberNumber: MemberNumber<br/>+ flightNumber: FlightNumber<br/>+ seatNumber: SeatNumber<br/>+ scheduleSnapshot: FlightScheduleSnapshot<br/>+ status: PassStatus<br/>+ qrCode: QRCodeData<br/>+ issueTime: TZDateTime<br/>+ activatedAt: TZDateTime?<br/>+ usedAt: TZDateTime?<br/>────────────<br/>+ activate()<br/>+ cancel()<br/>+ isValidForBoarding<br/>+ timeUntilDeparture"]
+        
+        PassVO1[PassId<br/>值物件<br/>BP + 8 chars format]
+        PassVO2[SeatNumber<br/>值物件<br/>1A-999Z format]
+        PassVO3[FlightScheduleSnapshot<br/>值物件<br/>Immutable schedule copy]
+        PassVO4[QRCodeData<br/>值物件<br/>Encrypted payload + signature]
+        PassEnum[PassStatus<br/>列舉<br/>ISSUED, ACTIVATED<br/>USED, EXPIRED<br/>CANCELLED]
+        
+        BoardingPass -.-> PassVO1
+        BoardingPass -.-> PassVO2
+        BoardingPass -.-> PassVO3
+        BoardingPass -.-> PassVO4
+        BoardingPass -.-> PassEnum
+    end
+
+    %% === Cross-Domain References ===
+    BoardingPass -.-> MemberVO2
+    BoardingPass -.-> FlightVO1
+    PassVO3 -.-> FlightVO3
+    PassVO3 -.-> FlightVO4
+
+    %% === Supporting Value Objects Detail ===
+    subgraph ValueObjectDetails [核心值物件詳細]
+        direction LR
+        
+        subgraph ContactInfoDetail [ContactInfo 聯絡資訊]
+            ContactFields["email: String - validated<br/>phone: String - validated<br/>────────────<br/>+ update()<br/>+ _validateEmail()<br/>+ _validatePhone()"]
+        end
+        
+        subgraph QRCodeDetail [QRCodeData QR碼資料]
+            QRFields["token: String<br/>signature: String<br/>generatedAt: TZDateTime<br/>version: int<br/>────────────<br/>+ toQRString()<br/>+ fromQRString()<br/>+ QRCodePayload support"]
+        end
+        
+        subgraph FlightScheduleDetail [FlightSchedule 航班時刻]
+            ScheduleFields["departureTime: TZDateTime<br/>boardingTime: TZDateTime<br/>departure: AirportCode<br/>arrival: AirportCode<br/>gate: Gate<br/>────────────<br/>+ delay()<br/>+ updateGate()<br/>+ updateDepartureTime()<br/>+ isInBoardingWindow()"]
+        end
+    end
+
+    %% === Domain Events ===
+    subgraph DomainEvents [領域事件 - 隱含]
+        Events["FlightStatusChanged<br/>BoardingPassActivated<br/>BoardingPassUsed<br/>MemberLoginTracked"]
+    end
+
+    %% === Business Rules Highlights ===
+    subgraph BusinessRules [核心業務規則]
+        Rules["• Flight status transition validation<br/>• Boarding pass activation window 24h<br/>• QR code expiration 24h<br/>• Name suffix validation for security<br/>• Boarding time validation 30min-4h window<br/>• Cross-domain consistency via weak references<br/>• Member eligibility for boarding pass"]
+    end
+
+    %% === Styling ===
+    classDef aggregateRoot fill:#e3f2fd,stroke:#1565c0,stroke-width:3px,color:#000,font-weight:bold
+    classDef valueObject fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#000
+    classDef enumType fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+    classDef domainConcept fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,color:#000
+    classDef businessRule fill:#ffebee,stroke:#c62828,stroke-width:1px,color:#000
+
+    class Member,Flight,BoardingPass aggregateRoot
+    class MemberVO1,MemberVO2,MemberVO3,MemberVO4,FlightVO1,FlightVO2,FlightVO3,FlightVO4,PassVO1,PassVO2,PassVO3,PassVO4,ContactFields,QRFields,ScheduleFields valueObject
+    class MemberEnum,FlightEnum,PassEnum enumType
+    class Events domainConcept
+    class Rules businessRule
+```
+
 ## 系統需求
 
 ### 開發環境
@@ -139,7 +246,6 @@ fvm flutter test test/integration/
 fvm flutter test --coverage
 ```
 
-
 ### 測試帳號
 
 開發與測試期間可使用以下測試帳號：
@@ -169,16 +275,16 @@ FullName.create("王小明")         // ✓
 FullName.create("John Smith")    // ✓
 FullName.create("王")            // ✗ 太短
 
-// 會員等級升級規則
-member.upgradeTier(MemberTier.gold)    // Bronze -> Silver -> Gold
-member.upgradeTier(MemberTier.bronze)  // ✗ 不可降級
+// 會員等級:
+MemberTier.gold     // 金級會員
+MemberTier.silver   // 銀級會員
+MemberTier.bronze   // 銅級會員
 ```
 
 #### 登機證管理 (Boarding Pass Domain)
 ```dart
 // 登機證狀態轉換
 boardingPass.activate()  // ISSUED -> ACTIVATED (起飛前24小時內)
-boardingPass.use()       // ACTIVATED -> USED (登機時間內)
 boardingPass.cancel()    // 任意狀態 -> CANCELLED (除 USED)
 
 // 座位號碼驗證
@@ -192,7 +298,6 @@ SeatNumber.create("12I")   // ✗ I 不是有效座位字母
 // 航班狀態轉換
 flight.updateStatus(FlightStatus.boarding)   // SCHEDULED -> BOARDING
 flight.updateStatus(FlightStatus.departed)   // BOARDING -> DEPARTED
-flight.cancel()  // 只能取消未起飛的航班
 
 // 時間驗證
 FlightSchedule.create(
@@ -294,7 +399,6 @@ validation.fold(
 - `ActivateBoardingPassUseCase`: 啟動登機證
 - `ValidateBoardingEligibilityUseCase`: 驗證登機資格
 - `GetBoardingPassesForMemberUseCase`: 取得所有登機證
-
 
 ### QR Code 掃描模組
 
