@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/cyan92128505/airline_connect/compare/v1.1.1...v1.2.0) (2025-08-15)
+
+
+### Features
+
+* add seeder reset functionality for development and optimize CI/CD workflows to prevent circular triggers ([#9](https://github.com/cyan92128505/airline_connect/issues/9)) ([e38312d](https://github.com/cyan92128505/airline_connect/commit/e38312d2a9b34595ceb30a5b23fc832caf1e15ae))
+* add semantic release automation for Flutter app versioning ([#7](https://github.com/cyan92128505/airline_connect/issues/7)) ([591de86](https://github.com/cyan92128505/airline_connect/commit/591de861a0b658e47043c15332e5af5679a90659))
+
+
+### Reverts
+
+* Revert "chore: release 1.0.0 [skip ci]" (#8) ([0e90767](https://github.com/cyan92128505/airline_connect/commit/0e90767bcef2f1f06875f42df9911cdb5f8d7f7a)), closes [#8](https://github.com/cyan92128505/airline_connect/issues/8)
+
 ## [1.1.1](https://github.com/cyan92128505/airline_connect/compare/v1.1.0...v1.1.1) (2025-08-14)
 
 
