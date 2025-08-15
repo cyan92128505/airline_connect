@@ -1,9 +1,10 @@
+import 'package:app/features/member/presentation/widgets/profile_info_row.dart';
+import 'package:app/features/member/presentation/widgets/seeder_reset_button.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:app/features/member/application/dtos/member_dto.dart';
-import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:app/features/member/presentation/notifiers/member_auth_notifier.dart';
 import 'package:app/features/shared/presentation/routes/app_routes.dart';
 import 'package:app/core/presentation/theme/app_colors.dart';
@@ -86,6 +87,10 @@ class MemberProfileScreen extends HookConsumerWidget {
 
                 // App info
                 _buildAppInfo(),
+
+                const Gap(24),
+
+                SeederResetButton(),
               ],
             ),
           ),
@@ -102,11 +107,7 @@ class MemberProfileScreen extends HookConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: _getTierGradientColors(member.tier),
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: AppColors.getTierGradient(member.tier),
         ),
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -120,11 +121,7 @@ class MemberProfileScreen extends HookConsumerWidget {
                 borderRadius: BorderRadius.circular(40),
                 border: Border.all(color: Colors.white, width: 2),
               ),
-              child: Icon(
-                _getTierIcon(member.tier),
-                size: 40,
-                color: Colors.white,
-              ),
+              child: Icon(member.tier.icon, size: 40, color: Colors.white),
             ),
 
             const Gap(16),
@@ -151,7 +148,7 @@ class MemberProfileScreen extends HookConsumerWidget {
                 border: Border.all(color: Colors.white.withAlpha(127)),
               ),
               child: Text(
-                _getTierDisplayName(member.tier),
+                member.tier.displayName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -192,26 +189,15 @@ class MemberProfileScreen extends HookConsumerWidget {
 
             const Gap(20),
 
-            _buildInfoRow(
-              context,
-              '會員號碼',
-              member.memberNumber,
-              Icons.badge_outlined,
-            ),
+            ProfileInfoRow('會員號碼', member.memberNumber, Icons.badge_outlined),
 
             const Gap(16),
 
-            _buildInfoRow(
-              context,
-              '會員等級',
-              _getTierDisplayName(member.tier),
-              Icons.star_outline,
-            ),
+            ProfileInfoRow('會員等級', member.tier.displayName, Icons.star_outline),
 
             if (member.createdAt != null) ...[
               const Gap(16),
-              _buildInfoRow(
-                context,
+              ProfileInfoRow(
                 '加入日期',
                 member.formatCreatedAt,
                 Icons.calendar_today_outlined,
@@ -220,8 +206,7 @@ class MemberProfileScreen extends HookConsumerWidget {
 
             if (member.lastLoginAt != null) ...[
               const Gap(16),
-              _buildInfoRow(
-                context,
+              ProfileInfoRow(
                 '最後登入',
                 member.formatLastLoginAt,
                 Icons.access_time_outlined,
@@ -273,11 +258,11 @@ class MemberProfileScreen extends HookConsumerWidget {
 
             const Gap(20),
 
-            _buildInfoRow(context, '電子郵件', member.email, Icons.email_outlined),
+            ProfileInfoRow('電子郵件', member.email, Icons.email_outlined),
 
             const Gap(16),
 
-            _buildInfoRow(context, '聯絡電話', member.phone, Icons.phone_outlined),
+            ProfileInfoRow('聯絡電話', member.phone, Icons.phone_outlined),
           ],
         ),
       ),
@@ -380,43 +365,6 @@ class MemberProfileScreen extends HookConsumerWidget {
     );
   }
 
-  /// Build information row widget
-  Widget _buildInfoRow(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: AppColors.textSecondary),
-        const Gap(12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-              ),
-              const Gap(4),
-              Text(
-                value,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   /// Show logout confirmation dialog
   void _showLogoutDialog(
     BuildContext context,
@@ -481,47 +429,5 @@ class MemberProfileScreen extends HookConsumerWidget {
         ],
       ),
     );
-  }
-
-  /// Get tier gradient colors
-  List<Color> _getTierGradientColors(MemberTier tier) {
-    switch (tier) {
-      case MemberTier.bronze:
-        return [const Color(0xFFCD7F32), const Color(0xFFA0522D)];
-      case MemberTier.silver:
-        return [const Color(0xFFC0C0C0), const Color(0xFF808080)];
-      case MemberTier.gold:
-        return [const Color(0xFFFFD700), const Color(0xFFB8860B)];
-      case MemberTier.suspended:
-        return [AppColors.error, const Color(0xFFC62828)];
-    }
-  }
-
-  /// Get tier icon
-  IconData _getTierIcon(MemberTier tier) {
-    switch (tier) {
-      case MemberTier.bronze:
-        return Icons.workspace_premium;
-      case MemberTier.silver:
-        return Icons.military_tech;
-      case MemberTier.gold:
-        return Icons.diamond;
-      case MemberTier.suspended:
-        return Icons.block;
-    }
-  }
-
-  /// Get tier display name in Chinese
-  String _getTierDisplayName(MemberTier tier) {
-    switch (tier) {
-      case MemberTier.bronze:
-        return '銅級會員';
-      case MemberTier.silver:
-        return '銀級會員';
-      case MemberTier.gold:
-        return '金級會員';
-      case MemberTier.suspended:
-        return '暫停會員';
-    }
   }
 }

@@ -409,7 +409,7 @@ jobs:
             build/app/outputs/bundle/release/compressed_libs.zip*
           token: ${{ secrets.GITHUB_TOKEN }}
           commit: main
-          tag: release-android-${{ needs.quality_gate.outputs.app_version }}
+          tag: android-release-${{ needs.quality_gate.outputs.app_version }}-build-${{ github.run_number }}
           name: "Android Release ${{ needs.quality_gate.outputs.app_version }}"
           bodyFile: release_body.md
           draft: false

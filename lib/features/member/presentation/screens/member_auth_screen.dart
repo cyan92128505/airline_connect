@@ -105,10 +105,11 @@ class MemberAuthScreen extends HookConsumerWidget {
                           child: LoadingIndicator(message: '正在驗證會員身份...'),
                         ),
 
-                      const Gap(32),
+                      const Gap(8),
 
                       // Help section
                       _buildHelpSection(context),
+                      const Gap(48),
                     ],
                   ),
                 ),

@@ -1,3 +1,4 @@
+import 'package:app/features/member/domain/enums/member_tier.dart';
 import 'package:flutter/material.dart';
 
 /// Application color scheme following Material Design 3 principles
@@ -78,13 +79,13 @@ abstract class AppColors {
   }
 
   /// Get color for member tier
-  static Color getTierColor(String tier) {
-    switch (tier.toLowerCase()) {
-      case 'bronze':
+  static Color getTierColor(MemberTier tier) {
+    switch (tier) {
+      case MemberTier.bronze:
         return tierBronze;
-      case 'silver':
+      case MemberTier.silver:
         return tierSilver;
-      case 'gold':
+      case MemberTier.gold:
         return tierGold;
       default:
         return textSecondary;
@@ -99,7 +100,7 @@ abstract class AppColors {
   );
 
   /// Get gradient for member tier
-  static LinearGradient getTierGradient(String tier) {
+  static LinearGradient getTierGradient(MemberTier tier) {
     final tierColor = getTierColor(tier);
     return LinearGradient(
       begin: Alignment.topLeft,

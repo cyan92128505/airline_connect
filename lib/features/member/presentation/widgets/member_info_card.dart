@@ -40,7 +40,7 @@ class MemberInfoCard extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.getTierColor(member.tier.name),
+              color: AppColors.getTierColor(member.tier),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -87,7 +87,7 @@ class MemberInfoCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          gradient: AppColors.getTierGradient(member.tier.name),
+          gradient: AppColors.getTierGradient(member.tier),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20.0),

@@ -10,13 +10,7 @@ import 'package:app/core/presentation/widgets/svg/logo.dart';
 import 'package:app/core/presentation/widgets/svg/slogen.dart';
 import 'package:gap/gap.dart';
 
-/// Splash screen for app initialization display
-/// Waits for proper initialization before navigation
 class SplashScreen extends HookConsumerWidget {
-  static const String routeName = '/splash';
-  static const Key splashContainerKey = Key('splash_container');
-  static const Key initializationIndicatorKey = Key('initialization_indicator');
-
   const SplashScreen({super.key});
 
   @override
@@ -26,16 +20,13 @@ class SplashScreen extends HookConsumerWidget {
       duration: const Duration(milliseconds: 2000),
     );
 
-    // Track if we've already navigated
     final hasNavigated = useRef(false);
 
-    // Start animation immediately
     useEffect(() {
       animationController.forward();
       return null;
     }, []);
 
-    // Handle navigation after initialization is complete
     useEffect(() {
       if (authState.isInitialized && !hasNavigated.value) {
         Future.delayed(const Duration(seconds: 2), () {
@@ -49,7 +40,6 @@ class SplashScreen extends HookConsumerWidget {
     }, [authState.isInitialized, authState.isAuthenticated]);
 
     return Scaffold(
-      key: splashContainerKey,
       backgroundColor: AppColors.primary,
       body: SafeArea(
         child: Center(
@@ -61,7 +51,6 @@ class SplashScreen extends HookConsumerWidget {
                 children: [
                   const Spacer(flex: 2),
 
-                  // Logo with fade-in animation
                   AnimatedOpacity(
                     opacity: animationController.value,
                     duration: const Duration(milliseconds: 800),
@@ -77,7 +66,6 @@ class SplashScreen extends HookConsumerWidget {
 
                   const Gap(32),
 
-                  // App name with slide-up animation
                   AnimatedSlide(
                     offset: Offset(0, 1 - animationController.value),
                     duration: const Duration(milliseconds: 1000),
@@ -117,12 +105,10 @@ class SplashScreen extends HookConsumerWidget {
 
                   const Spacer(flex: 2),
 
-                  // Loading section with status
                   _buildLoadingSection(context, authState),
 
                   const Gap(40),
 
-                  // Version info
                   AnimatedOpacity(
                     opacity: animationController.value * 0.7,
                     duration: const Duration(milliseconds: 1500),
@@ -144,13 +130,11 @@ class SplashScreen extends HookConsumerWidget {
     );
   }
 
-  /// Build loading section with clear status messages
   Widget _buildLoadingSection(BuildContext context, MemberAuthState authState) {
     String statusMessage;
     IconData statusIcon;
     Color statusColor = Colors.white;
 
-    // Clear status logic based on initialization state
     if (!authState.isInitialized) {
       statusMessage = '正在初始化應用程式...';
       statusIcon = Icons.sync;
@@ -171,9 +155,7 @@ class SplashScreen extends HookConsumerWidget {
     }
 
     return Column(
-      key: initializationIndicatorKey,
       children: [
-        // Status icon with pulse animation
         TweenAnimationBuilder<double>(
           duration: const Duration(milliseconds: 1500),
           tween: Tween(begin: 0.8, end: 1.2),
@@ -187,7 +169,6 @@ class SplashScreen extends HookConsumerWidget {
 
         const Gap(16),
 
-        // Status message
         Text(
           statusMessage,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -198,7 +179,6 @@ class SplashScreen extends HookConsumerWidget {
 
         const Gap(16),
 
-        // Loading indicator (only show if not yet initialized)
         if (!authState.isInitialized) ...[
           SizedBox(
             width: 200,
@@ -212,7 +192,6 @@ class SplashScreen extends HookConsumerWidget {
     );
   }
 
-  /// Navigate to appropriate screen after splash display
   void _navigateToNextScreen(BuildContext context, MemberAuthState authState) {
     if (authState.isAuthenticated &&
         authState.member?.isAuthenticated == true) {
