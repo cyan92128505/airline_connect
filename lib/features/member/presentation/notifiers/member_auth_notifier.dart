@@ -1,3 +1,6 @@
+import 'package:app/core/bootstrap/contracts/initialization_context.dart';
+import 'package:app/core/bootstrap/steps/demo_data_initialization_step.dart';
+import 'package:app/di/dependency_injection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -127,6 +130,14 @@ class MemberAuthNotifier extends _$MemberAuthNotifier {
       member: MemberDTOExtensions.unauthenticated(),
       isInitialized: true,
     );
+  }
+
+  Future<void> seederReset() async {
+    final context = InitializationContext();
+    context.container = ref.container;
+    context.objectBox = ref.read(objectBoxProvider);
+    await DemoDataInitializationStep().execute(context);
+    await DemoDataInitializationStep.syncRemoteDataSource(context);
   }
 
   /// Clear error message
