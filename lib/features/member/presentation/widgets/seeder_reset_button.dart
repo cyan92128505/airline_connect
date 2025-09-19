@@ -11,7 +11,7 @@ class SeederResetButton extends HookConsumerWidget {
   const SeederResetButton({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authNotifier = ref.read(memberAuthNotifierProvider.notifier);
+    final authNotifier = ref.read(memberAuthProvider.notifier);
 
     final goToSplash = useCallback(() {
       context.go(AppRoutes.splash);

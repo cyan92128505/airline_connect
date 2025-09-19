@@ -25,12 +25,10 @@ class BoardingPassScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final memberAuthState = ref.watch(memberAuthNotifierProvider);
-    final boardingPassState = ref.watch(boardingPassNotifierProvider);
+    final memberAuthState = ref.watch(memberAuthProvider);
+    final boardingPassState = ref.watch(boardingPassProvider);
     final networkState = ref.watch(networkConnectivityProvider);
-    final boardingPassNotifier = ref.read(
-      boardingPassNotifierProvider.notifier,
-    );
+    final boardingPassNotifier = ref.read(boardingPassProvider.notifier);
 
     // Load boarding passes when member is authenticated
     useEffect(() {

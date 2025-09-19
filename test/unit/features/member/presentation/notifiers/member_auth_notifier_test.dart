@@ -60,7 +60,7 @@ void main() {
             ),
           );
 
-          final notifier = container.read(memberAuthNotifierProvider.notifier);
+          final notifier = container.read(memberAuthProvider.notifier);
 
           // Act
           final future = notifier.authenticateMember(
@@ -69,7 +69,7 @@ void main() {
           );
 
           // Assert initial loading state
-          expect(container.read(memberAuthNotifierProvider).isLoading, isTrue);
+          expect(container.read(memberAuthProvider).isLoading, isTrue);
 
           await future;
         },
@@ -102,7 +102,7 @@ void main() {
             ),
           );
 
-          final notifier = container.read(memberAuthNotifierProvider.notifier);
+          final notifier = container.read(memberAuthProvider.notifier);
 
           // Act
           await notifier.authenticateMember(
@@ -111,7 +111,7 @@ void main() {
           );
 
           // Assert
-          final state = container.read(memberAuthNotifierProvider);
+          final state = container.read(memberAuthProvider);
           expect(state.isLoading, isFalse);
           expect(state.isAuthenticated, isTrue);
           expect(state.member, equals(expectedMember));
@@ -132,7 +132,7 @@ void main() {
             (_) async => Left(ValidationFailure('Member not found')),
           );
 
-          final notifier = container.read(memberAuthNotifierProvider.notifier);
+          final notifier = container.read(memberAuthProvider.notifier);
 
           // Act
           await notifier.authenticateMember(
@@ -141,7 +141,7 @@ void main() {
           );
 
           // Assert
-          final state = container.read(memberAuthNotifierProvider);
+          final state = container.read(memberAuthProvider);
           expect(state.isLoading, isFalse);
           expect(state.isAuthenticated, isFalse);
           expect(state.member!.isUnauthenticated, isTrue);
@@ -151,13 +151,13 @@ void main() {
 
       test('should validate input parameters', () async {
         // Arrange
-        final notifier = container.read(memberAuthNotifierProvider.notifier);
+        final notifier = container.read(memberAuthProvider.notifier);
 
         // Act
         await notifier.authenticateMember(memberNumber: '', nameSuffix: '1234');
 
         // Assert
-        final state = container.read(memberAuthNotifierProvider);
+        final state = container.read(memberAuthProvider);
         expect(state.isAuthenticated, isFalse);
         expect(state.errorMessage, equals('會員號碼和姓名後四碼不能為空'));
 
@@ -199,23 +199,20 @@ void main() {
           ),
         );
 
-        final notifier = container.read(memberAuthNotifierProvider.notifier);
+        final notifier = container.read(memberAuthProvider.notifier);
         await notifier.authenticateMember(
           memberNumber: 'AA123456',
           nameSuffix: '1234',
         );
 
         // Verify initial state
-        expect(
-          container.read(memberAuthNotifierProvider).isAuthenticated,
-          isTrue,
-        );
+        expect(container.read(memberAuthProvider).isAuthenticated, isTrue);
 
         // Act
         notifier.logout();
 
         // Assert
-        final state = container.read(memberAuthNotifierProvider);
+        final state = container.read(memberAuthProvider);
         expect(state.isAuthenticated, isFalse);
         expect(state.member!.isUnauthenticated, isTrue);
         expect(state.errorMessage, isNull);

@@ -75,9 +75,7 @@ class MemberAuthInitializer implements AuthInitializer {
 
       if (context.container != null) {
         try {
-          final currentState = context.container!.read(
-            memberAuthNotifierProvider,
-          );
+          final currentState = context.container!.read(memberAuthProvider);
 
           if (!currentState.isInitialized) {
             return Left(ValidationFailure('Notifier state not initialized'));
@@ -143,7 +141,7 @@ class MemberAuthInitializer implements AuthInitializer {
     MemberAuthState initialState,
   ) async {
     try {
-      final authNotifier = container.read(memberAuthNotifierProvider.notifier);
+      final authNotifier = container.read(memberAuthProvider.notifier);
       authNotifier.initializeWithRestoredState(initialState);
     } catch (e) {
       _logger.e('Failed to initialize auth notifier: $e');

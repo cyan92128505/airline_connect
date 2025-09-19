@@ -15,7 +15,7 @@ class SplashScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(memberAuthNotifierProvider);
+    final authState = ref.watch(memberAuthProvider);
     final animationController = useAnimationController(
       duration: const Duration(milliseconds: 2000),
     );

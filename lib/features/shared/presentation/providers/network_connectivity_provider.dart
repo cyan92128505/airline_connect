@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:app/di/dependency_injection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:logger/logger.dart';
@@ -96,7 +95,7 @@ enum NetworkEventType {
 }
 
 @riverpod
-int syncTrigger(Ref<int> ref) {
+int syncTrigger(Ref ref) {
   return DateTime.now().millisecondsSinceEpoch;
 }
 

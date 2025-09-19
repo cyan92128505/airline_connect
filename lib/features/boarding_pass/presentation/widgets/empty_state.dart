@@ -42,7 +42,7 @@ class EmptyState extends HookConsumerWidget {
             const Gap(32),
             OutlinedButton.icon(
               onPressed: () {
-                ref.read(boardingPassNotifierProvider.notifier).refresh();
+                ref.read(boardingPassProvider.notifier).refresh();
               },
               icon: const Icon(Icons.refresh),
               label: Text(networkState.isOnline ? '重新載入' : '重新載入本地資料'),

@@ -15,13 +15,11 @@ class ResultsAreaView extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch all relevant state providers
-    final boardingPassState = ref.watch(boardingPassNotifierProvider);
+    final boardingPassState = ref.watch(boardingPassProvider);
     final scannerState = ref.watch(qRScannerProvider);
 
     // Get notifiers
-    final boardingPassNotifier = ref.read(
-      boardingPassNotifierProvider.notifier,
-    );
+    final boardingPassNotifier = ref.read(boardingPassProvider.notifier);
     final scannerNotifier = ref.read(qRScannerProvider.notifier);
 
     // Show boarding pass validation in progress

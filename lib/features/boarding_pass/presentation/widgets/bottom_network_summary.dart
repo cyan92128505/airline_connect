@@ -9,9 +9,9 @@ class BottomNetworkSummary extends HookConsumerWidget {
   const BottomNetworkSummary({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final boardingPassState = ref.watch(boardingPassNotifierProvider);
+    final boardingPassState = ref.watch(boardingPassProvider);
     final networkState = ref.watch(networkConnectivityProvider);
-    final notifier = ref.read(boardingPassNotifierProvider.notifier);
+    final notifier = ref.read(boardingPassProvider.notifier);
 
     return Container(
       margin: const EdgeInsets.only(top: 24),

@@ -15,7 +15,7 @@ import 'route_guard.dart';
 
 /// GoRouter configuration provider
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(memberAuthNotifierProvider);
+  final authState = ref.watch(memberAuthProvider);
 
   return GoRouter(
     initialLocation: AppRoutes.root,

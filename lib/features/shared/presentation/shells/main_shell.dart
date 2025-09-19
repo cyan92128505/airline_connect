@@ -12,7 +12,7 @@ class MainShell extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final memberAuthState = ref.watch(memberAuthNotifierProvider);
+    final memberAuthState = ref.watch(memberAuthProvider);
     final currentTabIndex = NavigationService.getCurrentTabIndex(context);
     final isAuthenticated = memberAuthState.isAuthenticated;
 

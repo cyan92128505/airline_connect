@@ -21,9 +21,7 @@ class QRScannerScreen extends HookConsumerWidget {
     final cameraPermissionState = ref.watch(cameraPermissionProvider);
     final scannerState = ref.watch(qRScannerProvider);
 
-    final boardingPassNotifier = ref.read(
-      boardingPassNotifierProvider.notifier,
-    );
+    final boardingPassNotifier = ref.read(boardingPassProvider.notifier);
     final cameraPermissionNotifier = ref.read(
       cameraPermissionProvider.notifier,
     );
@@ -45,7 +43,7 @@ class QRScannerScreen extends HookConsumerWidget {
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           await cameraPermissionNotifier.setup();
           await scannerNotifier.setupPermission();
-          await scannerNotifier.setupScannerContorller();
+          await scannerNotifier.setupScannerController();
         });
       }).ignore;
     }, []);
