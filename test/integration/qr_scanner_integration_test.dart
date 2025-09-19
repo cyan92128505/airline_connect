@@ -22,6 +22,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../helpers/test_helpers.dart';
@@ -294,7 +295,7 @@ class TestQRScannerApp extends ConsumerWidget {
     bool withAuthentication,
   ) async {
     try {
-      final authNotifier = container.read(memberAuthNotifierProvider.notifier);
+      final authNotifier = container.read(memberAuthProvider.notifier);
 
       if (withAuthentication) {
         final testMember = _createTestMember();

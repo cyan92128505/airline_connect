@@ -55,9 +55,7 @@ class NetworkStatusSliver extends HookConsumerWidget {
                 if (status.showSync) // Direct property access
                   TextButton(
                     onPressed: () {
-                      ref
-                          .read(boardingPassNotifierProvider.notifier)
-                          .forceSync();
+                      ref.read(boardingPassProvider.notifier).forceSync();
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.primary,

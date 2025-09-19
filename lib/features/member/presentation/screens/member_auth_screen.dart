@@ -20,8 +20,8 @@ class MemberAuthScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(memberAuthNotifierProvider);
-    final authNotifier = ref.read(memberAuthNotifierProvider.notifier);
+    final authState = ref.watch(memberAuthProvider);
+    final authNotifier = ref.read(memberAuthProvider.notifier);
 
     return Scaffold(
       backgroundColor: AppColors.background,

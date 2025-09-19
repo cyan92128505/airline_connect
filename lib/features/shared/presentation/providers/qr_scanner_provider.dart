@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:app/di/dependency_injection.dart';
 import 'package:app/features/shared/infrastructure/services/mobile_scanner_service_impl.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -26,7 +25,7 @@ enum ScannerStatus {
 
 /// Provider for scanner service configuration
 @riverpod
-ScannerConfig scannerConfig(Ref<ScannerConfig> ref) {
+ScannerConfig scannerConfig(Ref ref) {
   return const ScannerConfig(
     formats: ['qr'],
     facing: 'back',
@@ -211,7 +210,7 @@ class QRScanner extends _$QRScanner {
     }
   }
 
-  Future<void> setupScannerContorller() async {
+  Future<void> setupScannerController() async {
     // Check camera permission first
     final cameraPermission = ref.read(cameraPermissionProvider);
     if (!cameraPermission.isGranted) {

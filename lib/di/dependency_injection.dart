@@ -31,7 +31,6 @@ import 'package:app/features/shared/infrastructure/services/permission_service_i
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:http/http.dart' as http;
 
 /// Global ObjectBox instance provider

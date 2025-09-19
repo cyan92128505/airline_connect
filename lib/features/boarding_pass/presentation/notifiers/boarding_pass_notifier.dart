@@ -156,7 +156,7 @@ class BoardingPassNotifier extends _$BoardingPassNotifier {
 
   /// Load boarding passes with network awareness
   Future<void> loadBoardingPasses() async {
-    final memberAuthState = ref.read(memberAuthNotifierProvider);
+    final memberAuthState = ref.read(memberAuthProvider);
     final networkState = ref.read(networkConnectivityProvider);
 
     if (!memberAuthState.isAuthenticated || memberAuthState.member == null) {
